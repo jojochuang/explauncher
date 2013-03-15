@@ -1,0 +1,14 @@
+syntax: glob
+
+microbenchmark_context
+
+*.pyc
+*.swp
+
+log/microbenchmark/*.dat
+
+conf/microbenchmark/hosts
+conf/microbenchmark/hosts*
+conf/microbenchmark/params-run-*
+conf/microbenchmark/boot
+

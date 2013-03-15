@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# This is the script that runs multiple microbenchmarks in fullcontext.
+
+mace_start_port=4000
+boottime=1   # total time to boot.
+runtime=10000  # maximum runtime
+earlyquit=1  # Whether to support early quit (yes)
+tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
+
+nruns=5      # number of replicated runs
+#nruns=1      # number of replicated runs
+#ncontexts=11
+#ncontexts=1
+
+
+samehead=1
+
+
+if [ $# -eq 0 ]; then
+    id="default"
+else
+    id=$1
+fi
+
+
+application="microbenchmark"
+bin="/homes/yoo7/benchmark"
+conf_orig_file="conf/${application}/params-basic-${application}.conf"
+conf_file="conf/${application}/params-run-${application}.conf"
+host_orig_file="conf/${application}/hosts"
+host_run_file="conf/${application}/hosts-run"
+host_nohead_file="conf/${application}/hosts-run-nohead"
+boot_file="conf/${application}/boot"
+
+for flavor in context; do
+  #for t_primes in 1 2 4 8 16 32 64 128 256 512 1024 2048 4096; do
+  for t_primes in 0; do
+  #for t_primes in 100; do
+
+    #for t_nodes in 4; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 1 2; do        # number of physical machines you will be using (excluding head node)
+    for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
+
+      if [[ $samehead -eq 1 ]]; then
+        t_machines=1
+      else
+        t_machines=$(($t_nodes+1))
+      fi
+
+      #t_contexts=1
+
+      #for (( c=1; c <= $ncontexts; c++ )); do
+      #for t_contexts in 1; do   # number of context per each physical machine
+      #for t_contexts in 4; do   # number of context per each physical machine
+      #for t_contexts in 1 2; do   # number of context per each physical machine
+      #for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
+      #for t_contexts in 32 64 128 256 512 1024; do   # number of context per each physical machine
+      for t_contexts in 1 2 4 8 16 32 64 128 256 512 1024; do   # number of context per each physical machine
+      #for t_contexts in 1; do   # number of context per each physical machine
+
+        t_groups=$(($t_contexts * $t_nodes))
+
+        for total_events in 10000; do
+
+          t_events=$(( $total_events / $t_groups ))
+
+          t_threads=$(($total_events * 3 / $t_nodes ))
+          if [ $t_threads -le 3000 ]; then
+            t_threads=3000
+          fi
+
+          for (( run=1; run <= $nruns; run++ )); do
+
+            cp ${conf_orig_file} ${conf_file}
+
+            echo "BINARY = ${application}_${flavor}" >> ${conf_file}
+            echo "MACE_START_PORT = ${mace_start_port}" >> ${conf_file}
+            echo "num_nodes = ${t_nodes}" >> ${conf_file}
+            echo "num_machines = ${t_machines}" >> ${conf_file}
+            echo "run_time = ${runtime}" >> ${conf_file}
+            echo "EARLY_QUIT = ${earlyquit}" >> ${conf_file}
+            echo "TOTAL_NUM_EVENTS = ${total_events}" >> ${conf_file}
+
+            echo "MAX_ASYNC_THREADS = ${t_threads}" >> ${conf_file}
+            echo "MAX_TRANSPORT_THREADS = ${t_threads}" >> ${conf_file}
+
+            echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
+
+            echo "ServiceConfig.MicroBenchmark.NUM_GROUPS = ${t_groups}" >> ${conf_file}
+            echo "ServiceConfig.MicroBenchmark.NUM_PRIMES = ${t_primes}" >> ${conf_file}
+            echo "ServiceConfig.MicroBenchmark.NUM_EVENTS = ${t_events}" >> ${conf_file}
+
+            # print out bootfile & nodeset
+
+            echo -e "\e[00;31m\$ ./configure-${application}.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
+            ./configure-${application}.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
+
+            # print out mappings
+            if [[ $samehead -eq 1 ]]; then
+              key_start=0
+              key_end=$t_nodes
+            else
+              key_start=1
+              key_end=$(($t_nodes+1))
+            fi
+
+            if [ $flavor == "context" ]; then
+                value=0
+                for (( key=$key_start; key < $key_end; key++ )); do
+                  for (( c=1; c <= $t_contexts; c++ )); do
+                    echo "mapping = ${key}:Group[${value}]" >> ${conf_file}
+                    value=$(($value+1))
+                  done
+                done
+            fi
+
+            echo -e "\e[00;31m\$ ./master-microbenchmark.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}\e[00m"
+            ./master-microbenchmark.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}
+            #./run-context.pl -m -r -p params-fullcontext-gol.conf -i n${t_nodes}-${id}-c${num_contexts}-v${v}-r${rounds} -w ${application} -f ${flavor} -e
+
+            sleep 5
+
+          done # end of nruns
+        done # end of total_events
+
+        t_contexts=$(($t_contexts*2))
+
+      done # end of t_contexts
+    done
+  done
+done
+
