@@ -24,66 +24,66 @@ Prerequisite
 Design
 =======
 
-  * run-PROJECTNAME.sh
+  * `run-PROJECTNAME.sh`
 
     This would be the top-level experiment execution file.
     It usually launch series of multiple experiments sequentially.
 
     Modify the shell script file for your own needs.
 
-  * configure-PROJECTNAME.py
+  * `configure-PROJECTNAME.py`
 
     Read from hosts and basic parameter files to create boot and hosts-run files.
 
-  * master-run-PROJECTNAME.py
+  * `master-run-PROJECTNAME.py`
 
     Script that runs at the master node. (Usually where you launch the application)
 
-  * worker-run-PROJECTNAME.py
+  * `worker-run-PROJECTNAME.py`
 
     Script that will spawn at the each of the machines.
 
-  * worker-log-PROJECTNAME.py
+  * `worker-log-PROJECTNAME.py`
 
     It collect the all the log to your log directory.
 
-  * log/PROJECTNAME/
+  * `log/PROJECTNAME/`
 
     Log analyzer will be listed in here.
 
-    * compile-PROJECTNAME.sh
+    * `compile-PROJECTNAME.sh`
     
       Usually this would be the file that you will run to analyze the log.
 
-  * conf/PROJECTNAME/
+  * `conf/PROJECTNAME/`
 
     Your all configuration file should be located here.
 
-    * params-basic-PROJECTNAME.conf
+    * `params-basic-PROJECTNAME.conf`
 
       Your default configuration file for your application. This setting will be copy-and-pasted
       to the actual running system.
 
-    * params-run-PROJECTNAME.conf
+    * `params-run-PROJECTNAME.conf`
 
       This file will be generated automatically by configure-PROJECTNAME.py. 
       Usually it has added configuration key-value pairs like mapping and nodeset.
 
-    * hosts
+    * `hosts`
 
       List your actual machines to use for your experiment. e.g. tiberius01 tibrius02
 
-    * hosts-run
+    * `hosts-run`
 
       This file will be generated automatically by configure-PROJECTNAME.py with your given
       actual number of node you will be using.
 
-    * hosts-run-nohead
+    * `hosts-run-nohead`
 
       This file will be generated automatically by configure-PROJECTNAME.py with your given
       actual number of node you will be using.
 
-    * boot
+    * `boot`
 
       This file will be generated automatically by configure-PROJECTNAME.py with your given
       actual number of node you will be using.
