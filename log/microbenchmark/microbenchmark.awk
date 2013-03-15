@@ -76,7 +76,11 @@ END {
           if( i in key ) {
             k = key[i]
             m = sum[k]/cnt[k]
-            sd = sqrt( (ss[k] - cnt[k] * m * m) / ( cnt[k] - 1.0))
+            if( cnt[k] > 1 ) {
+              sd = sqrt( (ss[k] - cnt[k] * m * m) / ( cnt[k] - 1.0))
+            } else {
+              sd = 0
+            }
             se = sd / sqrt(cnt[k])
             #printf("%d %.2f %.2f %.2f %.2f\n", key[i], m, worst[k], best[k], se);
             printf("%d %.2f %.2f\n", key[i], m, se);

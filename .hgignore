@@ -8,7 +8,8 @@ microbenchmark_context
 log/microbenchmark/*.dat
 
 conf/microbenchmark/hosts
-conf/microbenchmark/hosts*
+conf/microbenchmark/hosts-run
+conf/microbenchmark/hosts-run*
 conf/microbenchmark/params-run-*
 conf/microbenchmark/boot
 
