@@ -25,13 +25,21 @@ fi
 
 
 application="microbenchmark"
-bin="/homes/yoo7/benchmark"
-conf_orig_file="conf/${application}/params-basic-${application}.conf"
-conf_file="conf/${application}/params-run-${application}.conf"
-host_orig_file="conf/${application}/hosts"
-host_run_file="conf/${application}/hosts-run"
-host_nohead_file="conf/${application}/hosts-run-nohead"
-boot_file="conf/${application}/boot"
+
+user="yoo7"
+home="/homes/yoo7"                                       # Home directory
+bin="/homes/yoo7/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
+
+logdir="/u/tiberius06_s/yoo7/logs/${application}"        # Log collection directory
+scratchdir="/scratch/yoo7/tmp/${application}"            # Scratch directory location
+
+conf_dir="${bin}/conf"                    # Configuration directory
+conf_orig_file="conf/params-basic-${application}.conf"   # Relative directory of conf_orig_file
+conf_file="conf/params-run-${application}.conf"
+host_orig_file="conf/hosts"
+host_run_file="conf/hosts-run"
+host_nohead_file="conf/hosts-run-nohead"
+boot_file="conf/boot"
 
 for flavor in context; do
   #for t_primes in 1 2 4 8 16 32 64 128 256 512 1024 2048 4096; do
@@ -73,6 +81,20 @@ for flavor in context; do
           for (( run=1; run <= $nruns; run++ )); do
 
             cp ${conf_orig_file} ${conf_file}
+
+            echo "application = ${application}" >> ${conf_file}
+
+            # Default path configurations
+
+            echo "USER = ${user}" >> ${conf_file}
+            echo "HOME = ${home}" >> ${conf_file}
+            echo "BIN = ${bin}" >> ${conf_file}
+            echo "CONFDIR = ${conf_dir}" >> ${conf_file}
+            echo "HOSTRUNFILE = ${conf_dir}/hosts-run" >> $conf_file
+            echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
+            echo "BOOTFILE = ${conf_dir}/boot" >> $conf_file
+            echo "LOGDIR = ${logdir}" >> $conf_file
+            echo "SCRATCHDIR = ${scratchdir}" >> $conf_file
 
             echo "BINARY = ${application}_${flavor}" >> ${conf_file}
             echo "MACE_START_PORT = ${mace_start_port}" >> ${conf_file}
