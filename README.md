@@ -14,11 +14,14 @@ Prerequisite
 
 1. Install pssh (preferrably 2.2) and add the path to the pssh executable in your PATH.
 
-2. Create symbolic link of the executable file to your /YOUR/TOOLDIR/PROJECTNAME\_FLAVOR.
+2. Create symbolic link of the executable file under your /YOUR/TOOLDIR/PROJECTNAME/.
    For example, if your project name is "microbenchmark" and flavor is "context",
    you should name the symlink to be "microbenchmark\_context".
 
-3. Change default user and directory settings in various .py files to meet your need.
+3. Copy and create your params-basic-PROJECTNAME.conf from
+   params-basic-PROJECTNAME.conf-example.
+   Also, copy and create your hosts file from hosts-example.
+   Change default user and directory settings in .conf file and run-PROJECTNAME.sh file.
 
 
 Design
@@ -47,46 +50,38 @@ Design
 
     It collect the all the log to your log directory.
 
-  * `log/PROJECTNAME/`
+  * `log/compile-PROJECTNAME.sh`
+  
+    Usually this would be the file that you will run to analyze the log.
 
-    Log analyzer will be listed in here.
+  * `conf/params-basic-PROJECTNAME.conf`
 
-    * `compile-PROJECTNAME.sh`
-    
-      Usually this would be the file that you will run to analyze the log.
+    Your default configuration file for your application. This setting will be copy-and-pasted
+    to the actual running system.
 
-  * `conf/PROJECTNAME/`
+  * `conf/params-run-PROJECTNAME.conf`
 
-    Your all configuration file should be located here.
+    This file will be generated automatically by configure-PROJECTNAME.py. 
+    Usually it has added configuration key-value pairs like mapping and nodeset.
 
-    * `params-basic-PROJECTNAME.conf`
+  * `conf/hosts`
 
-      Your default configuration file for your application. This setting will be copy-and-pasted
-      to the actual running system.
+    List your actual machines to use for your experiment. e.g. tiberius01 tibrius02
 
-    * `params-run-PROJECTNAME.conf`
+  * `conf/hosts-run`
 
-      This file will be generated automatically by configure-PROJECTNAME.py. 
-      Usually it has added configuration key-value pairs like mapping and nodeset.
+    This file will be generated automatically by configure-PROJECTNAME.py with your given
+    actual number of node you will be using.
 
-    * `hosts`
+  * `conf/hosts-run-nohead`
 
-      List your actual machines to use for your experiment. e.g. tiberius01 tibrius02
+    This file will be generated automatically by configure-PROJECTNAME.py with your given
+    actual number of node you will be using.
 
-    * `hosts-run`
+  * `conf/boot`
 
-      This file will be generated automatically by configure-PROJECTNAME.py with your given
-      actual number of node you will be using.
-
-    * `hosts-run-nohead`
-
-      This file will be generated automatically by configure-PROJECTNAME.py with your given
-      actual number of node you will be using.
-
-    * `boot`
-
-      This file will be generated automatically by configure-PROJECTNAME.py with your given
-      actual number of node you will be using.
+    This file will be generated automatically by configure-PROJECTNAME.py with your given
+    actual number of node you will be using.
 
 Contacts
 ======
