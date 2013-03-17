@@ -4,7 +4,7 @@
 
 mace_start_port=4000
 boottime=1   # total time to boot.
-runtime=10000  # maximum runtime
+runtime=100  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 

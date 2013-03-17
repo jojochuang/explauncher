@@ -31,7 +31,7 @@ ServiceConfig.MicroBenchmark.USE_GLOBAL_EVENT_CREATE = 0
 
 # Artificial delay
 HEAD_NODE_USLEEP = 0
-ServiceConfig.MicroBenchmark.EVENT_WAIT_TIME = 200
+ServiceConfig.MicroBenchmark.EVENT_WAIT_TIME = 0
 
 # Logging parameters
 #MACE_LOG_AUTO_ALL = 1
