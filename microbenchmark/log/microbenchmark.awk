@@ -13,7 +13,7 @@ BEGIN {
     #sum2_total = 0
     #start_time = 0
     #sum5_total = 0
-    maxkey = 0
+    #maxkey = 0
 
 }
 
@@ -25,8 +25,13 @@ BEGIN {
       #start_time = int($1)
     }
 
-    # fourth field is the key.
-    k = int($4)
+    # third and fourth field is the key.
+    k = $3" "$4
+
+    # If number of field is insufficient, skip
+    if( NF < 9 ) {
+      next
+    }
     #k = int($1-start_time)
     #if( k == 0 ) {next}
     #if(keys==0) {
@@ -61,9 +66,9 @@ BEGIN {
         best[k] = $9
         worst[k] = $9
         ss[k] = $9 * $9
-        if( k > maxkey ) {
-          maxkey = k
-        }
+        #if( k > maxkey ) {
+          #maxkey = k
+        #}
     }
 
 }
@@ -72,8 +77,9 @@ BEGIN {
 END {
         #printf("RESULT\n");
         #printf("start_time = %.2f\n", start_time);
-        for (i = 0; i <= maxkey; i++) {
-          if( i in key ) {
+        #for (i = 0; i <= maxkey; i++) {
+        for ( i in key ) {
+          #if( i in key ) {
             k = key[i]
             m = sum[k]/cnt[k]
             if( cnt[k] > 1 ) {
@@ -83,8 +89,8 @@ END {
             }
             se = sd / sqrt(cnt[k])
             #printf("%d %.2f %.2f %.2f %.2f\n", key[i], m, worst[k], best[k], se);
-            printf("%d %.2f %.2f\n", key[i], m, se);
-          }
+            printf("%s %.2f %.2f %d\n", key[i], m, se, cnt[k]);
+          #}
         }
         #printf("sum2_total = %d\n", sum2_total);
         #printf("sum5_total = %d\n", sum5_total);

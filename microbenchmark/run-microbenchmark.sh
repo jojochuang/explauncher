@@ -8,13 +8,13 @@ runtime=100  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=5      # number of replicated runs
-#nruns=1      # number of replicated runs
+#nruns=5      # number of replicated runs
+nruns=1      # number of replicated runs
 #ncontexts=11
 #ncontexts=1
 
 
-samehead=1
+#samehead=1
 
 
 if [ $# -eq 0 ]; then
@@ -47,8 +47,9 @@ for flavor in context; do
   #for t_primes in 100; do
 
     #for t_nodes in 4; do        # number of physical machines you will be using (excluding head node)
-    #for t_nodes in 1 2; do        # number of physical machines you will be using (excluding head node)
-    for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 2 4; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
+    for t_nodes in 2; do        # number of physical machines you will be using (excluding head node)
 
       if [[ $samehead -eq 1 ]]; then
         t_machines=1
@@ -64,18 +65,20 @@ for flavor in context; do
       #for t_contexts in 1 2; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
       #for t_contexts in 32 64 128 256 512 1024; do   # number of context per each physical machine
-      for t_contexts in 1 2 4 8 16 32 64 128 256 512 1024; do   # number of context per each physical machine
-      #for t_contexts in 1; do   # number of context per each physical machine
+      #for t_contexts in 1 2 4 8 16 32 64 128 256 512 1024; do   # number of context per each physical machine
+      #for t_contexts in 2 4 8; do   # number of context per each physical machine
+      for t_contexts in 2; do   # number of context per each physical machine
 
         t_groups=$(($t_contexts * $t_nodes))
 
-        for total_events in 10000; do
+        for total_events in 2000000; do
 
           t_events=$(( $total_events / $t_groups ))
 
-          t_threads=$(($total_events * 3 / $t_nodes ))
-          if [ $t_threads -le 3000 ]; then
-            t_threads=3000
+          #t_threads=$(($total_events * 2 / $t_nodes ))
+          t_threads=$(($t_contexts * 2))
+          if [ $t_threads -le 8 ]; then
+            t_threads=8
           fi
 
           for (( run=1; run <= $nruns; run++ )); do
@@ -101,6 +104,8 @@ for flavor in context; do
             echo "num_nodes = ${t_nodes}" >> ${conf_file}
             echo "num_machines = ${t_machines}" >> ${conf_file}
             echo "run_time = ${runtime}" >> ${conf_file}
+            echo "num_groups = ${t_groups}" >> ${conf_file}
+            echo "num_contexts = ${t_contexts}" >> ${conf_file}
             echo "EARLY_QUIT = ${earlyquit}" >> ${conf_file}
             echo "TOTAL_NUM_EVENTS = ${total_events}" >> ${conf_file}
 
@@ -118,6 +123,11 @@ for flavor in context; do
             echo -e "\e[00;31m\$ ./configure-${application}.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
             ./configure-${application}.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
 
+            if [[ $? -ne 0 ]]; then
+              echo "Error occurred while processing ./configure-${application}.py. Terminated."
+              exit 1;
+            fi
+
             # print out mappings
             if [[ $samehead -eq 1 ]]; then
               key_start=0
@@ -132,6 +142,7 @@ for flavor in context; do
                 for (( key=$key_start; key < $key_end; key++ )); do
                   for (( c=1; c <= $t_contexts; c++ )); do
                     echo "mapping = ${key}:Group[${value}]" >> ${conf_file}
+                    echo "lib.ContextJobApplication.MicroBenchmark.mapping = ${key}:Group[${value}]" >> ${conf_file}
                     value=$(($value+1))
                   done
                 done

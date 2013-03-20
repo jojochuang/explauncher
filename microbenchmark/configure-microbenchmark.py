@@ -9,10 +9,29 @@ import Utils
 logger = logging.getLogger('Benchmark.Configure')
 
 
+def migrate(line_id, time, service_id, group_id, target_addr, f):
+    f.write('migrate{}.time = {}\n'.format(
+        line_id,
+        time))
+    f.write('migrate{}.service = {}\n'.format(
+        line_id,
+        service_id))
+    f.write('migrate{}.dest = {}\n'.format(
+        line_id,
+        target_addr))
+    f.write('migrate{}.contexts = Group[{}]\n'.format(
+        line_id,
+        group_id))
+    f.write('\n')
+    return
+                
 def main(options):
     """
     Main module of configure-microbenchmark.
     """
+
+    # Read param file before append
+    param = Utils.param_reader(options.paramfile)
 
     # Read host file
     ipaddr = []
@@ -48,13 +67,18 @@ def main(options):
                     g.write("%s\n" % hostname[i])
 
     # Write to output conf file (This is for nodes)
-    with open(options.output, "a") as f:
+    with open(options.paramfile, "a") as f:
+        nodeaddr = []
         # print nodeset
         port = options.port
         for i in range(options.machines):
             f.write( 'nodeset = {}:{}\n'.format(
                 ipaddr[i],
                 port))
+            f.write( 'lib.ContextJobApplication.nodeset = IPV4/{}:{}\n'.format(
+                ipaddr[i],
+                port))
+            nodeaddr.append("%s:%s" % ( ipaddr[i], port) )
             port += 1
 
         # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
@@ -63,6 +87,80 @@ def main(options):
         # write down HEAD_IPADDR, which is the first node in the hosts file
         f.write( "HEAD_IPADDR = %s\n" % ipaddr[0] )
 
+        # Write planned migration.
+        if param.get('MIGRATION', '0') == '1':
+            # Read values
+            nnodes = options.nodes
+            ngroups = int(param["num_groups"])
+            ncontexts = int(param["num_contexts"])
+            #print("ngroups = %s ncontexts = %s nnodes = %s\n" % (ngroups, ncontexts, nnodes))
+
+            # Make sure number of node is > 1.
+            assert nnodes > 1, "Number of nodes is insufficient"
+            assert ngroups == nnodes * ncontexts, "ngroups != nnodes * ncontexts"
+
+            # Create script
+            if param["MIGRATION_TYPE"] == "SWAP_ITERATIVE":
+                # Read additional values
+                period = int(param["MIGRATION_PERIOD"])
+                start = int(param["MIGRATION_START_TIME"])
+                end = int(param["MIGRATION_END_TIME"])
+
+                t = start
+                lid = 0 # line_id
+                while t < end:
+                    # Forward swap
+                    for gid in range(ngroups):
+                        if t >= end:
+                            break
+                        # move gid to reverse of the gid's address
+
+                        #print("gid = %s gid' = %s\n" % (gid, (ngroups-gid-1)/ncontexts + 1))
+                        migrate(lid,t,0,gid,nodeaddr[ (ngroups-gid-1)/ncontexts + 1 ],f)
+                        lid += 1
+                        t += period
+                        
+                    # Reverse swap
+                    for gid in range(ngroups):
+                        if t >= end:
+                            break
+                        # move gid to reverse of the gid's address
+                        migrate(lid,t,0,gid,nodeaddr[ gid/ncontexts + 1 ],f)
+                        lid += 1
+                        t += period
+
+                # Now print out migrate keys
+                if lid > 0:
+                    f.write("lib.ContextJobApplication.timed_migrate =");
+                    for i in range(lid):
+                        f.write(' migrate{}'.format(i))
+
+                    f.write("\n")
+
+            elif param["MIGRATION_TYPE"] == "SWAP_ONCE":
+                # Read additional values
+                t = int(param["MIGRATION_START_TIME"])
+                lid = 0 # line_id
+
+                for gid in range(ngroups):
+                    # move gid to reverse of the gid's address
+
+                    #print("gid = %s gid' = %s\n" % (gid, (ngroups-gid-1)/ncontexts + 1))
+                    lid = gid
+                    migrate(lid,t,0,gid,nodeaddr[ (ngroups-gid-1)/ncontexts + 1 ],f)
+                    t += 1
+
+                # Now print out migrate keys
+                if lid > 0:
+                    f.write("lib.ContextJobApplication.timed_migrate =");
+                    for i in range(ngroups):
+                        f.write(' migrate{}'.format(i))
+
+                    f.write("\n")
+
+            else:
+                assert 0, "You must specify appropriate MIGRATION_TYPE!"
+    
     return
 
 
@@ -81,7 +179,7 @@ if __name__ == "__main__":
     help="Number of physical machines. e.g. number of physical machines.")
     parser.add_option("-p", "--port", dest="port", action="store", type="int",
     help="Mace starting port.")
-    parser.add_option("-o", "--output", dest="output", action="store", type="string",
+    parser.add_option("-o", "--output", dest="paramfile", action="store", type="string",
     help="Output .conf file to append.")
     parser.add_option("-s", "--setuptime", dest="setuptime", action="store", type="int",
     help="Time to boot.")
@@ -109,7 +207,7 @@ if __name__ == "__main__":
         parser.error("Missing --machines")
     if not options.port:
         parser.error("Missing --port")
-    if not options.output:
+    if not options.paramfile:
         parser.error("Missing --output")
     if not options.setuptime:
         parser.error("Missing --setuptime")

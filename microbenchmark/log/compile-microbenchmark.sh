@@ -11,7 +11,7 @@ ids=(`cat result.dat | awk '{print $2}' | uniq`)
 
 for i in "${ids[@]}"; do
   echo "* Procesing id = $i"
-  grep " ${i} " result.dat | sed '/^$/d' | sort -t' ' -k4,4n | awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "(1000000*$8/$7)}' | ./microbenchmark.awk > result-${i}.dat
+  grep " ${i} " result.dat | sed '/^$/d' | sort -t' ' -k4,4n | awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7" "$8" "(1000000*$8/$7)}' | ./microbenchmark.awk | sort -t' ' -k +1n -k +2n > result-${i}.dat
   cat result-${i}.dat
   echo ""
 done
