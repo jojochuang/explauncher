@@ -3,6 +3,7 @@
 app="microbenchmark"
 
 ./aggregate-${app}.sh > result.dat
+
 #grep "unit" result.dat | grep "default" | sed '/^$/d' | sort -t' ' -k5,5n > result-unit.dat
 
 # Get the list of identifier

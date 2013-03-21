@@ -2,7 +2,6 @@
 
 logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
 
-#pushd $logdir
 cd $logdir
 
 file=(`find ./ -name '*head*' | xargs zgrep -l execution_time | sort`)
@@ -18,6 +17,4 @@ for f in "${file[@]}"; do
   zgrep -e "execution_time" $f | tail -1 | awk '{printf $4" "}'
   zgrep -e "EVENT_COMMIT_COUNT" $f | tail -1 | awk '{printf $4}'
 done
-
-#popd
 

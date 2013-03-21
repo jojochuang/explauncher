@@ -4,12 +4,12 @@
 
 mace_start_port=4000
 boottime=1   # total time to boot.
-runtime=100  # maximum runtime
+runtime=200  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-#nruns=5      # number of replicated runs
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
+#nruns=1      # number of replicated runs
 #ncontexts=11
 #ncontexts=1
 
@@ -47,14 +47,14 @@ for flavor in context; do
   #for t_primes in 100; do
 
     #for t_nodes in 4; do        # number of physical machines you will be using (excluding head node)
-    #for t_nodes in 2 4; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 1 2 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
     for t_nodes in 2; do        # number of physical machines you will be using (excluding head node)
 
       if [[ $samehead -eq 1 ]]; then
         t_machines=1
       else
-        t_machines=$(($t_nodes+1))
+        t_machines=$(($t_nodes+1)) # adding one more machine for head node dedication
       fi
 
       #t_contexts=1
@@ -64,16 +64,19 @@ for flavor in context; do
       #for t_contexts in 4; do   # number of context per each physical machine
       #for t_contexts in 1 2; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
-      #for t_contexts in 32 64 128 256 512 1024; do   # number of context per each physical machine
+      for t_contexts in 64 128 256 512; do   # number of context per each physical machine
+      #for t_contexts in 1 2 4 8 16 32 64 128 256 512; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16 32 64 128 256 512 1024; do   # number of context per each physical machine
       #for t_contexts in 2 4 8; do   # number of context per each physical machine
-      for t_contexts in 2; do   # number of context per each physical machine
+      #for t_contexts in 2; do   # number of context per each physical machine
 
         t_groups=$(($t_contexts * $t_nodes))
 
-        for total_events in 2000000; do
+        t_iterations=1
 
-          t_events=$(( $total_events / $t_groups ))
+        for total_events in 1000000; do
+
+          t_events=$(( $total_events / $t_iterations / $t_groups ))
 
           #t_threads=$(($total_events * 2 / $t_nodes ))
           t_threads=$(($t_contexts * 2))
@@ -117,6 +120,7 @@ for flavor in context; do
             echo "ServiceConfig.MicroBenchmark.NUM_GROUPS = ${t_groups}" >> ${conf_file}
             echo "ServiceConfig.MicroBenchmark.NUM_PRIMES = ${t_primes}" >> ${conf_file}
             echo "ServiceConfig.MicroBenchmark.NUM_EVENTS = ${t_events}" >> ${conf_file}
+            echo "ServiceConfig.MicroBenchmark.NUM_ITERATIONS = ${t_iterations}" >> ${conf_file}
 
             # print out bootfile & nodeset
 
