@@ -9,8 +9,8 @@ microbenchmark/log/*.dat
 
 microbenchmark/conf/hosts
 microbenchmark/conf/hosts-run
-microbenchmark/conf/hosts-run*
+microbenchmark/conf/hosts-run-nohead
 microbenchmark/conf/params-run-*
-microbenchmark/conf/params-basic-*.conf
+microbenchmark/conf/params-basic.conf
 microbenchmark/conf/boot
 

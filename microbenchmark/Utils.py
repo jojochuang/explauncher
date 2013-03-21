@@ -16,7 +16,7 @@ def unixTime():
     return time.time()
 
 def process_exec(cmd, log, verbose=True):
-    """ Run the command and return output as string """
+    """ Run the command with Popen() and return output as string """
 
     if verbose:
         logger.critical("$ %s", cmd)
@@ -41,7 +41,7 @@ def process_exec(cmd, log, verbose=True):
     return r
 
 def shell_launch(cmd, verbose=True):
-    """ Run the command and immeidately returns. """
+    """ Run the command with fork() and immediately returns. """
 
     if verbose:
         logger.critical("$ %s", cmd)
@@ -80,6 +80,7 @@ def shell_exec(cmd, verbose=True):
     return r
 
 def param_reader(filename):
+    """ Read ini-like parameter file. (key = value) """
     kv = {}
     with open(filename) as f:
         for line in f:
@@ -132,6 +133,7 @@ def copyfile(dest_dir, filename):
     shutil.copy2(filename, "%s/%s" % (dest_dir, os.path.basename(filename)))
 
 # Logging
+# From Karthik's Distalyzer code.
 
 LOG_FORMAT_STR = '%(asctime)s [%(levelname)s::%(module)s::%(funcName)s] %(message)s'
 LOG_FORMAT_COLOR_STR = '\033[1;33m%(asctime)s\033[0m %(color)s[%(levelname)s::%(module)s::%(funcName)s]\033[0m %(message)s'

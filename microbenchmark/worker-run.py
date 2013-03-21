@@ -82,8 +82,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,param, paramfile):
 
     logger.info("Head is trying to kill read of the machines.")
 
-    cmd = 'killall python2.7 worker-run-{app}.py {binary}'.format(
-            app=param["application"], 
+    cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
     Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
         num_machines=param["num_machines"], 
@@ -114,8 +113,8 @@ def main(options):
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
 
-    # Read boot file
-    # As defined in the boot file, you will fork and process.
+    # Read boot file and launch the application.
+    # As defined in the boot file, you will run the process with Popen (in Utils.py)
     plist = []
     with open(param["BOOTFILE"]) as f:
         for line in f:

@@ -46,8 +46,7 @@ def main(options):
     Utils.copyfile(log_dir, param["BOOTFILE"])
 
     # Killall the experiment
-    cmd = 'killall python2.7 worker-run-{app}.py {binary}'.format(
-            app=param["application"], 
+    cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
     Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
         num_machines=param["num_machines"], 
@@ -64,8 +63,7 @@ def main(options):
     # Run worker-run-microbenchmark.py with PSSH
     # PSSH will be launched via fork() to catch Ctrl+C to stop the
     # experiment.
-    cmd = '{bin}/worker-run-{app}.py -p {paramfile}'.format(
-            app=param["application"], 
+    cmd = '{bin}/worker-run.py -p {paramfile}'.format(
             bin=param["BIN"],
             paramfile="%s/%s" % (param["BIN"], options.paramfile))
     Utils.shell_launch('ulimit -c unlimited; pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
@@ -75,8 +73,7 @@ def main(options):
         command=cmd))
 
     # Killall the experiment
-    cmd = 'killall python2.7 worker-run-{app}.py {binary}'.format(
-            app=param["application"], 
+    cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
     Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
         num_machines=param["num_machines"], 
@@ -84,8 +81,7 @@ def main(options):
         command=cmd))
 
     # Copying logs
-    cmd = '{bin}/worker-log-{app}.py -p {paramfile} -l {logdir}'.format(
-            app=param["application"], 
+    cmd = '{bin}/worker-log.py -p {paramfile} -l {logdir}'.format(
             bin=param["BIN"],
             paramfile="%s/%s" % (param["BIN"], options.paramfile),
             logdir=log_dir)

@@ -34,8 +34,8 @@ logdir="/u/tiberius06_s/yoo7/logs/${application}"        # Log collection direct
 scratchdir="/scratch/yoo7/tmp/${application}"            # Scratch directory location
 
 conf_dir="${bin}/conf"                    # Configuration directory
-conf_orig_file="conf/params-basic-${application}.conf"   # Relative directory of conf_orig_file
-conf_file="conf/params-run-${application}.conf"
+conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
+conf_file="conf/params-run.conf"
 host_orig_file="conf/hosts"
 host_run_file="conf/hosts-run"
 host_nohead_file="conf/hosts-run-nohead"
@@ -124,8 +124,8 @@ for flavor in context; do
 
             # print out bootfile & nodeset
 
-            echo -e "\e[00;31m\$ ./configure-${application}.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
-            ./configure-${application}.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
+            echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
+            ./configure.py -a ${application} -f ${flavor} -n ${t_nodes} -m ${t_machines} -p ${mace_start_port} -o ${conf_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
 
             if [[ $? -ne 0 ]]; then
               echo "Error occurred while processing ./configure-${application}.py. Terminated."
@@ -152,8 +152,8 @@ for flavor in context; do
                 done
             fi
 
-            echo -e "\e[00;31m\$ ./master-microbenchmark.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}\e[00m"
-            ./master-microbenchmark.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}
+            echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}\e[00m"
+            ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}
             #./run-context.pl -m -r -p params-fullcontext-gol.conf -i n${t_nodes}-${id}-c${num_contexts}-v${v}-r${rounds} -w ${application} -f ${flavor} -e
 
             sleep 5
