@@ -151,12 +151,21 @@ def main(options):
                     t += 1
 
                 # Now print out migrate keys
-                if lid > 0:
-                    f.write("lib.ContextJobApplication.timed_migrate =");
-                    for i in range(ngroups):
-                        f.write(' migrate{}'.format(i))
+                #if lid > 0:
+                    #f.write("lib.ContextJobApplication.timed_migrate =");
+                    #for i in range(ngroups):
+                        #f.write(' migrate{}'.format(i))
 
-                    f.write("\n")
+                    #f.write("\n")
+
+                if lid > 0:
+                    f.write("ServiceConfig.MicroBenchmark.MIGRATION_IDS = \"");
+                    for i in range(ngroups):
+                        if i > 0:
+                            f.write(' ')
+                        f.write('migrate{}'.format(i))
+
+                    f.write("\"\n")
 
             else:
                 assert 0, "You must specify appropriate MIGRATION_TYPE!"

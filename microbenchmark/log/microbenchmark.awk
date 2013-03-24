@@ -26,7 +26,7 @@ BEGIN {
     }
 
     # third and fourth field is the key.
-    k = $3" "$4
+    k = $3" "$4" "$5
 
     # If number of field is insufficient, skip
     if( NF < 9 ) {

@@ -4,14 +4,12 @@
 
 mace_start_port=4000
 boottime=1   # total time to boot.
-runtime=200  # maximum runtime
+runtime=400  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=5      # number of replicated runs
 #nruns=1      # number of replicated runs
-#ncontexts=11
-#ncontexts=1
+nruns=5      # number of replicated runs
 
 
 #samehead=1
@@ -43,13 +41,23 @@ boot_file="conf/boot"
 
 for flavor in context; do
   #for t_primes in 1 2 4 8 16 32 64 128 256 512 1024 2048 4096; do
-  for t_primes in 0; do
+  #for t_primes in 0 10 20 40 80 160; do
+  for t_primes in 40 80 160; do
   #for t_primes in 100; do
 
     #for t_nodes in 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1 2 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 0 1 2 4 8; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 2 4 8; do        # number of physical machines you will be using (excluding head node)
     for t_nodes in 2; do        # number of physical machines you will be using (excluding head node)
+
+      samehead=0
+
+      if [[ $t_nodes -eq 0 ]]; then
+        samehead=1
+        t_nodes=1
+      fi
 
       if [[ $samehead -eq 1 ]]; then
         t_machines=1
@@ -61,20 +69,21 @@ for flavor in context; do
 
       #for (( c=1; c <= $ncontexts; c++ )); do
       #for t_contexts in 1; do   # number of context per each physical machine
-      #for t_contexts in 4; do   # number of context per each physical machine
+      #for t_contexts in 8; do   # number of context per each physical machine
       #for t_contexts in 1 2; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
-      for t_contexts in 64 128 256 512; do   # number of context per each physical machine
-      #for t_contexts in 1 2 4 8 16 32 64 128 256 512; do   # number of context per each physical machine
+      #for t_contexts in 64 128 256 512; do   # number of context per each physical machine
+      for t_contexts in 1 2 4 8 16 32 64; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16 32 64 128 256 512 1024; do   # number of context per each physical machine
       #for t_contexts in 2 4 8; do   # number of context per each physical machine
       #for t_contexts in 2; do   # number of context per each physical machine
 
         t_groups=$(($t_contexts * $t_nodes))
 
-        t_iterations=1
+        t_iterations=100
 
         for total_events in 1000000; do
+        #for total_events in 100000; do
 
           t_events=$(( $total_events / $t_iterations / $t_groups ))
 
@@ -150,6 +159,16 @@ for flavor in context; do
                     value=$(($value+1))
                   done
                 done
+
+                # Add one more group for dedicated event launcher.
+                echo "mapping = 0:Group[${value}]" >> ${conf_file}
+                echo "lib.ContextJobApplication.MicroBenchmark.mapping = 0:Group[${value}]" >> ${conf_file}
+
+            fi
+
+            # For correct printing
+            if [[ $samehead -eq 1 ]]; then
+              t_nodes=0
             fi
 
             echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}\e[00m"
