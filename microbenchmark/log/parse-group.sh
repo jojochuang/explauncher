@@ -2,6 +2,10 @@
 
 logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
 
+if [[ $# -ge 1 ]]; then
+    logdir=$1
+fi
+
 cd $logdir
 
 file=(`find ./ -name '*head*' | xargs zgrep -l execution_time | sort`)
