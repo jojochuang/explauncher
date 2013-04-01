@@ -9,9 +9,9 @@ BEGIN {
   MA += (x - Z[i]) / P; 
   Z[i] = x; 
   if(MA>=0) {
-    printf("%d %.2f\n", $1, MA);
+    printf("%f %.2f\n", $1, MA);
   } else{
-    printf("%d 0.0\n", $1);
+    printf("%f 0.0\n", $1);
   }
 }
   

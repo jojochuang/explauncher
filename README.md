@@ -50,7 +50,7 @@ Design
 
     It collect the all the log to your log directory.
 
-  * `log/compile-PROJECTNAME.sh`
+  * `log/run-TYPE_OF_DATA.sh`
   
     Usually this would be the file that you will run to analyze the log.
 

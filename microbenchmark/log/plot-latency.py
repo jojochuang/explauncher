@@ -59,7 +59,7 @@ def main(options):
     #menStd =   (2, 3, 4, 1, 2)
 
     ind = np.arange(nrows)  # the x locations for the groups
-    width = 0.15       # the width of the bars
+    width = 0.35       # the width of the bars
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -77,12 +77,13 @@ def main(options):
         #print("processing key = %s" % k1)
         means = []
         errors = []
-        glabel.append("P=%s" % (k1))
+        #glabel.append("P=%s" % (k1))
+        glabel.append("Latency")
 
         # Reconstruct means and errors
         for k2 in sorted(data[k1].keys(), key=lambda item: int(item)):
             if len(glabel) == 1:
-                xlabel.append("N=%s" % (int(k2)))
+                xlabel.append("%s MB" % (float(k2)/1000000))
             means.append(data[k1][k2].value[0])
             errors.append(data[k1][k2].value[1])
 
@@ -105,9 +106,8 @@ def main(options):
     #rects2 = ax.bar(ind+width, womenMeans, width, color='y', yerr=womenStd)
 
     # add some
-    ax.set_ylabel('Throughput')
-    #ax.set_title('Throughput by different cpu workload')
-    ax.set_title('Throughput by adding more physical nodes while having fixed C=160')
+    ax.set_ylabel('Latency (ms)')
+    #ax.set_title('Migration latency by different size of contexts')
 
     #print(xlabel)
     #print(glabel)
@@ -117,7 +117,7 @@ def main(options):
     ax.set_xticklabels( xlabel )
 
     #ax.legend( (rects1[0], rects2[0]), ('Men', 'Women') )
-    ax.legend( rects_legend, glabel )
+    #ax.legend( rects_legend, glabel )
 
 
     #for r in rects:

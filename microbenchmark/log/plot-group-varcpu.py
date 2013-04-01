@@ -48,7 +48,7 @@ def main(options):
     """
 
     # By different nprime values
-    data = parse(options.inputfile, group_by=3, index_by=1, cols=[4,5])
+    data = parse(options.inputfile, group_by=3, index_by=2, cols=[4,5])
 
     ngroups = len(data.keys())
     nrows = len(data[ data.keys()[0] ].keys() )
@@ -82,7 +82,7 @@ def main(options):
         # Reconstruct means and errors
         for k2 in sorted(data[k1].keys(), key=lambda item: int(item)):
             if len(glabel) == 1:
-                xlabel.append("N=%s" % (int(k2)))
+                xlabel.append("C=%s" % (int(k2)*nnodes))
             means.append(data[k1][k2].value[0])
             errors.append(data[k1][k2].value[1])
 
@@ -107,7 +107,7 @@ def main(options):
     # add some
     ax.set_ylabel('Throughput')
     #ax.set_title('Throughput by different cpu workload')
-    ax.set_title('Throughput by adding more physical nodes while having fixed C=160')
+    ax.set_title('Throughput by adding more contexts')
 
     #print(xlabel)
     #print(glabel)
@@ -117,7 +117,7 @@ def main(options):
     ax.set_xticklabels( xlabel )
 
     #ax.legend( (rects1[0], rects2[0]), ('Men', 'Women') )
-    ax.legend( rects_legend, glabel )
+    ax.legend( rects_legend, glabel, loc="upper left", ncol=3)
 
 
     #for r in rects:

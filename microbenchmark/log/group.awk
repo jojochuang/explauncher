@@ -75,25 +75,23 @@ BEGIN {
 
 # Final ruile:
 END {
-        #printf("RESULT\n");
-        #printf("start_time = %.2f\n", start_time);
-        #for (i = 0; i <= maxkey; i++) {
-        for ( i in key ) {
-          #if( i in key ) {
-            k = key[i]
-            m = sum[k]/cnt[k]
-            if( cnt[k] > 1 ) {
-              sd = sqrt( (ss[k] - cnt[k] * m * m) / ( cnt[k] - 1.0))
-            } else {
-              sd = 0
-            }
-            se = sd / sqrt(cnt[k])
-            #printf("%d %.2f %.2f %.2f %.2f\n", key[i], m, worst[k], best[k], se);
-            printf("%s %.2f %.2f %d\n", key[i], m, se, cnt[k]);
-          #}
+    #printf("RESULT\n");
+    #printf("start_time = %.2f\n", start_time);
+    #for (i = 0; i <= maxkey; i++) {
+    for ( i in key ) {
+      #if( i in key ) {
+        k = key[i]
+        m = sum[k]/cnt[k]
+        if( cnt[k] > 1 ) {
+          sd = sqrt( (ss[k] - cnt[k] * m * m) / ( cnt[k] - 1.0))
+        } else {
+          sd = 0
         }
-        #printf("sum2_total = %d\n", sum2_total);
-        #printf("sum5_total = %d\n", sum5_total);
+        se = sd / sqrt(cnt[k])
+        #printf("%d %.2f %.2f %.2f %.2f\n", key[i], m, worst[k], best[k], se);
+        printf("%s %.2f %.2f %d\n", key[i], m, se, cnt[k]);
+      #}
+    }
 }
  
 

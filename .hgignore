@@ -1,16 +1,52 @@
 syntax: glob
 
+*.swp
+*.pyc
+
 microbenchmark/microbenchmark_context
 
-microbenchmark/*.pyc
-microbenchmark/*.swp
-
-microbenchmark/log/*.dat
+microbenchmark/log/data/*
+microbenchmark/log/result/*
 
 microbenchmark/conf/hosts
 microbenchmark/conf/hosts-run
 microbenchmark/conf/hosts-run-nohead
-microbenchmark/conf/params-run-*
+microbenchmark/conf/params-run*
 microbenchmark/conf/params-basic.conf
 microbenchmark/conf/boot
+
+keyvalue/*.pyc
+keyvalue/*.swp
+
+keyvalue/log/data/*
+keyvalue/log/data*
+keyvalue/log/result/*
+
+#keyvalue/log/final01-cloud/*.?!(sar|log)
+
+keyvalue/conf/hosts
+keyvalue/conf/hosts-run
+keyvalue/conf/hosts-run-nohead
+keyvalue/conf/params-run*
+keyvalue/conf/params-basic.conf
+keyvalue/conf/boot
+
+
+tag/tag_context
+
+tag/*.pyc
+tag/*.swp
+
+tag/log/data/*
+tag/log/data*
+tag/log/result/*
+
+tag/conf/hosts
+tag/conf/hosts-run
+tag/conf/hosts-run-nohead
+tag/conf/params-run-*
+tag/conf/params-basic.conf
+tag/conf/boot
+
+
 

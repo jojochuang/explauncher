@@ -72,6 +72,7 @@ def main(options):
     glabel = []
 
     nnodes = 10
+    hatch_list = ["#", "\\", "/", "-", ".", ""]
 
     for k1 in sorted(data.keys(), key=lambda item: int(item)):
         #print("processing key = %s" % k1)
@@ -91,7 +92,7 @@ def main(options):
             means.append(0)
             errors.append(0)
 
-        rect = ax.bar(ind+gid*width, means, width, yerr=errors, color=cm.jet(1.*gid/ngroups))
+        rect = ax.bar(ind+gid*width, means, width, yerr=errors, color=cm.jet(1.*gid/ngroups), hatch=hatch_list[gid])
         rects.append(rect)
         rects_legend.append(rect[0])
 
@@ -105,19 +106,21 @@ def main(options):
     #rects2 = ax.bar(ind+width, womenMeans, width, color='y', yerr=womenStd)
 
     # add some
-    ax.set_ylabel('Throughput')
+    ax.set_ylabel('Throughput (processed events / sec)')
+    ax.set_xlabel('Number of physical nodes')
     #ax.set_title('Throughput by different cpu workload')
-    ax.set_title('Throughput by adding more physical nodes while having fixed C=160')
+    #ax.set_title('Throughput by adding more physical nodes while having fixed C=160')
 
     #print(xlabel)
     #print(glabel)
 
-    ax.set_xticks(ind+width)
+    ax.set_xlim(left=-width)
+    ax.set_xticks(ind + (gid/2) * width)
     #ax.set_xticklabels( ('G1', 'G2', 'G3', 'G4', 'G5') )
     ax.set_xticklabels( xlabel )
 
     #ax.legend( (rects1[0], rects2[0]), ('Men', 'Women') )
-    ax.legend( rects_legend, glabel )
+    ax.legend( rects_legend, glabel, loc="upper left", ncol=3)
 
 
     #for r in rects:

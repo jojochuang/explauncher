@@ -167,6 +167,56 @@ def main(options):
 
                     f.write("\"\n")
 
+            elif param["MIGRATION_TYPE"] == "SCALE_OUT_AND_IN":
+                # Read additional values
+                t = int(param["MIGRATION_START_TIME"])
+                lid = 0 # line_id
+
+                # Scale out
+                for gid in range(ngroups):
+                    # move gid to whatever it has to go
+
+                    #print("gid = %s gid' = %s\n" % (gid, (ngroups-gid-1)/ncontexts + 1))
+                    lid = gid
+                    if gid >= ncontexts:
+                        migrate(lid,t,0,gid,nodeaddr[ gid/ncontexts + 1 ],f)
+                    t += 1
+
+                if lid > 0:
+                    f.write("ServiceConfig.MicroBenchmark.MIGRATION_IDS = \"");
+                    first = True
+                    for i in range(ncontexts, ngroups):
+                        if first:
+                            first = False
+                        else:
+                            f.write(' ')
+                        f.write('migrate{}'.format(i))
+
+                    f.write("\"\n")
+
+                # Scale in
+                for gid in range(ngroups):
+                    # move gid to 1'st node
+
+                    #print("gid = %s gid' = %s\n" % (gid, (ngroups-gid-1)/ncontexts + 1))
+                    lid = gid+ngroups
+                    if gid >= ncontexts:
+                        migrate(lid,t,0,gid,nodeaddr[ 1 ],f)
+                    t += 1
+
+                if lid > 0:
+                    f.write("ServiceConfig.MicroBenchmark.MIGRATION_IDS2 = \"");
+                    first = True
+                    for i in range(ncontexts,ngroups):
+                        if first:
+                            first = False
+                        else:
+                            f.write(' ')
+                        f.write('migrate{}'.format(i+ngroups))
+
+                    f.write("\"\n")
+
+
             else:
                 assert 0, "You must specify appropriate MIGRATION_TYPE!"
     

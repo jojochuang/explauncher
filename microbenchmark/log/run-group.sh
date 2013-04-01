@@ -1,13 +1,26 @@
 # generate sorted result.
 
 app="microbenchmark"
+#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final01-cpuload
 logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
 
 # Generate "combined table" of all experiments.
+#type="var_cpuload"
+type="fixed_cpuload"
+
+if [[ "$type" = "var_cpuload" ]]; then
+  echo "generating var_cpuload"
+  logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final01-cpuload
+elif [[ "$type" = "fixed_cpuload" ]]; then
+  echo "generating fixed_cpuload"
+  logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final03-cpuload-fixedcontexts
+fi
+
+
 ./parse-group.sh $logdir > data/group-all.dat
 
 # Get the list of identifiers
-ids=(`cat result.dat | awk '{print $2}' | uniq`)
+ids=(`cat data/group-all.dat | awk '{print $2}' | uniq`)
 
 # Generate throughput-added file for each identifiers.
 
@@ -17,8 +30,13 @@ for i in "${ids[@]}"; do
   cat data/group-id-${i}.dat
   echo ""
 
-  # Now plotting with group.py
-  ./plot-group.py -i data/group-id-${i}.dat -o result/group-id-${i}.pdf
+  if [[ "$type" = "var_cpuload" ]]; then
+    # Now plotting with group.py
+    ./plot-group-varcpu.py -i data/group-id-${i}.dat -o result/group-id-${i}.pdf
+  elif [[ "$type" = "fixed_cpuload" ]]; then
+    # Now plotting with group.py
+    ./plot-group-fixcpu.py -i data/group-id-${i}.dat -o result/group-id-${i}.pdf
+  fi
 done
 
 

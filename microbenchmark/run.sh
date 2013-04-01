@@ -8,8 +8,8 @@ runtime=1000  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
-#nruns=5      # number of replicated runs
+#nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
 
 #samehead=1
@@ -43,19 +43,32 @@ for flavor in context; do
   #for t_primes in 1 2 4 8 16 32 64 128 256 512 1024 2048 4096; do
   #for t_primes in 0 10 20 40 80 160; do
   #for t_primes in 40 80 160; do
-  for t_primes in 0; do
-  #for t_primes in 300 400; do
+  #for t_primes in 0 100 150 200 300 400; do
+  #for t_primes in 0 100 200 300 400; do
+  #for t_primes in 0; do
+  for t_primes in 150; do
 
-    for t_payload in 0 100000 200000 400000 800000 1600000 3200000 6400000 128000000; do
+    #for t_payload in 100000 200000 400000 800000 1600000 3200000 6400000 12800000; do       # size of bytes of each context space. set this if you want to test migration effect.
+    #for t_payload in 0 100000000 200000000 400000000; do       # size of bytes of each context space. set this if you want to test migration effect.
+    #for t_payload in 102400000 204800000 409600000; do       # size of bytes of each context space. set this if you want to test migration effect.
+    #for t_payload in 12800000; do
+    for t_payload in 0; do
+
     #for t_nodes in 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1 2 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 0 1 2 4 8; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 2 4 8; do        # number of physical machines you will be using (excluding head node)
-    #for t_nodes in 10; do        # number of physical machines you will be using (excluding head node)
-    for t_nodes in 2; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 1 2 4 8; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 2; do        # number of physical machines you will be using (excluding head node)
+    for t_nodes in 10; do        # number of physical machines you will be using (excluding head node)
 
       samehead=0
+
+      # Set this 1 if you want to start all the contexts at first node.
+      # CAUTION ! Do this only for testing scale-out-and-in migration
+      #
+      #start_same_node=1
 
       if [[ $t_nodes -eq 0 ]]; then
         samehead=1
@@ -72,20 +85,23 @@ for flavor in context; do
 
       #for (( c=1; c <= $ncontexts; c++ )); do
       #for t_contexts in 1; do   # number of context per each physical machine
-      #for t_contexts in 8; do   # number of context per each physical machine
+      #for t_contexts in 2; do   # number of context per each physical machine
       #for t_contexts in 1 2; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
       #for t_contexts in 64 128 256 512; do   # number of context per each physical machine
-      #for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
+      for t_contexts in 1 2 4 8 16; do   # number of context per each physical machine
       #for t_contexts in 1 2 4 8 16 32 64 128 256 512 1024; do   # number of context per each physical machine
       #for t_contexts in 2 4 8; do   # number of context per each physical machine
-      for t_contexts in 2; do   # number of context per each physical machine
+      #for t_contexts in 2; do   # number of context per each physical machine
+      #for t_totcontexts in 160; do
+        #t_contexts=$(($t_totcontexts/$t_nodes))
 
         t_groups=$(($t_contexts * $t_nodes))
 
         t_iterations=100
 
-        for total_events in 1000000; do
+        #for total_events in 10000000; do # Recommended for migration test
+        for total_events in 1000000; do # Recommended for other cpuload test
         #for total_events in 100000; do
 
           t_events=$(( $total_events / $t_iterations / $t_groups ))
@@ -147,6 +163,8 @@ for flavor in context; do
             fi
 
             # print out mappings
+            # CHANGE THIS TO BE CREATED BY ./configure.py !!!!!!!!!!
+
             if [[ $samehead -eq 1 ]]; then
               key_start=0
               key_end=$t_nodes
@@ -159,8 +177,14 @@ for flavor in context; do
                 value=0
                 for (( key=$key_start; key < $key_end; key++ )); do
                   for (( c=1; c <= $t_contexts; c++ )); do
-                    echo "mapping = ${key}:Group[${value}]" >> ${conf_file}
-                    echo "lib.ContextJobApplication.MicroBenchmark.mapping = ${key}:Group[${value}]" >> ${conf_file}
+
+                    if [[ $start_same_node -eq 1 ]]; then
+                      echo "mapping = ${key_start}:Group[${value}]" >> ${conf_file}
+                      echo "lib.ContextJobApplication.MicroBenchmark.mapping = ${key_start}:Group[${value}]" >> ${conf_file}
+                    else
+                      echo "mapping = ${key}:Group[${value}]" >> ${conf_file}
+                      echo "lib.ContextJobApplication.MicroBenchmark.mapping = ${key}:Group[${value}]" >> ${conf_file}
+                    fi
                     value=$(($value+1))
                   done
                 done
