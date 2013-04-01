@@ -1,7 +1,8 @@
 # generate sorted result.
 
 #app="microbenchmark"
-logdir=final01-cloud
+#logdir=final01-cloud
+logdir=data
 
 cd $logdir
 
