@@ -1,3 +1,5 @@
+#!/bin/bash
+
 app="microbenchmark"
 
 #logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
@@ -23,7 +25,13 @@ if [[ "$type" = "publish" ]]; then
   #gnuplot < timeseries-throughput.plot
   #gnuplot < timeseries-migration.plot
 elif [[ "$type" = "instant" ]]; then
+  logdir=/u/tiberius06_s/yoo7/logs/tag
   echo "generating instant"
+  ./check-assert.sh $type $logdir
+  if [[ $? -ne 0 ]]; then
+    echo "There is assertion failure."
+    #exit 0
+  fi
   ./parse-timeseries.sh $type $logdir
   gnuplot < timeseries-latency.plot
   gnuplot < timeseries-throughput.plot
@@ -50,10 +58,11 @@ fi
 
 
 cd result
-epspdf tag-latency.eps
-epspdf tag-throughput.eps
-epspdf tag-migration.eps
-epspdf tag-nserver.eps
+ls *.eps | xargs --max-lines=1 epspdf
+#epspdf tag-latency.eps
+#epspdf tag-throughput.eps
+#epspdf tag-migration.eps
+#epspdf tag-nserver.eps
 rm *.eps
 #mv timeseries.pdf result
 #rm *.eps *.pdf

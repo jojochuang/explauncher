@@ -48,5 +48,6 @@ tag/conf/params-run-*
 tag/conf/params-basic.conf
 tag/conf/boot
 
+ec2/conf/ami-id
 
 

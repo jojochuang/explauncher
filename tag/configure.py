@@ -573,9 +573,9 @@ def main(options):
             for j in range(num_clients):
                 join_time = int(rnd.gauss(day_join,day_error) * day_period % day_period)
                 leave_time = int(rnd.gauss(day_leave,day_error) * day_period % day_period)
-                if join_time < 0:
+                while join_time < 0:
                     join_time += day_period
-                if leave_time < 0:
+                while leave_time < 0:
                     leave_time += day_period
 
                 assert join_time >=0 and join_time < day_period
@@ -596,6 +596,33 @@ def main(options):
                 f.write('LEAVE_TIME_{} = {}\n'.format(
                     i,
                     int(rnd.gauss(day_leave,day_error) * day_period) % day_period))
+                i += 1
+
+        elif param["JOIN_TYPE"] == "ROUND":
+
+            for j in range(num_clients):
+                mid_time = int(rnd.gauss( (day_join+day_leave)/2, day_error) * day_period % day_period)
+                while mid_time < 0:
+                    mid_time += day_period
+                period = rnd.gauss( 0.2, day_error) * day_period
+                while period < 0:
+                    period += day_period
+                join_time = int((mid_time - period) % day_period)
+                leave_time = int((mid_time + period) % day_period)
+
+                while join_time < 0:
+                    join_time += day_period
+                while leave_time < 0:
+                    leave_time += day_period
+
+                assert join_time >=0 and join_time < day_period
+                assert leave_time >=0 and leave_time < day_period
+
+
+                f.write('JOIN_TIME_{} = {}\n'.format(
+                    i,join_time))
+                f.write('LEAVE_TIME_{} = {}\n'.format(
+                    i,leave_time))
                 i += 1
         else:
             assert 0, "Please specify JOIN_TYPE"

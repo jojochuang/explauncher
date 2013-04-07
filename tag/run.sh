@@ -15,7 +15,7 @@ nruns=1      # number of replicated runs
 #day_period=360000000
 #day_period=100000000
 prejoin_wait_time_per_client=500000
-prejoin_minimum_wait_time=10000000
+prejoin_minimum_wait_time=20000000
 #day_period=100000000
 #day_period=10000000
 day_period=40000000
@@ -23,15 +23,18 @@ day_period=40000000
 #day_period=20000000
 day_join=0.2
 day_leave=0.5
-day_error=0.12
+#day_error=0.12
+day_error=0.2
 t_days=6
 
 #server_movement_period=500000
-server_movement_period=300000
+#server_movement_period=300000
+server_movement_period=1000000
 #server_movement_period=150000
 #server_movement_period=150000
 #client_request_period=500000
-client_request_period=500000
+#client_request_period=500000
+client_request_period=2000000
 
 
 #samehead=1
@@ -80,8 +83,9 @@ for t_server_machines in 8; do
   for t_client_machines in 2; do
     #for t_clients in 500; do
     #for t_clients in 64; do
-    for t_clients in 128; do
     #for t_clients in 128; do
+    #for t_clients in 128; do
+    for t_clients in 256; do
     #for t_clients in 8; do
       t_clients_per_machine=$(($t_clients/$t_client_machines))
 
@@ -103,7 +107,7 @@ for t_server_machines in 8; do
 
         #for t_primes in 500; do  # Additional computation payload at the server.
         #for t_primes in 100; do  # Additional computation payload at the server.
-        for t_primes in 400; do  # Additional computation payload at the server.
+        for t_primes in 150; do  # Additional computation payload at the server.
 
           t_buildings_per_server=$(($t_buildings/$t_servers))
 

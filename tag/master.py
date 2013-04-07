@@ -75,7 +75,7 @@ def main(options):
         command=cmd))
 
     # Killall the experiment
-    cmd = 'killall python2.7 worker-run.py {binary}'.format(
+    cmd = 'killall python2.7 worker-run.py {binary} sar worker-sar.sh'.format(
             binary=param["BINARY"])
     Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
         num_machines=param["num_machines"], 
@@ -96,7 +96,7 @@ def main(options):
         verbose=False)
 
     # Adjust log directory permission
-    Utils.shell_exec("chmod -R a+rx %s" % log_dir)
+    Utils.shell_exec("chmod -R a+rwx %s" % log_dir)
 
     # Unregister for monitor
     if options.monitor:

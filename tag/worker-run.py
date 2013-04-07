@@ -31,6 +31,8 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     Utils.chdir(subdir)
 
     # Run the application
+    start_time = Utils.unixTime()
+
     app = "%s/%s" % (param["BIN"], param["BINARY"])
 
     if app_type == "server":
@@ -69,7 +71,11 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             ip=ipaddr.strip().split(":")[0],
             port=ipaddr.strip().split(":")[1]),
             log=logfile)
+
+    end_time = Utils.unixTime()
+
     logger.info("Process %s exited." % nid)
+    logger.info("Total execution time : %f sec", end_time - start_time)
     
 
 def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
@@ -94,6 +100,9 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     Utils.chdir(subdir)
 
     # Run the application
+
+    start_time = Utils.unixTime()
+
     app = "%s/%s" % (param["BIN"], param["BINARY"])
     #cmd = '{application} {pfile} -MACE_PORT {port}'.format(
         #application=app,
@@ -106,13 +115,18 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
         pfile=paramfile,
         port=ipaddr.strip().split(":")[1]),
         log=logfile)
+    
+    end_time = Utils.unixTime()
+    
     logger.info("Process %s exited." % nid)
+    logger.info("Total execution time : %f sec", end_time - start_time)
 
     # If the head is killed, kill the rest of the machines.
 
     logger.info("Head is trying to kill read of the machines.")
 
-    cmd = 'killall python2.7 worker-run.py {binary}'.format(
+    #cmd = 'killall python2.7 worker-run.py {binary}'.format(
+    cmd = 'killall python2.7 {binary}'.format(
             binary=param["BINARY"])
     Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
         num_machines=param["num_machines"], 
@@ -146,6 +160,15 @@ def main(options):
     logger.info("myhost = %s" % myhost)
     #logger.info("ulimit\n%s\n" % ulimit)
 
+    # Launching sar
+    #Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        #binary = param["BINARY"],
+        #logdir = param["SCRATCHDIR"],
+        #logname = "client-%s-sar.log",
+        #interval = "1",
+        #runtime = param["run_time"]))
+
+
     # Read boot file and launch the application.
     # As defined in the boot file, you will run the process with Popen (in Utils.py)
     plist = []
@@ -173,9 +196,8 @@ def main(options):
             p.join()
 
 
-
-
-
+    # Killing sar
+    Utils.shell_exec('killall worker-sar.sh sar')
 
 
 ###############################################################################
