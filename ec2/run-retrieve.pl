@@ -43,9 +43,9 @@ GetOptions("mace_rsync" => \$mace_rsync,
        );
 
 
-my $ec2_key = "AKIAIGXNKNV5WAFF2CWA";
-my $ec2_pass = "kA1nDQ9KmnTf0DhiK9hxL39mUYA4Kb7s8rxHuc4V";
-my $ec2_instance = "i-42849d3f";
+my $ec2_key = "AKIAIYLTU627SYDCUERQ";
+my $ec2_pass = "Om7X3l1nqqLJ4DPx2BeJW5iAEInwYfWoLlXEySCk";
+my $ec2_instance = "i-12c9aafc";
 
 #sed -i".bak" '/ecdsa/d' known_hosts
 #my $ami_id = "ami-3a49f353";
