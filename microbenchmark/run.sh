@@ -24,12 +24,13 @@ fi
 
 application="microbenchmark"
 
-user="yoo7"
-home="/homes/yoo7"                                       # Home directory
-bin="/homes/yoo7/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
+user="ubuntu"
+home="/home/ubuntu"                                       # Home directory
+bin="/home/ubuntu/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
-logdir="/u/tiberius06_s/yoo7/logs/${application}"        # Log collection directory
-scratchdir="/scratch/yoo7/tmp/${application}"            # Scratch directory location
+#logdir="/u/tiberius06_s/yoo7/logs/${application}"        # Log collection directory
+logdir="/home/ubuntu/logs/${application}"        # Log collection directory
+scratchdir="/home/ubuntu/tmp/${application}"            # Scratch directory location
 
 conf_dir="${bin}/conf"                    # Configuration directory
 conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
@@ -61,7 +62,8 @@ for flavor in context; do
     #for t_nodes in 2 4 8; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1 2 4 8; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 2; do        # number of physical machines you will be using (excluding head node)
-    for t_nodes in 10; do        # number of physical machines you will be using (excluding head node)
+    #for t_nodes in 10; do        # number of physical machines you will be using (excluding head node)
+    for t_nodes in 1; do        # number of physical machines you will be using (excluding head node)
 
       samehead=0
 
@@ -201,7 +203,7 @@ for flavor in context; do
             fi
 
             echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-            ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+            ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
 
             sleep 5
 
