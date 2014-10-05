@@ -7,8 +7,10 @@ if [[ $# -ge 1 ]]; then
 fi
 
 cd $logdir
+#pwd
 
-file=(`find ./ -name '*head*' | grep payload | xargs zgrep -l execution_time | sort`)
+#file=(`find ./ -name '*head*' | grep payload | xargs zgrep -l execution_time | sort`)
+file=(`find ./ -name '*head*' | xargs zgrep -l execution_time | sort`)
 
 #echo -e "TYPE\tID\tNUM_MACHINES\tNCONTEXT\tNPRIME\tNEVENT\tTIME\tNUM_COMMIT"
 #microbenchmark-context-default-n1-c1-p1-e10000-20130313-16-35-52

@@ -2,6 +2,7 @@
 
 from optparse import OptionParser
 import logging
+import random
 
 import Utils
 
@@ -36,13 +37,25 @@ def main(options):
     # Read host file
     ipaddr = []
     hostname = []
+    lines = []
 
     with open(options.host, "r") as h:
-        for line in h:
-            ip = Utils.shell_exec("host %s | awk '{print $2}'" % line.strip(), verbose=False)
+        for l in h:
+            lines.append(l.strip())
+
+        if param["SHUFFLE_HOSTS"] == "1":
+            random.shuffle(lines)
+
+        for line in lines:
+            if param["EC2"] == "1":
+                ip = Utils.shell_exec("host %s | head -1 | awk '{print $4}'" % line.strip(), verbose=False)
+            else:
+                ip = Utils.shell_exec("host %s | awk '{print $2}'" % line.strip(), verbose=False)
             #print("host = %s, ip = %s" % (line.strip(), ip.strip()))
             hostname.append(line.strip())
             ipaddr.append(ip.strip())
+
+        
 
     assert len(ipaddr) > 0, "Number of machines in host file should exist at least one"
     assert len(ipaddr) >= options.machines, "number of machines in host file is smaller than --machines"
@@ -82,7 +95,10 @@ def main(options):
             port += 1
 
         # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
-        f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))
+        if param["EC2"] == "1":
+            f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -f | awk '{print $1}'", verbose=False)))
+        else:
+            f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))
 
         # write down HEAD_IPADDR, which is the first node in the hosts file
         f.write( "HEAD_IPADDR = %s\n" % ipaddr[0] )

@@ -37,7 +37,7 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,param, paramfile):
         #port=ipaddr.strip().split(":")[1])
     #logger.info("cmd = %s" % cmd)
     #app = "echo"
-    r = Utils.process_exec('{application} {pfile} -MACE_PORT {port}'.format(
+    r = Utils.process_exec('ulimit -n 100000; ulimit -c unlimited; {application} {pfile} -MACE_PORT {port}'.format(
         application=app,
         pfile=paramfile,
         port=ipaddr.strip().split(":")[1]),
@@ -71,7 +71,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,param, paramfile):
         #pfile=paramfile,
         #port=ipaddr.strip().split(":")[1])
     #logger.info("cmd = %s" % cmd)
-    r = Utils.process_exec('{application} {pfile} -MACE_PORT {port}'.format(
+    r = Utils.process_exec('ulimit -n 100000; ulimit -c unlimited; {application} {pfile} -MACE_PORT {port}'.format(
         application=app,
         pfile=paramfile,
         port=ipaddr.strip().split(":")[1]),
@@ -84,7 +84,8 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,param, paramfile):
 
     cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTNOHEADFILE"],
         command=cmd))
@@ -100,7 +101,12 @@ def main(options):
     # Some initialization
     param = Utils.param_reader(options.paramfile)
 
-    myhost = Utils.shell_exec('hostname -s', verbose=False)
+    ulimit_log = Utils.shell_exec('ulimit -n 100000; ulimit -c unlimited; ulimit -a', verbose=True)
+
+    if param["EC2"] == "1":
+        myhost = Utils.shell_exec('hostname -f', verbose=False)
+    else:
+        myhost = Utils.shell_exec('hostname -s', verbose=False)
     myhost = myhost.strip()
     Utils.mkdirp(param["SCRATCHDIR"])
     Utils.chdir(param["SCRATCHDIR"])
@@ -112,6 +118,7 @@ def main(options):
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
+    logger.info("ulimit info\n%s\n" % ulimit_log)
 
     # Read boot file and launch the application.
     # As defined in the boot file, you will run the process with Popen (in Utils.py)

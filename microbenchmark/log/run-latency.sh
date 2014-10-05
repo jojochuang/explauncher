@@ -1,19 +1,21 @@
 # generate sorted result.
 
 app="microbenchmark"
-logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+logdir=/home/ubuntu/logs/microbenchmark
 
 type="latency"
 
 if [[ "$type" = "latency" ]]; then
   echo "generating latency result"
-  logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final02-context-size-latency
+  #logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final02-context-size-latency
 fi
 
 
 
 # (Plotting migration latency by varying context size)
 # Generate "combined table" of all experiments.
+#./parse-latency.sh $logdir
 ./parse-latency.sh $logdir > data/latency-all.dat
 
 # Get the list of identifiers

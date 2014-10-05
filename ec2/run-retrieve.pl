@@ -8,11 +8,12 @@ unless (@ARGV) {
     print "usage: $0\n";
     print "  -m (rsync maceclean-project)\n";
     print "  -f (rsync mace-project)\n";
+    print "  -b (rsync benchmark)\n";
 
     print "  -r (regenerate conf/slave from conf/instance)\n";
     print "  -p (do parallel ssh for pwd)\n";
     print "  -t (terminate all running instances)\n";
-    print "  -a [create add start stop terminate] instances\n";
+    print "  -a [CREATE ADD START STOP TERMINATE] instances\n";
 
     print "  -s (sync machine lists)\n";
     print "  -i (create new ami image)\n";
@@ -23,6 +24,7 @@ unless (@ARGV) {
 
 my $mace_rsync = 0;
 my $fullcontext_rsync = 0;
+my $benchmark_rsync = 0;
 my $pssh = 0;
 my $action = "";
 my $regenerate = 0;
@@ -33,6 +35,7 @@ my $delete = "";
 
 GetOptions("mace_rsync" => \$mace_rsync,
            "fullcontext_rsync" => \$fullcontext_rsync,
+           "benchmark_rsync" => \$benchmark_rsync,
            "pssh" => \$pssh,
            "action=s" => \$action,
            "regenerate" => \$regenerate,
@@ -225,21 +228,33 @@ if( $fullcontext_rsync) {
     print "\$ cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/mace-project/ {}:~/mace-project\n";
     print `cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/mace-project/ {}:~/mace-project`
 }
-    
-print "\$ cp all-list.txt fullcontext-list.txt\n";
-print "\$ cp all-list.txt gol-list.txt\n";
-print `cp all-list.txt fullcontext-list.txt`;
-print `cp all-list.txt gol-list.txt`;
-print "\$ ./process-list.rb all fullcontext gol\n";
-print `./process-list.rb all fullcontext gol`;
 
-if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $sync ) {
-    if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" ) {
-        sleep(30);
-    }
-    print "\$ /home/ubuntu/pssh-2.2/bin/pscp -h conf/slave ~/machine-list/* ~/machine-list"."\n";
-    print `/home/ubuntu/pssh-2.2/bin/pscp -h conf/slave ~/machine-list/* ~/machine-list`."\n";
+if( $benchmark_rsync) {
+    print "\$ cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark\n";
+    print `cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark`
 }
+    
+#print "\$ cp all-list.txt fullcontext-list.txt\n";
+#print "\$ cp all-list.txt gol-list.txt\n";
+#print `cp all-list.txt fullcontext-list.txt`;
+#print `cp all-list.txt gol-list.txt`;
+#print "\$ ./process-list.rb all fullcontext gol\n";
+#print `./process-list.rb all fullcontext gol`;
+
+# Copy "hostname -s" only to conf/hosts.
+
+print "\$ cp conf/slave ../microbenchmark/conf/hosts\n";
+print `cp conf/slave ../microbenchmark/conf/hosts`;
+#print "\$ cat conf/slave | cut -f1 -d'.' > ../microbenchmark/conf/hosts\n";
+#print `cat conf/slave | cut -f1 -d'.' > ../microbenchmark/conf/hosts`;
+
+#if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $sync ) {
+    #if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" ) {
+        #sleep(30);
+    #}
+    #print "\$ /home/ubuntu/pssh-2.2/bin/pscp -h conf/slave ~/machine-list/* ~/machine-list"."\n";
+    #print `/home/ubuntu/pssh-2.2/bin/pscp -h conf/slave ~/machine-list/* ~/machine-list`."\n";
+#}
 
 sub subexecute {
     my $cmd = shift;
@@ -282,4 +297,4 @@ sub trim {
     }
     return wantarray ? @out : $out[0];
 } # trim
-                                
+

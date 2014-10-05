@@ -7,6 +7,7 @@ import os
 import sys
 import shutil
 import signal
+import resource
 
 logger = logging.getLogger('Benchmark.Utils')
 
@@ -14,6 +15,12 @@ def unixTime():
     """ Return current unix time """
 
     return time.time()
+
+def setlimits():
+    """ Set maximum number of open file to 4096 to child process """
+    #print "Setting resource limit in child (pid %d)" % os.getpid()
+    #resource.setrlimit(resource.RLIMIT_NOFILE, (4096, 4096))
+    resource.setrlimit(resource.RLIMIT_NOFILE, (100000, 100000))
 
 def process_exec(cmd, log, verbose=True):
     """ Run the command with Popen() and return output as string """
@@ -25,6 +32,7 @@ def process_exec(cmd, log, verbose=True):
         try:
             #r = subprocess.check_output("%s 2>&1 > %s" % (cmd, log), stderr=subprocess.STDOUT, shell=True)
             #os.system("/bin/bash -c \"%s\" 2>&1 > %s" % (cmd, log))
+            #p = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=f, stderr=f, preexec_fn=setlimits)
             p = subprocess.Popen(cmd, shell=True, universal_newlines=True, stdout=f, stderr=f)
             p.wait()
             f.flush()
@@ -115,7 +123,8 @@ def mkdirp(path):
     """
     logger.info("Creating directory %s", path)
     if not os.path.isdir(path):
-        os.mkdir(path)
+        os.makedirs(path)
+        #os.mkdir(path)
 
 def chdir(path):
     """

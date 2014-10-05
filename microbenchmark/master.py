@@ -48,17 +48,46 @@ def main(options):
     # Killall the experiment
     cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
 
     # Clean up scratch directory
     cmd = "'rm -rvf %s'" % param["SCRATCHDIR"]
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
+
+    # Sync the conf/* if needed
+    # Affected files are : boot hosts-run hosts-run-nohead params-run.conf
+    if param["SYNC_CONF_FILES"] == "1":
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {bootfile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            bootfile=param["BOOTFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostfile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostnoheadfile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            hostnoheadfile=param["HOSTNOHEADFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            conffile=param["CONFFILE"],
+            confdir=param["CONFDIR"]))
+
 
     # Run worker-run-microbenchmark.py with PSSH
     # PSSH will be launched via fork() to catch Ctrl+C to stop the
@@ -66,7 +95,8 @@ def main(options):
     cmd = '{bin}/worker-run.py -p {paramfile}'.format(
             bin=param["BIN"],
             paramfile="%s/%s" % (param["BIN"], options.paramfile))
-    Utils.shell_launch('ulimit -c unlimited; pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+    Utils.shell_launch('ulimit -c unlimited; {pssh_dir}/pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         run_time=param["run_time"],
         hostfile=param["HOSTRUNFILE"],
@@ -75,7 +105,8 @@ def main(options):
     # Killall the experiment
     cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
@@ -86,12 +117,13 @@ def main(options):
             paramfile="%s/%s" % (param["BIN"], options.paramfile),
             logdir=log_dir)
 
-    Utils.shell_exec('ulimit -c unlimited; pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+    Utils.shell_exec('ulimit -c unlimited; {pssh_dir}/pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         run_time=param["run_time"],
         hostfile=param["HOSTRUNFILE"],
         command=cmd),
-        verbose=False)
+        verbose=True)
 
     # Adjust log directory permission
     Utils.shell_exec("chmod -R a+rx %s" % log_dir)

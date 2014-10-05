@@ -1,10 +1,11 @@
 app="microbenchmark"
 
 #logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
-logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
-type="migration_before_and_after"
+#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+logdir=/home/ubuntu/logs/microbenchmark
+#type="migration_before_and_after"
 #type="migration_scale_out_and_in"
-#type="instant"
+type="instant"
 
 # We need a better plot parser
 
@@ -24,6 +25,11 @@ elif [[ "$type" = "migration_scale_out_and_in" ]]; then
   gnuplot < timeseries-scale-out-and-in.plot
 else
   echo "generating instant"
+  ./check-assert.sh $type $logdir
+  if [[ $? -ne 0 ]]; then
+    echo "There is assertion failure."
+    #exit 0
+  fi
   ./parse-timeseries.sh $type $logdir
   gnuplot < timeseries-instant.plot
 fi
@@ -31,9 +37,9 @@ fi
 
 
 cd result
-epspdf migration-before-and-after-0.eps
-epspdf migration-before-and-after-100.eps
-#ls *.eps | xargs epspdf
+#epspdf migration-before-and-after-0.eps
+#epspdf migration-before-and-after-100.eps
+ls *.eps | xargs --max-lines=1 epspdf
 #epspdf timeseries.eps
 #rm *.eps
 #mv timeseries.pdf result
