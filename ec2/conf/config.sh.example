@@ -1,0 +1,9 @@
+#!/bin/bash
+# Access key given by EC2
+ACCESS_KEY=""
+# Secret key given by EC2
+SECRET_KEY=""
+# instance id of the master node
+instance_id=""
+# pem file name/path for ssh connection
+pem_file=""

@@ -4,6 +4,8 @@ use strict;
 use Getopt::Long;
 #use Math;
 
+require "conf/config.pl";
+
 unless (@ARGV) {
     print "usage: $0\n";
     print "  -m (rsync maceclean-project)\n";
@@ -12,7 +14,7 @@ unless (@ARGV) {
 
     print "  -r (regenerate conf/slave from conf/instance)\n";
     print "  -p (do parallel ssh for pwd)\n";
-    print "  -t (terminate all running instances)\n";
+    print "  -t (terminate all running instances) [ unimplemented ]\n";
     print "  -a [CREATE ADD START STOP TERMINATE] instances\n";
 
     print "  -s (sync machine lists)\n";
@@ -46,10 +48,10 @@ GetOptions("mace_rsync" => \$mace_rsync,
        );
 
 
-my $ec2_key = "AKIAIGXNKNV5WAFF2CWA";
-my $ec2_pass = "kA1nDQ9KmnTf0DhiK9hxL39mUYA4Kb7s8rxHuc4V";
-my $ec2_instance = "i-42849d3f";
-
+my $ec2_key = get_ec2key();
+my $ec2_pass = get_ec2pass();
+my $ec2_instance = get_ec2instance();
+my $key_pair_name = get_keypairname();
 #sed -i".bak" '/ecdsa/d' known_hosts
 #my $ami_id = "ami-3a49f353";
 
@@ -93,7 +95,7 @@ if( $action eq "START" ) {
 
 # Create instances
 if( $action eq "CREATE" ) {
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k shyoo -t m1.small --availability-zone us-east-1a | grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small --availability-zone us-east-1a | grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -120,7 +122,7 @@ if( $action eq "CREATE" ) {
 }
 
 if( $action eq "ADD" ) {
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k shyoo -t m1.small | grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small | grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
