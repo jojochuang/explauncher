@@ -85,12 +85,12 @@ def main(options):
         # print nodeset
         port = options.port
         for i in range(options.machines):
-            f.write( 'nodeset = {}:{}\n'.format(
-                ipaddr[i],
-                port))
-            f.write( 'lib.ContextJobApplication.nodeset = IPV4/{}:{}\n'.format(
-                ipaddr[i],
-                port))
+            #f.write( 'nodeset = {}:{}\n'.format(
+            #    ipaddr[i],
+            #    port))
+            #f.write( 'lib.MApplication.nodeset = IPV4/{}:{}\n'.format(
+            #    ipaddr[i],
+            #    port))
             nodeaddr.append("%s:%s" % ( ipaddr[i], port) )
             port += 1
 
@@ -147,7 +147,7 @@ def main(options):
 
                 # Now print out migrate keys
                 if lid > 0:
-                    f.write("lib.ContextJobApplication.timed_migrate =");
+                    f.write("lib.MApplication.timed_migrate =");
                     for i in range(lid):
                         f.write(' migrate{}'.format(i))
 
@@ -168,7 +168,7 @@ def main(options):
 
                 # Now print out migrate keys
                 #if lid > 0:
-                    #f.write("lib.ContextJobApplication.timed_migrate =");
+                    #f.write("lib.MApplication.timed_migrate =");
                     #for i in range(ngroups):
                         #f.write(' migrate{}'.format(i))
 

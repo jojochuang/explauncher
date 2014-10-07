@@ -1,7 +1,7 @@
 app="microbenchmark"
 
-#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
-#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+#logdir=/u/tiberius06_s/chuangw/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
+#logdir=/u/tiberius06_s/chuangw/logs/microbenchmark
 logdir=/home/ubuntu/logs/microbenchmark
 #type="migration_before_and_after"
 #type="migration_scale_out_and_in"
@@ -16,7 +16,7 @@ type="instant"
 
 if [[ "$type" = "migration_before_and_after" ]]; then
   echo "generating before-and-after"
-  logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final04-migration-timeseries-varying-context
+  logdir=/u/tiberius06_s/chuangw/logs/microbenchmark_archive/final04-migration-timeseries-varying-context
   ./parse-timeseries.sh $type $logdir
   gnuplot < timeseries-before-and-after.plot
 elif [[ "$type" = "migration_scale_out_and_in" ]]; then

@@ -1,8 +1,8 @@
 # generate sorted result.
 
 app="microbenchmark"
-#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final01-cpuload
-#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+#logdir=/u/tiberius06_s/chuangw/logs/microbenchmark_archive/final01-cpuload
+#logdir=/u/tiberius06_s/chuangw/logs/microbenchmark
 logdir=/home/ubuntu/logs/microbenchmark
 
 # Generate "combined table" of all experiments.
@@ -11,10 +11,10 @@ type="fixed_cpuload"
 
 if [[ "$type" = "var_cpuload" ]]; then
   echo "generating var_cpuload"
-  logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final01-cpuload
+  logdir=/u/tiberius06_s/chuangw/logs/microbenchmark_archive/final01-cpuload
 elif [[ "$type" = "fixed_cpuload" ]]; then
   echo "generating fixed_cpuload"
-  #logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final03-cpuload-fixedcontexts
+  #logdir=/u/tiberius06_s/chuangw/logs/microbenchmark_archive/final03-cpuload-fixedcontexts
 fi
 
 

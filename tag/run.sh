@@ -186,7 +186,7 @@ for t_server_machines in 8; do
             echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
             #echo "EVENT_LIFE_TIME = 1" >> ${conf_file}
             echo "EVENT_READY_COMMIT = 1" >> ${conf_file}
-            #echo "lib.ContextJobApplication.debug = 1" >> ${conf_file}
+            #echo "lib.MApplication.debug = 1" >> ${conf_file}
 
             # print out bootfile & param for servers
             echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"

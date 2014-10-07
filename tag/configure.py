@@ -161,7 +161,7 @@ def main(options):
         # write for head
         f.write( 'nodeset = {}:{}\n'.format(
             ipaddr[i], options.port+i*2))
-        f.write( 'lib.ContextJobApplication.nodeset = IPV4/{}:{}\n'.format(
+        f.write( 'lib.MApplication.nodeset = IPV4/{}:{}\n'.format(
             ipaddr[i], options.port+i*2))
 
         i += 1
@@ -171,7 +171,7 @@ def main(options):
             sid = (1 + j % num_server_machines) % num_machines
             f.write( 'nodeset = {}:{}\n'.format(
                 ipaddr[sid], options.port+i*2))
-            f.write( 'lib.ContextJobApplication.nodeset = IPV4/{}:{}\n'.format(
+            f.write( 'lib.MApplication.nodeset = IPV4/{}:{}\n'.format(
                 ipaddr[sid], options.port+i*2))
             serveraddr.append("%s:%s" % ( ipaddr[sid], options.port+i*2) )
             i += 1
@@ -193,7 +193,7 @@ def main(options):
                 sid = (1 + i % num_server_machines) % num_machines
                 f.write( 'mapping = {}:Building[{}]\n'.format(
                     sid, i))
-                f.write( 'lib.ContextJobApplication.{}.mapping = {}:Building[{}]\n'.format(
+                f.write( 'lib.MApplication.{}.mapping = {}:Building[{}]\n'.format(
                     service_name, sid, i))
 
             # Kids
@@ -201,7 +201,7 @@ def main(options):
                 sid = (1 + i % num_server_machines) % num_machines
                 f.write( 'mapping = {}:Kid[{}]\n'.format(
                     sid, i))
-                f.write( 'lib.ContextJobApplication.{}.mapping = {}:Kid[{}]\n'.format(
+                f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
                     service_name, sid, i))
 
             # Also, add migration code
@@ -213,14 +213,14 @@ def main(options):
             for i in range(num_contexts):
                 f.write( 'mapping = {}:Building[{}]\n'.format(
                     1, i))
-                f.write( 'lib.ContextJobApplication.{}.mapping = {}:Building[{}]\n'.format(
+                f.write( 'lib.MApplication.{}.mapping = {}:Building[{}]\n'.format(
                     service_name, 1, i))
 
             # Kids
             for i in range(num_clients):
                 f.write( 'mapping = {}:Kid[{}]\n'.format(
                     1, i))
-                f.write( 'lib.ContextJobApplication.{}.mapping = {}:Kid[{}]\n'.format(
+                f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
                     service_name, 1, i))
 
             # Also, add migration code
@@ -247,14 +247,14 @@ def main(options):
             for i in range(num_contexts):
                 f.write( 'mapping = {}:Building[{}]\n'.format(
                     1, i))
-                f.write( 'lib.ContextJobApplication.{}.mapping = {}:Building[{}]\n'.format(
+                f.write( 'lib.MApplication.{}.mapping = {}:Building[{}]\n'.format(
                     service_name, 1, i))
 
             # Kids
             for i in range(num_clients):
                 f.write( 'mapping = {}:Kid[{}]\n'.format(
                     1, i))
-                f.write( 'lib.ContextJobApplication.{}.mapping = {}:Kid[{}]\n'.format(
+                f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
                     service_name, 1, i))
 
 
@@ -516,7 +516,7 @@ def main(options):
 
             # 3. Finally, activate all migration ids
             if mid > 0:
-                f.write("lib.ContextJobApplication.timed_migrate =");
+                f.write("lib.MApplication.timed_migrate =");
                 for i in range(mid):
                     f.write(' migrate{}'.format(i))
 

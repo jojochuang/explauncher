@@ -10,7 +10,7 @@ boottime=1   # total time to boot.
 runtime=300  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
-ec2=1        # set this if you are experimenting on EC2
+ec2=0        # set this if you are experimenting on EC2
 #shuffle_hosts=1  # set this to 1 to shuffle hosts file.
 shuffle_hosts=0  # set this to 1 to shuffle hosts file.
 
@@ -33,13 +33,13 @@ fi
 application="microbenchmark"
 
 if [[ $ec2 -eq 0 ]]; then
-  user="yoo7"
-  home="/homes/yoo7"                                       # Home directory
-  bin="/homes/yoo7/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
+  user="chuangw"
+  home="/homes/chuangw"                                       # Home directory
+  bin="/homes/chuangw/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
-  logdir="/u/tiberius06_s/yoo7/logs/${application}"        # Log collection directory
-  scratchdir="/scratch/yoo7/tmp/${application}"            # Scratch directory location
-  psshdir="/homes/yoo7/pssh-2.2/bin"
+  logdir="/u/tiberius06_s/chuangw/logs/${application}"        # Log collection directory
+  scratchdir="/scratch/chuangw/tmp/${application}"            # Scratch directory location
+  psshdir="/homes/chuangw/pssh/bin"
 else
   user="ubuntu"
   home="/home/ubuntu"                                       # Home directory
@@ -88,7 +88,7 @@ for flavor in context; do
     #for t_nodes in 128 64 32; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 64 32 16; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 128; do        # number of physical machines you will be using (excluding head node)
-    for t_nodes in 128; do        # number of physical machines you will be using (excluding head node)
+    for t_nodes in 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 16 8 4; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 16 8 4 2 1; do        # number of physical machines you will be using (excluding head node)
     #for t_nodes in 1 2 4 8; do        # number of physical machines you will be using (excluding head node)
@@ -230,15 +230,17 @@ for flavor in context; do
 
             if [ $flavor == "context" ]; then
                 value=0
+                initial_size=$(($key_end+1))
+                echo "lib.MApplication.initial_size = $initial_size" >> ${conf_file}
                 for (( key=$key_start; key < $key_end; key++ )); do
                   for (( c=1; c <= $t_contexts; c++ )); do
 
                     if [[ $start_same_node -eq 1 ]]; then
                       echo "mapping = ${key_start}:Group[${value}]" >> ${conf_file}
-                      echo "lib.ContextJobApplication.MicroBenchmark.mapping = ${key_start}:Group[${value}]" >> ${conf_file}
+                      echo "lib.MApplication.MicroBenchmark.mapping = ${key_start}:Group[${value}]" >> ${conf_file}
                     else
                       echo "mapping = ${key}:Group[${value}]" >> ${conf_file}
-                      echo "lib.ContextJobApplication.MicroBenchmark.mapping = ${key}:Group[${value}]" >> ${conf_file}
+                      echo "lib.MApplication.MicroBenchmark.mapping = ${key}:Group[${value}]" >> ${conf_file}
                     fi
                     value=$(($value+1))
                   done
@@ -246,7 +248,7 @@ for flavor in context; do
 
                 # Add one more group for dedicated event launcher.
                 echo "mapping = 0:Group[${value}]" >> ${conf_file}
-                echo "lib.ContextJobApplication.MicroBenchmark.mapping = 0:Group[${value}]" >> ${conf_file}
+                echo "lib.MApplication.MicroBenchmark.mapping = 0:Group[${value}]" >> ${conf_file}
 
             fi
 
@@ -258,7 +260,8 @@ for flavor in context; do
             if [[ $ec2 -eq 0 ]]; then
               # use monitor
               echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-              ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+              #./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+              ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
 
             else
               # do not use monitor

@@ -40,7 +40,7 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
                 logdir,
                 hostname,
                 nid)
-        logger.info('$ {application} {pfile} -service {service} -lib.ContextJobApplication.services {service} -MACE_PORT {port}'.format(
+        logger.info('$ {application} {pfile} -service {service} -lib.MApplication.services {service} -MACE_PORT {port}'.format(
             application=app,
             pfile=paramfile,
             service=param["server_service"],

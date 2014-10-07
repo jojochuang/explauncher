@@ -1,6 +1,6 @@
 #!/bin/bash
 
-logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+source conf.sh
 cwd=`pwd`
 #echo $cwd
 

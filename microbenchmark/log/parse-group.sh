@@ -1,6 +1,6 @@
 #!/bin/bash
 
-logdir=/u/tiberius06_s/yoo7/logs/microbenchmark
+source conf.sh
 
 if [[ $# -ge 1 ]]; then
     logdir=$1
