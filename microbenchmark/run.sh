@@ -230,7 +230,7 @@ for flavor in context; do
 
             if [ $flavor == "context" ]; then
                 value=0
-                initial_size=$(($key_end+1))
+                initial_size=$(($key_end))
                 echo "lib.MApplication.initial_size = $initial_size" >> ${conf_file}
                 for (( key=$key_start; key < $key_end; key++ )); do
                   for (( c=1; c <= $t_contexts; c++ )); do
