@@ -75,17 +75,17 @@ boot_file="conf/boot"
 # Rather, I would do 
 
 
-for t_server_machines in 1; do
+for t_server_machines in 3; do
   # For each server machine, you will run only one server process.
   t_servers=$t_server_machines
   t_servers_per_machine=$(($t_servers/$t_server_machines))
 
-  for t_client_machines in 1; do
+  for t_client_machines in 4; do
     #for t_clients in 500; do
     #for t_clients in 64; do
     #for t_clients in 128; do
     #for t_clients in 128; do
-    for t_clients in 1; do
+    for t_clients in 4; do
     #for t_clients in 8; do
       t_clients_per_machine=$(($t_clients/$t_client_machines))
 
@@ -173,6 +173,8 @@ for t_server_machines in 1; do
             echo "ServiceConfig.TagClient.PREJOIN_WAIT_TIME = ${prejoin_wait_time}" >> ${conf_file}
             echo "ServiceConfig.TagClient.EXIT_TIME = ${exit_time}" >> ${conf_file}
 echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
+            echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator Migration\"" >> ${conf_file}
+            echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
 
             #echo "ServiceConfig.MicroBenchmark.NUM_EVENTS = ${t_events}" >> ${conf_file}
@@ -186,18 +188,18 @@ echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
             echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
             echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
             echo "ServiceConfig.Throughput.role = 1" >>  ${conf_client_file}
-echo "ServiceConfig.Throughput.receiver_addr = IPV4/tiberius01:4000" >>  ${conf_client_file}
 
 
 
 
             echo -e "\n# Specific parameters for server" >> ${conf_file}
 
-            echo "MACE_LOG_AUTO_SELECTORS = Accumulator" >> ${conf_file}
-            echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
             #echo "EVENT_LIFE_TIME = 1" >> ${conf_file}
             #echo "EVENT_READY_COMMIT = 1" >> ${conf_file}
-            echo "lib.MApplication.initial_size = ${t_server_machines}" >> ${conf_file}
+
+
+            initial_server_size=$(($t_server_machines+1))
+            echo "lib.MApplication.initial_size = ${initial_server_size}" >> ${conf_file}
             echo "ServiceConfig.Throughput.role = 2" >>  ${conf_file}
             #echo "lib.MApplication.debug = 1" >> ${conf_file}
 

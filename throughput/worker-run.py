@@ -36,7 +36,7 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     app = "%s/%s" % (param["BIN"], param["BINARY"])
 
     if app_type == "server":
-        logfile = '{}/client-{}-server-{}.log'.format(
+        logfile = '{}/server-{}-{}.log'.format(
                 logdir,
                 hostname,
                 nid)
@@ -52,23 +52,23 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             port=ipaddr.strip().split(":")[1]),
             log=logfile)
     else: # client
-        logfile = '{}/client-{}-player-{}.log'.format(
+        sender_id = int(nid) - int(param["lib.MApplication.initial_size"])
+
+        logfile = '{}/client-{}-{}.log'.format(
                 logdir,
                 hostname,
                 nid)
-        logger.info('$ {application} {pfile} -service {service} -ServiceConfig.TagClient.CLIENT_ID {cid} -nodeset {ip}:{port} -mapping 0:Global -MACE_PORT {port}'.format(
+        logger.info('$ {application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
             application=app,
             pfile=clientfile,
             service=param["client_service"],
-            cid=nid,
-            ip=ipaddr.strip().split(":")[0],
+            sid=nid,
             port=ipaddr.strip().split(":")[1]))
-        r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.TagClient.CLIENT_ID {cid} -nodeset {ip}:{port} -mapping 0:Global -MACE_PORT {port}'.format(
+        r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
             application=app,
             pfile=clientfile,
             service=param["client_service"],
-            cid=nid,
-            ip=ipaddr.strip().split(":")[0],
+            sid=nid,
             port=ipaddr.strip().split(":")[1]),
             log=logfile)
 
@@ -89,7 +89,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     # Log filename
     logdir = param["SCRATCHDIR"]
-    logfile = '{}/client-{}-head-{}.log'.format(
+    logfile = '{}/head-{}-{}.log'.format(
             logdir,
             hostname,
             nid)
@@ -154,7 +154,7 @@ def main(options):
 
 
     # Configure log
-    Utils.configureLogging('Benchmark', output_file='client-{}-console.log'.format(myhost),
+    Utils.configureLogging('Benchmark', output_file='{}-console.log'.format(myhost),
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
