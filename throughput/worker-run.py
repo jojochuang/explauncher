@@ -62,13 +62,13 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             application=app,
             pfile=clientfile,
             service=param["client_service"],
-            sid=nid,
+            sid=sender_id,
             port=ipaddr.strip().split(":")[1]))
         r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
             application=app,
             pfile=clientfile,
             service=param["client_service"],
-            sid=nid,
+            sid=sender_id,
             port=ipaddr.strip().split(":")[1]),
             log=logfile)
 

@@ -2,8 +2,8 @@
 
 # This is the script that runs multiple microbenchmarks in fullcontext.
 
-mace_start_port=4000
-boottime=1   # total time to boot.
+mace_start_port=4100
+boottime=10   # total time to boot.
 #runtime=1000  # maximum runtime
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 #tcp_nodelay=0   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
@@ -112,11 +112,11 @@ for t_server_machines in 3; do
 
           t_buildings_per_server=$(($t_buildings/$t_servers))
 
-          t_threads=$(($t_buildings_per_server * 2))
+          #t_threads=$(($t_buildings_per_server * 2))
 
-          if [ $t_threads -le 2000 ]; then
-            t_threads=2000
-          fi
+          #if [ $t_threads -le 2000 ]; then
+          #  t_threads=2000
+          #fi
 
           for (( run=1; run <= $nruns; run++ )); do
 
@@ -153,28 +153,30 @@ for t_server_machines in 3; do
             echo "day_error = ${day_error}" >> ${conf_file}
             echo "num_days = ${t_days}" >> ${conf_file}
 
-            echo "MAX_ASYNC_THREADS = ${t_threads}" >> ${conf_file}
-            echo "MAX_TRANSPORT_THREADS = ${t_threads}" >> ${conf_file}
+            #echo "MAX_ASYNC_THREADS = ${t_threads}" >> ${conf_file}
+            #echo "MAX_TRANSPORT_THREADS = ${t_threads}" >> ${conf_file}
 
             echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
 
-            echo "ServiceConfig.TagServerAsync.NUM_BUILDINGS = ${t_buildings_per_server}" >> ${conf_file}
-            echo "ServiceConfig.TagServerAsync.NUM_ROOMS = ${t_rooms}" >> ${conf_file}
-            echo "ServiceConfig.TagServerAsync.MOVEMENT_PERIOD = ${server_movement_period}" >> ${conf_file}
-            echo "ServiceConfig.TagServerAsync.NUM_PRIMES = ${t_primes}" >> ${conf_file}
-            echo "ServiceConfig.TagServerAsync.EXIT_TIME = ${exit_time}" >> ${conf_file}
+            #echo "ServiceConfig.TagServerAsync.NUM_BUILDINGS = ${t_buildings_per_server}" >> ${conf_file}
+            #echo "ServiceConfig.TagServerAsync.NUM_ROOMS = ${t_rooms}" >> ${conf_file}
+            #echo "ServiceConfig.TagServerAsync.MOVEMENT_PERIOD = ${server_movement_period}" >> ${conf_file}
+            #echo "ServiceConfig.TagServerAsync.NUM_PRIMES = ${t_primes}" >> ${conf_file}
+            #echo "ServiceConfig.TagServerAsync.EXIT_TIME = ${exit_time}" >> ${conf_file}
 
 
-            echo "ServiceConfig.TagClient.ONE_DAY = ${day_period}" >> ${conf_file}
-            echo "ServiceConfig.TagClient.NUM_DAYS = ${t_days}" >> ${conf_file}
-            echo "ServiceConfig.TagClient.MOVEMENT_PERIOD = ${server_movement_period}" >> ${conf_file}
-            echo "ServiceConfig.TagClient.MAP_REQUEST_PERIOD = ${client_request_period}" >> ${conf_file}
-            echo "ServiceConfig.TagClient.PREJOIN_WAIT_TIME = ${prejoin_wait_time}" >> ${conf_file}
-            echo "ServiceConfig.TagClient.EXIT_TIME = ${exit_time}" >> ${conf_file}
+            #echo "ServiceConfig.TagClient.ONE_DAY = ${day_period}" >> ${conf_file}
+            #echo "ServiceConfig.TagClient.NUM_DAYS = ${t_days}" >> ${conf_file}
+            #echo "ServiceConfig.TagClient.MOVEMENT_PERIOD = ${server_movement_period}" >> ${conf_file}
+            #echo "ServiceConfig.TagClient.MAP_REQUEST_PERIOD = ${client_request_period}" >> ${conf_file}
+            #echo "ServiceConfig.TagClient.PREJOIN_WAIT_TIME = ${prejoin_wait_time}" >> ${conf_file}
+            #echo "ServiceConfig.TagClient.EXIT_TIME = ${exit_time}" >> ${conf_file}
 echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
-            echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator Migration\"" >> ${conf_file}
+            echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator\"" >> ${conf_file}
             echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
+            initial_server_size=$(($t_server_machines+1))
+            echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
 
 
             #echo "ServiceConfig.MicroBenchmark.NUM_EVENTS = ${t_events}" >> ${conf_file}
@@ -198,7 +200,7 @@ echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
             #echo "EVENT_READY_COMMIT = 1" >> ${conf_file}
 
 
-            initial_server_size=$(($t_server_machines+1))
+            echo "lib.MApplication.services = Throughput" >> ${conf_file}
             echo "lib.MApplication.initial_size = ${initial_server_size}" >> ${conf_file}
             echo "ServiceConfig.Throughput.role = 2" >>  ${conf_file}
             #echo "lib.MApplication.debug = 1" >> ${conf_file}

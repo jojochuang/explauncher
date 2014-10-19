@@ -196,7 +196,7 @@ def main(options):
 
             # Building
             for i in range(num_contexts):
-                sid = (1 + i % num_server_machines) % num_machines
+                sid = (0 + i % (num_server_machines+1) ) % num_machines
                 #f.write( 'mapping = {}:Building[{}]\n'.format(
                 #    sid, i))
                 f.write( 'lib.MApplication.{}.mapping = {}:Receiver[{}]\n'.format(
