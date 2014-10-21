@@ -75,18 +75,21 @@ boot_file="conf/boot"
 # Rather, I would do 
 
 
-for t_server_machines in 3; do
+for t_server_machines in 0 1 3; do
   # For each server machine, you will run only one server process.
   t_servers=$t_server_machines
   t_servers_per_machine=$(($t_servers/$t_server_machines))
 
-  for t_client_machines in 4; do
+  t_client_machines=$($t_server_machines+1)
+  #for t_client_machines in 4; do
     #for t_clients in 500; do
     #for t_clients in 64; do
     #for t_clients in 128; do
     #for t_clients in 128; do
-    for t_clients in 4; do
+    #for t_clients in 4; do
     #for t_clients in 8; do
+    t_clients=$t_client_machines
+
       t_clients_per_machine=$(($t_clients/$t_client_machines))
 
       # Get actual number of machines you will be using
@@ -225,6 +228,6 @@ echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
           done # end of nruns
         done # end of total_events
       done # end of t_contexts
-    done
-  done
+    #done
+  #done
 done

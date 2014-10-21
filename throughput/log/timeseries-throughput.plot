@@ -49,7 +49,7 @@ set key left top
 #unset key
 
 set xlabel "Time (sec)" font "Helvetica,22"
-set output "result/tag-throughput.eps"
+set output "result/throughput.eps"
 
 #set arrow 1 from 171,29000 to 165,31000 lt 1 lw 3
 #set label 1 "Migration for all context" at 151,28500 tc rgb "#ff0000"
@@ -58,7 +58,7 @@ set output "result/tag-throughput.eps"
 #set label 2 "From 2 to 4 nodes" at 250,920 tc rgb "#ff0000"
 
 plot \
-  'data/head-nplayers.ts'    using 1:($2) title "number of players"   lt -1 pt 0 lw 0.3, \
+  #'data/head-nplayers.ts'    using 1:($2) title "number of players"   lt -1 pt 0 lw 0.3, \
   'data/head-throughput.ts'    using 1:($2) title "throughput"   lt 1 pt 0 lw 1 axes x1y2
   #'data/head-nplayers.ts'    using 1:($2) title "number of players"   lt 1 pt 0 lw 1 axes x1y2
   #'data/nocpu_migration_varying_context_size-l12800000.ts'    using 1:($2) title "S=12.8MB"   lt 1 pt 0 lw 1, \

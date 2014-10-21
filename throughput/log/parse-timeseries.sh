@@ -1,6 +1,6 @@
 #!/bin/bash
 
-logdir=/u/tiberius06_s/yoo7/logs/tag
+logdir=/u/tiberius06_s/chuangw/logs/throughput
 cwd=`pwd`
 #echo $cwd
 
@@ -14,12 +14,15 @@ cd $logdir
 # Which file do you want to plot?
 #file=(`find ./ -name '*head*.gz' | grep "migration" | sort | tail -1`)
 if [[ "$type" = "instant" ]]; then
+  # find the latest log dir
   dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
-  headfile=(`find $dir -name '*head*.gz' | tail -1`)
+  # find the latest log set in the dir
+  headfile=(`find $dir -name 'head-*.gz' | tail -1`)
   clifile=(`find $dir -name '*player*.gz'`)
+  svfile=(`find $dir -name 'server-*.gz'`)
 else
   dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
-  headfile=(`find $dir -name '*head*.gz' | tail -1`)
+  headfile=(`find $dir -name 'head*.gz' | tail -1`)
   clifile=(`find $dir -name '*player*.gz'`)
   nsfile=(`find $dir -name '*.nserver.conf' | tail -1`)
   #headfile=(`find ./ -name '*head*.gz' | grep "migration" | sort`)
@@ -27,7 +30,7 @@ else
 fi
 #file=(`find ./ -name '*head*.gz' | grep "migration-n2-c8" | sort | tail -1`)
 
-
+start_time=0
 # For headfile, generate plot file
 for f in "${headfile[@]}"; do
   echo "head = $f"
@@ -35,31 +38,65 @@ for f in "${headfile[@]}"; do
   start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
   start_time=$(($start_time_us / 1000000))
 
-  prejoin_time=`zgrep -a -e "PREJOIN_WAIT_TIME" $f | head -1 | awk '{print $5}' | tr -d '"\r\n'`
+  #prejoin_time=`zgrep -a -e "PREJOIN_WAIT_TIME" $f | head -1 | awk '{print $5}' | tr -d '"\r\n'`
 
-  echo "prejoin = $prejoin_time"
+  #echo "prejoin = $prejoin_time"
 
   # throughput
   out="${cwd}/data/head-throughput.ts"
   echo "producing $out"
-  zgrep -a -e "EVENT_READY_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
+  zgrep -a -e "EVENT_FINISH" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
   # migration
-  out="${cwd}/data/head-migration.ts"
-  echo "producing $out"
-  zgrep -a -e "MIGRATION_EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
+  #out="${cwd}/data/head-migration.ts"
+  #echo "producing $out"
+  #zgrep -a -e "MIGRATION_EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
   # num_players
-  out="${cwd}/data/head-nplayers.ts"
-  echo "producing $out"
-  #zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); printf \"%.3f\t%d\n\", (T/1000000), \$3}" | $cwd/timeseries.awk | sort -k +1n > $out
-  if [[ "$type" = "instant" ]]; then
-    zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); if (T>$prejoin_time) printf \"%.3f\t%d\n\", (T/1000000), \$3}" | sort -k +1n > $out
-  else
-    zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); if (T>$prejoin_time+1000000 && T < $cutoff) printf \"%.3f\t%d\n\", (T/1000000), \$3}" | sort -k +1n > $out
-  fi
+  #out="${cwd}/data/head-nplayers.ts"
+  #echo "producing $out"
+  #if [[ "$type" = "instant" ]]; then
+  #  zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); if (T>$prejoin_time) printf \"%.3f\t%d\n\", (T/1000000), \$3}" | sort -k +1n > $out
+  #else
+  #  zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); if (T>$prejoin_time+1000000 && T < $cutoff) printf \"%.3f\t%d\n\", (T/1000000), \$3}" | sort -k +1n > $out
+  #fi
 
 done
+
+# For svfile, generate plot file
+# assuming timers on all machines are all sync'ed.
+for f in "${svfile[@]}"; do
+  echo "server file = $f"
+
+  #start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
+  #start_time=$(($start_time_us / 1000000))
+
+  #prejoin_time=`zgrep -a -e "PREJOIN_WAIT_TIME" $f | head -1 | awk '{print $5}' | tr -d '"\r\n'`
+
+  #echo "prejoin = $prejoin_time"
+
+  # throughput
+  out="${cwd}/data/head-throughput.ts"
+  echo "producing $out"
+  zgrep -a -e "EVENT_FINISH" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n >> $out
+
+  # migration
+  #out="${cwd}/data/head-migration.ts"
+  #echo "producing $out"
+  #zgrep -a -e "MIGRATION_EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
+
+  # num_players
+  #out="${cwd}/data/head-nplayers.ts"
+  #echo "producing $out"
+  #if [[ "$type" = "instant" ]]; then
+  #  zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); if (T>$prejoin_time) printf \"%.3f\t%d\n\", (T/1000000), \$3}" | sort -k +1n > $out
+  #else
+  #  zgrep -a -e "num_kids" $f | awk "{ T=int(\$1 - $start_time_us); if (T>$prejoin_time+1000000 && T < $cutoff) printf \"%.3f\t%d\n\", (T/1000000), \$3}" | sort -k +1n > $out
+  #fi
+
+done
+
+${cwd}/aggregator.pl $out
 
 if [[ "$type" = "publish" ]]; then
   # For nserver file

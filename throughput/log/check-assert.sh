@@ -1,6 +1,6 @@
 #!/bin/bash
 
-logdir=/u/tiberius06_s/yoo7/logs/tag
+logdir=/u/tiberius06_s/chuangw/logs/throughput
 cwd=`pwd`
 #echo $cwd
 
@@ -13,7 +13,9 @@ echo $logdir
 cd $logdir
 
 if [[ "$type" = "instant" ]]; then
+  # find the latest log directory
   dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
+  # find the latest log set
   files=(`find $dir -name '*.log.gz'`)
   echo $dir
 fi
@@ -23,6 +25,7 @@ fi
 
 retcode=0
 
+# check if there are any assertion failures in the log.
 for f in "${files[@]}"; do
   #echo "file = $f"
   
