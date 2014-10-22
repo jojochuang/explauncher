@@ -129,7 +129,7 @@ def main(options):
         boot_time = 0
 
         # Write for head
-        boot(i, boot_time, ipaddr[i % num_machines], options.port+i*2, hostname[i%num_machines], "head", f) 
+        boot(i, boot_time, ipaddr[i % num_machines], options.port+i*5, hostname[i%num_machines], "head", f) 
         i += 1
         boot_time += boot_period
 

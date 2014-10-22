@@ -76,9 +76,10 @@ for f in "${svfile[@]}"; do
   #echo "prejoin = $prejoin_time"
 
   # throughput
-  out="${cwd}/data/head-throughput.ts"
+  
+  out="${cwd}/data/"`echo $f|sed 's/^.*\///'| sed 's/\.log\.gz//'`".ts" #remove the file name suffix
   echo "producing $out"
-  zgrep -a -e "EVENT_FINISH" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n >> $out
+  zgrep -a -e "EVENT_FINISH" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
   # migration
   #out="${cwd}/data/head-migration.ts"
@@ -95,8 +96,29 @@ for f in "${svfile[@]}"; do
   #fi
 
 done
+input_ts=(`find ${cwd}/data -name '[server|head]*.ts'`)
+echo "input_ts="  ${input_ts[@]};
+out_column="${cwd}/data/column-throughput.ts"
+echo "out_ts "  $out_ts;
+${cwd}/columnizer.pl $out_column ${input_ts[@]} 
+#${cwd}/aggregator.pl $out
 
-${cwd}/aggregator.pl $out
+cp ${cwd}/timeseries-throughput.plot ${cwd}/timeseries-throughput-combined.plot
+n=2
+input_size=${#input_ts[@]}
+linewidth=3
+for f in "${input_ts[@]}"; do
+  sep=", \\"
+  if [ $(($n-2+1)) -eq $input_size ]; then
+    sep=""
+  fi
+  #color=$(( $(($n-2)) /$input_size))
+  color=$(($n-2))
+  nopath=`echo $f|sed 's/^.*\///'` #remove the  path name
+  echo "'$out_column'    using 1:(\$${n}) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${cwd}/timeseries-throughput-combined.plot
+  n=$(($n+1))
+done
+
 
 if [[ "$type" = "publish" ]]; then
   # For nserver file

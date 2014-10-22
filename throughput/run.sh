@@ -3,7 +3,7 @@
 # This is the script that runs multiple microbenchmarks in fullcontext.
 
 mace_start_port=4100
-boottime=10   # total time to boot.
+boottime=20   # total time to boot.
 #runtime=1000  # maximum runtime
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 #tcp_nodelay=0   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
@@ -74,21 +74,21 @@ boot_file="conf/boot"
 # Otherwise, I'm wrong with migration.
 # Rather, I would do 
 
-
-for t_server_machines in 0 1 3; do
+#t_ncontexts=48
+for t_server_machines in 7; do
   # For each server machine, you will run only one server process.
   t_servers=$t_server_machines
   t_servers_per_machine=$(($t_servers/$t_server_machines))
 
-  t_client_machines=$($t_server_machines+1)
-  #for t_client_machines in 4; do
+  #t_client_machines=$($t_server_machines+1)
+  for t_client_machines in 8; do
     #for t_clients in 500; do
     #for t_clients in 64; do
     #for t_clients in 128; do
     #for t_clients in 128; do
     #for t_clients in 4; do
-    #for t_clients in 8; do
-    t_clients=$t_client_machines
+    for t_clients in 8; do
+    #t_clients=$t_client_machines
 
       t_clients_per_machine=$(($t_clients/$t_client_machines))
 
@@ -104,16 +104,16 @@ for t_server_machines in 0 1 3; do
       runtime=50
 
       #for t_buildings in 128; do  # Number of total buildings across all the servers
-      for t_buildings in 8; do  # Number of total buildings across all the servers
+      for t_ncontexts in 48; do  # Number of total buildings across all the servers
 
         # Note that there will only be one room and one hallway per each building.
         t_rooms=1  # rooms per each building. DO NOT CHANGE THIS.
 
         #for t_primes in 500; do  # Additional computation payload at the server.
         #for t_primes in 100; do  # Additional computation payload at the server.
-        for t_primes in 150; do  # Additional computation payload at the server.
+        for t_primes in 1; do  # Additional computation payload at the server.
 
-          t_buildings_per_server=$(($t_buildings/$t_servers))
+          #t_buildings_per_server=$(($t_ncontexts/$t_servers))
 
           #t_threads=$(($t_buildings_per_server * 2))
 
@@ -148,7 +148,7 @@ for t_server_machines in 0 1 3; do
             echo "num_client_machines = ${t_client_machines}" >> ${conf_file}
             echo "num_servers = ${t_servers}" >> ${conf_file}
             echo "num_clients = ${t_clients}" >> ${conf_file}
-            echo "num_contexts = ${t_buildings}" >> ${conf_file}
+            echo "num_contexts = ${t_ncontexts}" >> ${conf_file}
             
             echo "day_period = ${day_period}" >> ${conf_file}
             echo "day_join = ${day_join}" >> ${conf_file}
@@ -161,13 +161,11 @@ for t_server_machines in 0 1 3; do
 
             echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-
             #echo "ServiceConfig.TagServerAsync.NUM_BUILDINGS = ${t_buildings_per_server}" >> ${conf_file}
             #echo "ServiceConfig.TagServerAsync.NUM_ROOMS = ${t_rooms}" >> ${conf_file}
             #echo "ServiceConfig.TagServerAsync.MOVEMENT_PERIOD = ${server_movement_period}" >> ${conf_file}
             #echo "ServiceConfig.TagServerAsync.NUM_PRIMES = ${t_primes}" >> ${conf_file}
             #echo "ServiceConfig.TagServerAsync.EXIT_TIME = ${exit_time}" >> ${conf_file}
-
 
             #echo "ServiceConfig.TagClient.ONE_DAY = ${day_period}" >> ${conf_file}
             #echo "ServiceConfig.TagClient.NUM_DAYS = ${t_days}" >> ${conf_file}
@@ -175,12 +173,14 @@ for t_server_machines in 0 1 3; do
             #echo "ServiceConfig.TagClient.MAP_REQUEST_PERIOD = ${client_request_period}" >> ${conf_file}
             #echo "ServiceConfig.TagClient.PREJOIN_WAIT_TIME = ${prejoin_wait_time}" >> ${conf_file}
             #echo "ServiceConfig.TagClient.EXIT_TIME = ${exit_time}" >> ${conf_file}
-echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
+
+            echo "WORKER_JOIN_WAIT_TIME = 10" >>  ${conf_file}
             echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator\"" >> ${conf_file}
             echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
             initial_server_size=$(($t_server_machines+1))
             echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
-
+            echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
+            echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
 
             #echo "ServiceConfig.MicroBenchmark.NUM_EVENTS = ${t_events}" >> ${conf_file}
             #echo "ServiceConfig.MicroBenchmark.NUM_ITERATIONS = ${t_iterations}" >> ${conf_file}
@@ -193,6 +193,7 @@ echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
             echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
             echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
             echo "ServiceConfig.Throughput.role = 1" >>  ${conf_client_file}
+            echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
 
 
@@ -207,6 +208,7 @@ echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
             echo "lib.MApplication.initial_size = ${initial_server_size}" >> ${conf_file}
             echo "ServiceConfig.Throughput.role = 2" >>  ${conf_file}
             #echo "lib.MApplication.debug = 1" >> ${conf_file}
+            echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
 
             # print out bootfile & param for servers
             echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
@@ -219,15 +221,15 @@ echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
             
             #exit 0
 
-            echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_buildings}-p${t_primes}\e[00m"
+            echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
             #./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_buildings}-p${t_primes}
-            ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_buildings}-p${t_primes}
+            ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
 
             sleep 5
 
           done # end of nruns
         done # end of total_events
       done # end of t_contexts
-    #done
-  #done
+    done
+  done
 done

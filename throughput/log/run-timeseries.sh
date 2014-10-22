@@ -37,7 +37,7 @@ elif [[ "$type" = "instant" ]]; then
   ./parse-timeseries.sh $type $logdir
   # generate eps plot using the data points
   #gnuplot < timeseries-latency.plot
-  gnuplot < timeseries-throughput.plot
+  gnuplot < timeseries-throughput-combined.plot
   #gnuplot < timeseries-migration.plot
 fi
 
