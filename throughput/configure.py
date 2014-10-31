@@ -140,14 +140,14 @@ def main(options):
         # Write for servers
         for j in range(num_servers):
             sid = (1 + j % num_server_machines) % num_machines
-            boot(i, boot_time, ipaddr[sid], options.port+i*2, hostname[sid], "server", f) 
+            boot(i, boot_time, ipaddr[sid], options.port+i*5, hostname[sid], "server", f) 
             i += 1
             boot_time += boot_period
 
         # Write for clients
         for j in range(num_clients):
             sid = (1 + num_server_machines + j % num_client_machines) % num_machines
-            boot(i, boot_time, ipaddr[sid], options.port+i*2, hostname[sid], "client", f) 
+            boot(i, boot_time, ipaddr[sid], options.port+i*5, hostname[sid], "client", f) 
             i += 1
             boot_time += boot_period
 
@@ -183,7 +183,7 @@ def main(options):
             #    ipaddr[sid], options.port+i*2))
             #f.write( 'lib.MApplication.nodeset = IPV4/{}:{}\n'.format(
             #    ipaddr[sid], options.port+i*2))
-            serveraddr.append("%s:%s" % ( ipaddr[sid], options.port+i*2) )
+            serveraddr.append("%s:%s" % ( ipaddr[sid], options.port+i*5) )
             i += 1
 
         # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
@@ -549,7 +549,7 @@ def main(options):
     # Write to output client conf file
     with open(options.clientfile, "a") as f:
         for j in range(num_servers+1):
-          f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*2 ));
+          f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
 
         # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
         f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))

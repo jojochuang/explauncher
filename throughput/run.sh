@@ -3,7 +3,7 @@
 application="throughput"
 source ../common.sh
 
-mace_start_port=4100
+mace_start_port=21500
 
 runtime=50 # duration of the experiment
 boottime=20   # total time to boot.
@@ -45,10 +45,11 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::accept\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 10" >>  ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = 3" >> ${conf_file}
 
   if [[ $ec2 -eq 1 ]]; then
     echo "EC2 = 1" >> ${conf_file}
@@ -130,7 +131,7 @@ function runexp (){
 
   if [[ $ec2 -eq 0 ]]; then
     # do not use monitor
-    echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
+    echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
     ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
 
   else
@@ -143,7 +144,7 @@ function runexp (){
 }
 
 for t_server_machines in 7; do
-  for t_client_machines in 8; do
+  for t_client_machines in 4; do
     for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         for (( run=1; run <= $nruns; run++ )); do

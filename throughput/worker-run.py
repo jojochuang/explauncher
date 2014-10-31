@@ -15,13 +15,16 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     assert app_type == "server" or app_type == "client"
 
     # Sleep
-    logger.info("Sleeping %s...", float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"]))
+    sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
+    if app_type == "client": # add additional time before the client starts
+      sleep_time += int(param["CLIENT_WAIT_TIME"])
 
-    #if float(boot_wait_time) > int(param["WORKER_JOIN_WAIT_TIME"]):
-    sleep(float(boot_wait_time))
-    #else:
-    sleep(int(param["WORKER_JOIN_WAIT_TIME"]))
+    logger.info("Sleeping %d...", sleep_time )
 
+    #sleep(float(boot_wait_time))
+    #sleep(int(param["WORKER_JOIN_WAIT_TIME"]))
+    sleep( sleep_time )
+  
     # Log filename
     logdir = param["SCRATCHDIR"]
 
@@ -115,7 +118,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
         pfile=paramfile,
         port=ipaddr.strip().split(":")[1]),
         log=logfile)
-    
+
     end_time = Utils.unixTime()
     
     logger.info("Process %s exited." % nid)
@@ -141,6 +144,7 @@ def main(options):
     Main module of worker-run--microbenchmark.
     """
 
+    logger.info("enter main")
     # Some initialization
     param = Utils.param_reader(options.paramfile)
 
