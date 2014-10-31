@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Configures parameters that are shared by all benchmarks
+
 ec2=0        # set this if you are experimenting on EC2
 
 if [[ $ec2 -eq 0 ]]; then
@@ -19,3 +21,22 @@ else
   scratchdir="/run/shm/tmp/${application}"            # Scratch directory location
   psshdir="/home/ubuntu/pssh-2.2/bin"
 fi
+conf_dir="${bin}/conf"                    # Configuration directory
+conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
+host_orig_file="conf/hosts"
+host_run_file="conf/hosts-run"
+boot_file="conf/boot"
+
+function GenerateCommonParameter () {
+  conf_file=$1
+  echo "USER = ${user}" >> ${conf_file}
+  echo "HOME = ${home}" >> ${conf_file}
+  echo "BIN = ${bin}" >> ${conf_file}
+  echo "CONFDIR = ${conf_dir}" >> ${conf_file}
+  echo "HOSTRUNFILE = ${conf_dir}/hosts-run" >> $conf_file
+  #echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
+  echo "BOOTFILE = ${conf_dir}/boot" >> $conf_file
+  echo "LOGDIR = ${logdir}" >> $conf_file
+  echo "SCRATCHDIR = ${scratchdir}" >> $conf_file
+  echo "PSSHDIR = ${psshdir}" >> $conf_file
+}

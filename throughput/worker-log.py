@@ -23,7 +23,6 @@ def main(options):
 
     else:
         Utils.shell_exec("cp -v %s/*.gz %s" % (param["SCRATCHDIR"], options.logdir))
-    #Utils.shell_exec("cp -v %s/*.gz %s" % (param["SCRATCHDIR"], options.logdir))
 
 
 

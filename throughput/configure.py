@@ -311,17 +311,17 @@ def main(options):
 
             for d in range(initial_no_migration_days, initial_no_migration_days + migration_days):
 
-                #day_period = int(param["day_period"])
-                #num_days = int(param["num_days"])
-                #day_join = float(param["day_join"])
-                #day_leave = float(param["day_leave"])
-                #day_error = float(param["day_error"])
-                #sid = (1 + i % num_server_machines) % num_machines
+                day_period = int(param["day_period"])
+                num_days = int(param["num_days"])
+                day_join = float(param["day_join"])
+                day_leave = float(param["day_leave"])
+                day_error = float(param["day_error"])
+                sid = (1 + i % num_server_machines) % num_machines
                 
-                #day_peak = (day_join + day_leave) / 2.0
-                #day_floor = (day_peak + 0.5) % 1
+                day_peak = (day_join + day_leave) / 2.0
+                day_floor = (day_peak + 0.5) % 1
 
-                #day_floor = (day_join + day_leave) / 2.0
+                day_floor = (day_join + day_leave) / 2.0
                 day_floor = ( (day_join + day_leave) / 2.0 + 1 - 0.1 ) % 1   # Do it more eagerly
                 day_peak = (day_floor + 0.5) % 1
 

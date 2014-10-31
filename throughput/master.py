@@ -56,10 +56,38 @@ def main(options):
 
     # Clean up scratch directory
     cmd = "'rm -rvf %s'" % param["SCRATCHDIR"]
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
+
+    # Sync the conf/* if needed
+    # Affected files are : boot hosts-run hosts-run-nohead params-run.conf
+    if param["SYNC_CONF_FILES"] == "1":
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {bootfile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            bootfile=param["BOOTFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostfile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostnoheadfile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            hostnoheadfile=param["HOSTNOHEADFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            conffile=param["CONFFILE"],
+            confdir=param["CONFDIR"]))
+
 
     # Run worker-run-microbenchmark.py with PSSH
     # PSSH will be launched via fork() to catch Ctrl+C to stop the

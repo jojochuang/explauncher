@@ -30,13 +30,13 @@ else
     id=$1
 fi
 
-conf_dir="${bin}/conf"                    # Configuration directory
-conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
+#conf_dir="${bin}/conf"                    # Configuration directory
+#conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
 conf_file="conf/params-run.conf"
-host_orig_file="conf/hosts"
-host_run_file="conf/hosts-run"
+#host_orig_file="conf/hosts"
+#host_run_file="conf/hosts-run"
 host_nohead_file="conf/hosts-run-nohead"
-boot_file="conf/boot"
+#boot_file="conf/boot"
 
 for flavor in context; do
   #for t_primes in 1 2 4 8 16 32 64 128 256 512 1024 2048 4096; do
@@ -135,19 +135,20 @@ for flavor in context; do
 
             echo "application = ${application}" >> ${conf_file}
 
+            GenerateCommonParameter ${conf_file}
             # Default path configurations
 
-            echo "USER = ${user}" >> ${conf_file}
-            echo "HOME = ${home}" >> ${conf_file}
-            echo "BIN = ${bin}" >> ${conf_file}
-            echo "CONFDIR = ${conf_dir}" >> ${conf_file}
-            echo "HOSTRUNFILE = ${conf_dir}/hosts-run" >> $conf_file
+            #echo "USER = ${user}" >> ${conf_file}
+            #echo "HOME = ${home}" >> ${conf_file}
+            #echo "BIN = ${bin}" >> ${conf_file}
+            #echo "CONFDIR = ${conf_dir}" >> ${conf_file}
+            #echo "HOSTRUNFILE = ${conf_dir}/hosts-run" >> $conf_file
             echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
-            echo "BOOTFILE = ${conf_dir}/boot" >> $conf_file
+            #echo "BOOTFILE = ${conf_dir}/boot" >> $conf_file
             echo "CONFFILE = ${conf_dir}/params-run.conf" >> $conf_file
-            echo "LOGDIR = ${logdir}" >> $conf_file
-            echo "SCRATCHDIR = ${scratchdir}" >> $conf_file
-            echo "PSSHDIR = ${psshdir}" >> $conf_file
+            #echo "LOGDIR = ${logdir}" >> $conf_file
+            #echo "SCRATCHDIR = ${scratchdir}" >> $conf_file
+            #echo "PSSHDIR = ${psshdir}" >> $conf_file
 
             echo "BINARY = ${application}_${flavor}" >> ${conf_file}
             echo "MACE_START_PORT = ${mace_start_port}" >> ${conf_file}
