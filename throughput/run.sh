@@ -1,4 +1,6 @@
 #!/bin/bash
+application="throughput"
+source ../common.sh
 
 # This is the script that runs multiple microbenchmarks in fullcontext.
 
@@ -47,15 +49,8 @@ else
 fi
 
 
-application="throughput"
 flavor="context"
 
-user="chuangw"
-home="/homes/chuangw"                                       # Home directory
-bin="/homes/chuangw/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
-
-logdir="/u/tiberius06_s/chuangw/logs/${application}"        # Log collection directory
-scratchdir="/scratch/chuangw/tmp/${application}"            # Scratch directory location
 
 conf_dir="${bin}/conf"                    # Configuration directory
 conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
@@ -78,7 +73,8 @@ boot_file="conf/boot"
 for t_server_machines in 7; do
   # For each server machine, you will run only one server process.
   t_servers=$t_server_machines
-  t_servers_per_machine=$(($t_servers/$t_server_machines))
+  #t_servers_per_machine=$(($t_servers/$t_server_machines))
+  t_servers_per_machine=1
 
   #t_client_machines=$($t_server_machines+1)
   for t_client_machines in 8; do
@@ -104,8 +100,9 @@ for t_server_machines in 7; do
       runtime=50
 
       #for t_buildings in 128; do  # Number of total buildings across all the servers
-      for t_ncontexts in 48; do  # Number of total buildings across all the servers
-
+      #for t_ncontexts in 24; do  # Number of total buildings across all the servers
+      t_scale=$(($t_server_machines+1))
+      t_ncontexts=$(($t_scale*6 ))
         # Note that there will only be one room and one hallway per each building.
         t_rooms=1  # rooms per each building. DO NOT CHANGE THIS.
 
@@ -182,6 +179,13 @@ for t_server_machines in 7; do
             echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
             echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
 
+            if [[ $ec2 -eq 1 ]]; then
+              echo "EC2 = 1" >> ${conf_file}
+              echo "SYNC_CONF_FILES = 1" >> ${conf_file}
+            else
+              echo "EC2 = 0" >> ${conf_file}
+              echo "SYNC_CONF_FILES = 0" >> ${conf_file}
+            fi
             #echo "ServiceConfig.MicroBenchmark.NUM_EVENTS = ${t_events}" >> ${conf_file}
             #echo "ServiceConfig.MicroBenchmark.NUM_ITERATIONS = ${t_iterations}" >> ${conf_file}
 
@@ -221,15 +225,29 @@ for t_server_machines in 7; do
             
             #exit 0
 
-            echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
+            #echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
             #./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_buildings}-p${t_primes}
-            ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+            #./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
 
+            if [[ $ec2 -eq 0 ]]; then
+              # use monitor
+              #echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
+              #./master.py -a ${application} -f ${flavor} -p ${conf_file} -m -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+              #./master.py -a ${application} -f ${flavor} -p ${conf_file} -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+              echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
+              #./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -m -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_buildings}-p${t_primes}
+              ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+
+            else
+              # do not use monitor
+              echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
+              ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+            fi
             sleep 5
 
           done # end of nruns
         done # end of total_events
-      done # end of t_contexts
+      #done # end of t_contexts
     done
   done
 done

@@ -144,7 +144,11 @@ def main(options):
     # Some initialization
     param = Utils.param_reader(options.paramfile)
 
-    myhost = Utils.shell_exec('hostname -s', verbose=False)
+    if param["EC2"] == "1":
+        myhost = Utils.shell_exec('hostname -f', verbose=False)
+    else:
+        myhost = Utils.shell_exec('hostname -s', verbose=False)
+    #myhost = Utils.shell_exec('hostname -s', verbose=False)
     #ulimit = Utils.shell_exec('ulimit -n 10000; ulimit -a', verbose=False)
     #ulimit = Utils.shell_exec('ulimit -a', verbose=False)
     myhost = myhost.strip()

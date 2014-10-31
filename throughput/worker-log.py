@@ -18,7 +18,12 @@ def main(options):
 
     Utils.chdir(param["SCRATCHDIR"])
     Utils.shell_exec("gzip *.log")
-    Utils.shell_exec("cp -v %s/*.gz %s" % (param["SCRATCHDIR"], options.logdir))
+    if param["EC2"] == "1":
+        Utils.shell_exec("scp %s/*.gz ubuntu@%s:%s" % (param["SCRATCHDIR"], param["hostname0"], options.logdir))
+
+    else:
+        Utils.shell_exec("cp -v %s/*.gz %s" % (param["SCRATCHDIR"], options.logdir))
+    #Utils.shell_exec("cp -v %s/*.gz %s" % (param["SCRATCHDIR"], options.logdir))
 
 
 

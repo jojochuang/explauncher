@@ -1,4 +1,6 @@
 #!/bin/bash
+application="microbenchmark"
+source ../common.sh
 
 # This is the script that runs multiple microbenchmarks in fullcontext.
 
@@ -10,7 +12,6 @@ boottime=1   # total time to boot.
 runtime=300  # maximum runtime
 earlyquit=1  # Whether to support early quit (yes)
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
-ec2=0        # set this if you are experimenting on EC2
 #shuffle_hosts=1  # set this to 1 to shuffle hosts file.
 shuffle_hosts=0  # set this to 1 to shuffle hosts file.
 
@@ -27,27 +28,6 @@ if [ $# -eq 0 ]; then
     id="default"
 else
     id=$1
-fi
-
-
-application="microbenchmark"
-
-if [[ $ec2 -eq 0 ]]; then
-  user="chuangw"
-  home="/homes/chuangw"                                       # Home directory
-  bin="/homes/chuangw/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
-
-  logdir="/u/tiberius06_s/chuangw/logs/${application}"        # Log collection directory
-  scratchdir="/scratch/chuangw/tmp/${application}"            # Scratch directory location
-  psshdir="/homes/chuangw/pssh/bin"
-else
-  user="ubuntu"
-  home="/home/ubuntu"                                       # Home directory
-  bin="/home/ubuntu/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
-
-  logdir="/home/ubuntu/logs/${application}"        # Log collection directory
-  scratchdir="/run/shm/tmp/${application}"            # Scratch directory location
-  psshdir="/home/ubuntu/pssh-2.2/bin"
 fi
 
 conf_dir="${bin}/conf"                    # Configuration directory
