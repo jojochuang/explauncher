@@ -1,9 +1,10 @@
 #!/bin/bash
 
-#app="microbenchmark"
+application="throughput"
+source ../../common.sh
 
 #logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
-logdir=/u/tiberius06_s/chuangw/logs/throughput
+#logdir=/u/tiberius06_s/chuangw/logs/throughput
 #type="migration_before_and_after"
 #type="tag"
 type="instant"
@@ -18,14 +19,14 @@ type="instant"
 
 if [[ "$type" = "publish" ]]; then
   echo "generating publish"
-  logdir=/u/tiberius06_s/chuangw/logs/tag_archive/final01-migration
+  #logdir=/u/tiberius06_s/chuangw/logs/tag_archive/final01-migration
   #logdir=/u/tiberius06_s/yoo7/logs/tag_archive/final02
   ./parse-timeseries.sh $type $logdir
   gnuplot < timeseries-latency-publish.plot
   #gnuplot < timeseries-throughput.plot
   #gnuplot < timeseries-migration.plot
 elif [[ "$type" = "instant" ]]; then
-  logdir=/u/tiberius06_s/chuangw/logs/throughput
+  #logdir=/u/tiberius06_s/chuangw/logs/throughput
   echo "generating instant"
   # check for assertion failures in the latest logs
   ./check-assert.sh $type $logdir

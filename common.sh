@@ -2,7 +2,7 @@
 
 # Configures parameters that are shared by all benchmarks
 
-ec2=0        # set this if you are experimenting on EC2
+ec2=1        # set this if you are experimenting on EC2
 
 if [[ $ec2 -eq 0 ]]; then
   user="chuangw"
@@ -36,6 +36,7 @@ function GenerateCommonParameter () {
   echo "HOSTRUNFILE = ${conf_dir}/hosts-run" >> $conf_file
   #echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
   echo "BOOTFILE = ${conf_dir}/boot" >> $conf_file
+  echo "CONFFILE = ${conf_dir}/params-run.conf" >> $conf_file
   echo "LOGDIR = ${logdir}" >> $conf_file
   echo "SCRATCHDIR = ${scratchdir}" >> $conf_file
   echo "PSSHDIR = ${psshdir}" >> $conf_file

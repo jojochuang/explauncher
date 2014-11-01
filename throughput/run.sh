@@ -136,15 +136,16 @@ function runexp (){
 
   else
     # do not use monitor
+    ./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
     echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-    ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i ${application}-${flavor}-${id}-n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}
+    ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
   fi
   sleep 5
 
 }
 
 for t_server_machines in 7; do
-  for t_client_machines in 4; do
+  for t_client_machines in 8; do
     for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         for (( run=1; run <= $nruns; run++ )); do

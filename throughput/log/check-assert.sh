@@ -1,6 +1,8 @@
 #!/bin/bash
 
-logdir=/u/tiberius06_s/chuangw/logs/throughput
+application="throughput"
+source ../../common.sh
+#logdir=/u/tiberius06_s/chuangw/logs/throughput
 cwd=`pwd`
 #echo $cwd
 

@@ -152,12 +152,16 @@ def main(options):
             boot_time += boot_period
 
     # Write to output host file
+    hostname_set = set( hostname ) # create unique host name
     with open(options.hostrun, "w") as f:
         with open(options.hostnohead, "w") as g:
-            for i in range(num_machines):
-                f.write("%s\n" % hostname[i])
-                if i > 0:
-                    g.write("%s\n" % hostname[i])
+            for h in hostname_set: #range(num_machines):
+                #f.write("%s\n" % hostname[i])
+                f.write("%s\n" % h )
+                #if i > 0:
+                if h != hostname[0]:
+                    #g.write("%s\n" % hostname[i])
+                    g.write("%s\n" % h)
 
     # Write to output server conf file
     with open(options.paramfile, "a") as f:
