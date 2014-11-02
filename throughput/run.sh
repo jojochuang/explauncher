@@ -45,7 +45,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::accept\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
@@ -136,7 +136,7 @@ function runexp (){
 
   else
     # do not use monitor
-    ./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
+    #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
     echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
     ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
   fi
@@ -144,13 +144,32 @@ function runexp (){
 
 }
 
+function aggregate_output () {
+  # create a new directory for the set of logs
+  log_set_dir=`date --iso-8601="seconds"`
+  mkdir ${log_dir}/${log_set_dir}
+  # move the log directories into the new dir
+  mv ${log_dir}/${application}-* ${log_dir}/${log_set_dir}/
+  # parse the logs in each of the log directory, and aggregate the throughput
+  # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
+  # compute average and standard deviation
+  # append to the output file
+}
+
 for t_server_machines in 7; do
-  for t_client_machines in 8; do
+  for t_client_machines in 4; do
     for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         for (( run=1; run <= $nruns; run++ )); do
           runexp $t_server_machines $t_client_machines $t_clients $t_primes
+          #./log/plot_connection.sh
         done # end of nruns
+
+        #TODO: compute avg and stddev, and plot error bar.
+        # Find the last $nruns log, aggregate the compute/plot error bar
+
+        # what to plot? the average throughput w/ error
+        #aggregate_output 
       done # end of total_events
     done
   done
