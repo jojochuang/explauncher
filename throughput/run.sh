@@ -10,8 +10,8 @@ boottime=20   # total time to boot.
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
-#nruns=5      # number of replicated runs
+#nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
 flavor="context"
 
@@ -147,13 +147,17 @@ function runexp (){
 function aggregate_output () {
   # create a new directory for the set of logs
   log_set_dir=`date --iso-8601="seconds"`
-  mkdir ${log_dir}/${log_set_dir}
+  mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
-  mv ${log_dir}/${application}-* ${log_dir}/${log_set_dir}/
+  mv ${logdir}/${application}-* ${logdir}/${log_set_dir}/
   # parse the logs in each of the log directory, and aggregate the throughput
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
+  cwd=`pwd`
+  cd log
+  ./run-throughput.sh ${logdir}/${log_set_dir}
+  cd $cwd
 }
 
 for t_server_machines in 7; do
@@ -162,14 +166,14 @@ for t_server_machines in 7; do
       for t_primes in 1; do  # Additional computation payload at the server.
         for (( run=1; run <= $nruns; run++ )); do
           runexp $t_server_machines $t_client_machines $t_clients $t_primes
-          #./log/plot_connection.sh
+          ./log/plot_connection.sh
         done # end of nruns
 
         #TODO: compute avg and stddev, and plot error bar.
         # Find the last $nruns log, aggregate the compute/plot error bar
 
         # what to plot? the average throughput w/ error
-        #aggregate_output 
+        aggregate_output 
       done # end of total_events
     done
   done
