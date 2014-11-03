@@ -56,7 +56,8 @@ while( <FILE> ){
   }
 }
 foreach my $key ( keys %remote_nodes ) {
-  print "  \"$local_ip:$local_port\" -> \"$key\";\n";
+  #print "  \"$local_ip:$local_port\" -> \"$key\";\n";
+  print "  $local_ip:$local_port -> $key\n";
 }
 #print "remote_ip = $remote_ip, remote_port = $remote_port, local ip = $local_ip, local_port = $local_port\n";
 close FILE;
