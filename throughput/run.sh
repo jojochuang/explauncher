@@ -3,17 +3,17 @@
 application="throughput"
 source ../common.sh
 
-mace_start_port=21500
+mace_start_port=30000
 
 runtime=50 # duration of the experiment
-boottime=20   # total time to boot.
+boottime=10   # total time to boot.
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
 nruns=5      # number of replicated runs
 
-flavor="context"
+flavor="nacho"
 
 # migration pattern parameters
 t_days=6
@@ -37,6 +37,7 @@ function GenerateBenchmarkParameter (){
   conf_file=$1
 
   echo "application = ${application}" >> ${conf_file}
+  echo "TOTAL_BOOT_TIME = ${boottime}" >> ${conf_file}
 
   echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
   echo "BINARY = ${application}_${flavor}" >> ${conf_file}
@@ -45,11 +46,11 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 1" >>  ${conf_file}
-  echo "CLIENT_WAIT_TIME = 3" >> ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = 10" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
 
   if [[ $ec2 -eq 1 ]]; then
     echo "EC2 = 1" >> ${conf_file}
@@ -140,11 +141,13 @@ function runexp (){
     echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
     ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
   fi
-  sleep 5
+  sleep 10
 
 }
 
 function aggregate_output () {
+  t_clients=$1
+  t_primes=$2
   # create a new directory for the set of logs
   log_set_dir=`date --iso-8601="seconds"`
   mkdir ${logdir}/${log_set_dir}
@@ -156,7 +159,7 @@ function aggregate_output () {
   # append to the output file
   cwd=`pwd`
   cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir}
+  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
   cd $cwd
 }
 
@@ -165,15 +168,16 @@ for t_server_machines in 7; do
     for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         for (( run=1; run <= $nruns; run++ )); do
+          mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $t_clients $t_primes
-          ./log/plot_connection.sh
+          ./log/plot_connection.sh $run
         done # end of nruns
 
         #TODO: compute avg and stddev, and plot error bar.
         # Find the last $nruns log, aggregate the compute/plot error bar
 
         # what to plot? the average throughput w/ error
-        aggregate_output 
+        aggregate_output $t_clients $t_primes
       done # end of total_events
     done
   done

@@ -3,8 +3,10 @@
 application="throughput"
 source ../../common.sh
 
-#logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
-#logdir=/u/tiberius06_s/chuangw/logs/throughput
+logset=$1
+
+#logset=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/run10-various-halfmigrate-longrun/
+#logset=/u/tiberius06_s/chuangw/logs/throughput
 #type="migration_before_and_after"
 #type="tag"
 type="instant"
@@ -12,30 +14,30 @@ type="instant"
 
 # We need a better plot parser
 
-#./parse-timeseries.sh $logdir > data/timeseries.dat
+#./parse-timeseries.sh $logset > data/timeseries.dat
 
 #cat data/timeseries.dat | ./timeseries.awk | ./sma.awk > data/timeseries-plot.dat
 #cat result-plot.dat | ./${app}-plot.awk > ${app}-plot.dat
 
 if [[ "$type" = "publish" ]]; then
   echo "generating publish"
-  #logdir=/u/tiberius06_s/chuangw/logs/tag_archive/final01-migration
-  #logdir=/u/tiberius06_s/yoo7/logs/tag_archive/final02
-  ./parse-timeseries.sh $type $logdir
+  #logset=/u/tiberius06_s/chuangw/logs/tag_archive/final01-migration
+  #logset=/u/tiberius06_s/yoo7/logs/tag_archive/final02
+  ./parse-timeseries.sh $type $logset
   gnuplot < timeseries-latency-publish.plot
   #gnuplot < timeseries-throughput.plot
   #gnuplot < timeseries-migration.plot
 elif [[ "$type" = "instant" ]]; then
-  #logdir=/u/tiberius06_s/chuangw/logs/throughput
+  #logset=/u/tiberius06_s/chuangw/logs/throughput
   echo "generating instant"
   # check for assertion failures in the latest logs
-  ./check-assert.sh $type $logdir
+  ./check-assert.sh $type $logset
   if [[ $? -ne 0 ]]; then
     echo "There is assertion failure."
     #exit 0
   fi
   # generate data points from the log
-  ./parse-timeseries.sh $type $logdir
+  ./parse-timeseries.sh $type $logset
   # generate eps plot using the data points
   #gnuplot < timeseries-latency.plot
   gnuplot < timeseries-throughput-combined.plot
@@ -46,16 +48,16 @@ fi
 
 #if [[ "$type" = "tag" ]]; then
   #echo "generating before-and-after"
-  #logdir=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final04-migration-timeseries-varying-context
-  #./parse-timeseries.sh $type $logdir
+  #logset=/u/tiberius06_s/yoo7/logs/microbenchmark_archive/final04-migration-timeseries-varying-context
+  #./parse-timeseries.sh $type $logset
   #gnuplot < timeseries-before-and-after.plot
 #elif [[ "$type" = "migration_scale_out_and_in" ]]; then
   #echo "generating scale-out-and-in"
-  #./parse-timeseries.sh $type $logdir
+  #./parse-timeseries.sh $type $logset
   #gnuplot < timeseries-scale-out-and-in.plot
 #else
   #echo "generating instant"
-  #./parse-timeseries.sh $type $logdir
+  #./parse-timeseries.sh $type $logset
   #gnuplot < timeseries-instant.plot
 #fi
 

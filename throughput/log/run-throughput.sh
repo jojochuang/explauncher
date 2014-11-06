@@ -5,6 +5,13 @@ source ../../common.sh
 
 logset=$1
 
+label=$2
+
+if [[ $# -lt 2 ]]; then
+  echo "needs two parameter: ./run-throughput.sh [log directory] [label name]"
+  exit
+fi
+
 type="instant"
 cwd=`pwd`
 out_avg="${cwd}/data/avg-throughput.ts"
@@ -12,9 +19,9 @@ stat_throughput="${cwd}/data/stat_throughput.ts"
 if [ -f $out_avg ]; then
   rm $out_avg
 fi
-if [ -f $stat_throughput ]; then
-  rm $stat_throughput
-fi
+#if [ -f $stat_throughput ]; then
+#  rm $stat_throughput
+#fi
 
 for log in $logset/*
 do
@@ -30,7 +37,7 @@ do
 done
   # compute average of average, and std dev of the average.
   # output data
-label=`date --iso-8601="seconds"`
+#label=`date --iso-8601="seconds"`
 echo "label = $label"
 #awk $out_avg 'BEGIN{avg=0;run=0;stddev=0.0}{avg+=$6;run++}END{avg /=run;}'
 gen-stat.pl $out_avg $stat_throughput $label

@@ -37,23 +37,28 @@ my $max_time;
 open( FILE, '>>', $fn );
 # sort and output
 my $sum_throughput = 0;
+print "-------------\n";
+my $max_throughput; # = $throughput{ $max_time };
+my $min_throughput; # = $throughput{ $min_time };
 for my $timeval ( sort {$a <=> $b} keys %throughput ){
   #print $FILE "$timeval ".$throughput{ $timeval }."\n";
   $sum_throughput += $throughput{ $timeval };
   if( not defined $min_time and $sum_throughput >= $min_threshold ){
     $min_time = $timeval;
+    $min_throughput = $sum_throughput;
+    print "min_time = $min_time\n";
   }
   if( not defined $max_time and $sum_throughput >= $max_threshold ){
     $max_time = $timeval - 1;
+    $max_throughput = $sum_throughput;
+    print "max_time = $max_time\n";
   }
-  #print "$timeval $sum_throughput " . $throughput{ $timeval } . "\n";
+  print "$timeval $sum_throughput " . $throughput{ $timeval } . "\n";
 }
 # find # total events
 # find when 10% event is finished
 # find when 90% event is finished
 # compute average throughput = ( ev at 90% - ev at 10% )/( time at 90% - time at 10% )
-my $max_throughput = $throughput{ $max_time };
-my $min_throughput = $throughput{ $min_time };
 my $avg = ( $max_throughput - $min_throughput ) / ( $max_time - $min_time );
 print FILE "$total_throughput $max_throughput $max_time $min_throughput $min_time $avg LABEL:$logdir_label\n";
 close FILE;

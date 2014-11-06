@@ -16,7 +16,7 @@ while ( <$BOOT> ){
   $nodes{ $addr } = $node_type;
 }
 close $BOOT;
-print "after parse boot file\n";
+#print "after parse boot file\n";
 
 my %connections;
 open $IN, $infile;
@@ -29,7 +29,7 @@ while ( <$IN> ){
   push @{ $connections{ $conn_from } }, $conn_to;
 }
 close $IN;
-print "after parse intermediate file\n";
+#print "after parse intermediate file\n";
 
 open $OUT, '>', $outfile;
 print $OUT "graph Connection {\n";
@@ -38,7 +38,7 @@ print $OUT "graph Connection {\n";
 print $OUT "  edge [len=3]";
 while ( ( $from , $to_array ) = each %connections ) {
   foreach my $to ( @{$to_array} ){
-    print "$from $to\n";
+    #print "$from $to\n";
     if( ($nodes{ $from } eq "head" or $nodes{ $from } eq "server" ) and 
       ($nodes{ $to } eq "head" or $nodes{ $to } eq "server" ) ){
 

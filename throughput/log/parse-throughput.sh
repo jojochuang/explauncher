@@ -23,15 +23,21 @@ svfile=(`find . -name 'server-*.gz'`)
 echo "svfile = $svfile"
 
 start_time=0
+rm ${cwd}/data/server-*.ts
+rm ${cwd}/data/head-throughput.ts
 # For headfile, generate plot file
 for f in "${headfile[@]}"; do
   echo "head = $f"
 
   start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
+  echo "start time=$start_time_us"
   start_time=$(($start_time_us / 1000000))
 
   # throughput
   out="${cwd}/data/head-throughput.ts"
+  #if [ -f $out ]; then
+  #  rm $out
+  #fi
   echo "producing $out"
   zgrep -a -e "EVENT_FINISH" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 done
@@ -50,13 +56,10 @@ for f in "${svfile[@]}"; do
 done
 
 # combine the throughput of each physical node into a single time series
-input_ts=(`find ${cwd}/data -name '[server|head]*.ts'`)
+input_ts=(`find ${cwd}/data -regex '.*\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_avg="${cwd}/data/avg-throughput.ts"
 echo "out_avg "  $out_avg;
-#${cwd}/columnizer.pl $out_column ${input_ts[@]} 
-#echo "" > $out
-#${cwd}/aggregator.pl $out
 ${cwd}/aggregator.pl  $out_avg ${input_ts[@]}  $logdir
 
 exit;

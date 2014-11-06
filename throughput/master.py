@@ -98,7 +98,8 @@ def main(options):
             clientfile="%s/%s" % (param["BIN"], options.clientfile))
     Utils.shell_launch('pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
         num_machines=param["num_machines"], 
-        run_time=param["run_time"],
+        run_time=int(param["run_time"]) + int(param["WORKER_JOIN_WAIT_TIME"]) + 
+                 int(param["CLIENT_WAIT_TIME"]) + int(param["TOTAL_BOOT_TIME"]) + 10,
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
 

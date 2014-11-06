@@ -126,7 +126,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     # If the head is killed, kill the rest of the machines.
 
-    logger.info("Head is trying to kill read of the machines.")
+    logger.info("Head is trying to kill rest of the machines.")
 
     #cmd = 'killall python2.7 worker-run.py {binary}'.format(
     cmd = 'killall python2.7 {binary}'.format(

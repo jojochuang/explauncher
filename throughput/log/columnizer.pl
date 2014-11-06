@@ -39,7 +39,7 @@ for ($n = 1; $n < $nargs; $n++ ){
   push @all_data, \%tmp;
 
 }
-print "max time = $max_time, $min_time = $min_time\n";
+print "max time = $max_time, min_time = $min_time\n";
 for( my $n=$min_time; $n<= $max_time; $n++ ){
   foreach my $data_set (@all_data){
     if( not defined $data_set->{ $n }  ){
@@ -64,6 +64,7 @@ for my $timeval ( sort {$a <=> $b} keys %throughput ){
     $str .= " " . $v;
   }
   print $FILE "$str\n";
+  print "$str\n";
 }
 
 close $FILE;
