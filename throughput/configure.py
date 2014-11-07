@@ -6,6 +6,7 @@ import random
 import math
 
 import Utils
+import sys
 
 
 
@@ -208,8 +209,16 @@ def main(options):
 
             # Building
             for i in range(num_contexts):
-                #sid = (0 + i % (num_server_machines+1) ) % num_machines
-                sid = (0 + (i+1) % (num_server_machines+1) ) % num_machines
+                if param["CONTEXT_ASSIGNMENT_POLICY"] == "NO_SHIFT":
+                  sid = (0 + i % (num_server_machines+1) ) % num_machines
+                elif param["CONTEXT_ASSIGNMENT_POLICY"] == "SHIFT_BY_ONE":
+                  sid = (0 + (i+1) % (num_server_machines+1) ) % num_machines
+                elif param["CONTEXT_ASSIGNMENT_POLICY"] == "RANDOM":
+                  sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines+1) ) % num_machines
+                else:
+                  print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
+                  sys.exit()
+
                 #f.write( 'mapping = {}:Building[{}]\n'.format(
                 #    sid, i))
                 f.write( 'lib.MApplication.{}.mapping = {}:Receiver[{}]\n'.format(

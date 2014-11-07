@@ -37,7 +37,7 @@ my $max_time;
 open( FILE, '>>', $fn );
 # sort and output
 my $sum_throughput = 0;
-print "-------------\n";
+print "-------------aggregated time series of throughput------------\n";
 my $max_throughput; # = $throughput{ $max_time };
 my $min_throughput; # = $throughput{ $min_time };
 for my $timeval ( sort {$a <=> $b} keys %throughput ){

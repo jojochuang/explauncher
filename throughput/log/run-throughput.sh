@@ -25,7 +25,7 @@ fi
 
 for log in $logset/*
 do
-  echo "generating instant"
+  #echo "generating instant"
   # check for assertion failures in the latest logs
   ./check-assert.sh $type $log
   if [[ $? -ne 0 ]]; then
@@ -47,5 +47,6 @@ gnuplot < avg-throughput.plot
 # generate pdf files using the eps file.
 cd result
 ls *.eps | xargs --max-lines=1 epspdf
+mogrify -format png *.eps
 rm *.eps
 

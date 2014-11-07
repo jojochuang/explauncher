@@ -3,7 +3,8 @@
 application="throughput"
 source ../common.sh
 
-mace_start_port=30000
+mace_start_port=10000
+scale=8
 
 runtime=50 # duration of the experiment
 boottime=10   # total time to boot.
@@ -14,6 +15,10 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 nruns=5      # number of replicated runs
 
 flavor="nacho"
+
+#context_policy="NO_SHIFT"
+#context_policy="SHIFT_BY_ONE"
+context_policy="RANDOM"
 
 # migration pattern parameters
 t_days=6
@@ -51,6 +56,8 @@ function GenerateBenchmarkParameter (){
 
   echo "WORKER_JOIN_WAIT_TIME = 10" >>  ${conf_file}
   echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
+
+  echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
   if [[ $ec2 -eq 1 ]]; then
     echo "EC2 = 1" >> ${conf_file}
@@ -170,7 +177,15 @@ for t_server_machines in 7; do
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $t_clients $t_primes
-          ./log/plot_connection.sh $run
+
+          # generate plots
+          cwd=`pwd`
+          cd log
+          ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
+          ./run-timeseries.sh
+          cd $cwd
+          # publish plots and parameters and logs to web page
+          ./publish.sh
         done # end of nruns
 
         #TODO: compute avg and stddev, and plot error bar.

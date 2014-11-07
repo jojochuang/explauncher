@@ -51,10 +51,6 @@ for( my $n=$min_time; $n<= $max_time; $n++ ){
     }
   }
 }
-#use Data::Dumper;
-
-#print Dumper( %throughput );
-
 
 open( $FILE, '>', $out );
 # sort and output

@@ -31,7 +31,7 @@ set ylabel "Throughput (evt/sec)" font "Helvetica,22" tc lt 1
 #set xrange [0:200]
 #set mytics 5
 #set style data linesp
-set key right top 
+set key left top 
 
 # MaceKen:    circle, black
 # Plain Mace: triangle, red
@@ -49,7 +49,7 @@ set key right top
 
 #unset key
 
-set xlabel "Runtime Configuration" font "Helvetica,22"
+set xlabel "Server scale" font "Helvetica,22"
 set output "result/stat-throughput.eps"
 
 #set arrow 1 from 171,29000 to 165,31000 lt 1 lw 3
@@ -76,4 +76,6 @@ set style histogram errorbars gap 2 lw 2
 set style data histogram
 set style fill solid border -1 
 plot \
-  'data/stat_throughput.ts' using 2:3:xtic(1) title "Nacho" linecolor rgb "#FF0000"
+  'data/stat_throughput.ts' using 2:3:xtic(1) title "Shifted" linecolor rgb "#FF0000", \
+  'data/stat_throughput.ts' using 5:6:xtic(4) title "Random" linecolor rgb "#00FF00", \
+  'data/stat_throughput.ts' using 8:9:xtic(7) title "Local" linecolor rgb "#0000FF"

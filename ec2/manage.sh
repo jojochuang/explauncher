@@ -6,7 +6,7 @@ source conf/config.sh
 # Make sure you start it, and connect to the node so that you can do whatever you want to do.
 
 if [ $# -eq 0 ]; then
-  echo "usage : mange.sh [connect|stop|start]"
+  echo "usage : mange.sh [connect|stop|start|list]"
   action="connect"
 else
   action=$1
@@ -23,5 +23,10 @@ elif [ "$action" = "stop" ]; then
 elif [ "$action" = "start" ]; then
   echo "starting"
   ec2start -O $ACCESS_KEY -W $SECRET_KEY $instance_id
+elif [ "$action" = "list" ]; then
+  cmd="ec2din -O $ACCESS_KEY -W $SECRET_KEY "
+  echo $cmd
+  host=`$cmd | grep "INSTANCE" | awk '{print $4}'`
+  echo $host
 fi
 
