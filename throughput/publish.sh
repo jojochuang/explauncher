@@ -17,19 +17,24 @@ if [[ $# -lt 1 ]]; then
   exit
 fi
 
-echo "log_set_dir=${log_set_dir}"
+# find the latest log set
+echo "logdir=${logdir}"
 
-webdir="/homes/chuangw/.www/benchmark/$application"
-url_prefix="http://www.cs.purdue.edu/homes/chuangw/benchmark/$application/${log_set_dir}/${last_log_dir}/"
+echo "log_set_dir=${log_set_dir}"
+last_log_dir=`ls -tr ${logdir} | tail -n1`
+
+if [[ $ec2 -eq 0 ]]; then
+  webdir="/homes/chuangw/.www/benchmark/$application"
+  #url_prefix="http://www.cs.purdue.edu/homes/chuangw/benchmark/$application/${log_set_dir}/${last_log_dir}/"
+else
+  webdir="/var/www/benchmark/$application"
+  #url_prefix="http://ec2-54-81-182-184.compute-1.amazonaws.com/benchmark/$application/${log_set_dir}/${last_log_dir}/"
+fi
 
 if [ ! -d $webdir/$log_set_dir ]; then
   mkdir $webdir/$log_set_dir
 fi
 
-# find the latest log set
-echo "logdir=${logdir}"
-
-last_log_dir=`ls -tr ${logdir} | tail -n1`
 
 echo "copy log directory"
 cp -R ${logdir}/$last_log_dir ${webdir}/${log_set_dir}/${last_log_dir}
@@ -57,21 +62,21 @@ cat <<EOF > ${log_page}
 <h2>Log identifier: ${last_log_dir}</h2>
 
 <table border=1>
-<tr> <td> <a href="${url_prefix}boot">boot</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}console.log">console.log</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}params-run-client.conf">params-run-client.conf</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}params-run-server.conf">params-run-server.conf</a> </td> </tr>
+<tr> <td> <a href="boot">boot</a> </td> </tr>
+<tr> <td> <a href="console.log">console.log</a> </td> </tr>
+<tr> <td> <a href="params-run-client.conf">params-run-client.conf</a> </td> </tr>
+<tr> <td> <a href="params-run-server.conf">params-run-server.conf</a> </td> </tr>
 
-<tr> <td> <a href="${url_prefix}column-throughput.ts">column-throughput.ts</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}conn.dot">conn.dot</a> </td> </tr>
+<tr> <td> <a href="column-throughput.ts">column-throughput.ts</a> </td> </tr>
+<tr> <td> <a href="conn.dot">conn.dot</a> </td> </tr>
 
 <tr> <td> client logs, server logs... </td> </tr>
-<tr> <td> <a href="${url_prefix}throughput.png">
+<tr> <td> <a href="throughput.png">
   <p>Throughput time series</p>
-  <img src="${url_prefix}throughput.png"></img></a> </td> </tr>
-<tr> <td> <a href="${url_prefix}${conn_graph}">
+  <img src="throughput.png"></img></a> </td> </tr>
+<tr> <td> <a href="${conn_graph}">
   <p>Network connection graph</p>
-  <img src="${url_prefix}${conn_graph}" width=800></img> </a> </td> </tr>
+  <img src="${conn_graph}" width=800></img> </a> </td> </tr>
 
 </table>
 </body>

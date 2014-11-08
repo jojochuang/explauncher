@@ -85,7 +85,13 @@ def main(options):
         Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
-            conffile=param["CONFFILE"],
+            conffile=param["SERVER_CONFFILE"],
+            confdir=param["CONFDIR"]))
+
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            conffile=param["CLIENT_CONFFILE"],
             confdir=param["CONFDIR"]))
 
 

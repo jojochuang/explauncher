@@ -19,8 +19,14 @@ fi
 
 echo "log_set_dir=${log_set_dir}"
 
-webdir="/homes/chuangw/.www/benchmark/$application"
-url_prefix="http://www.cs.purdue.edu/homes/chuangw/benchmark/$application/"
+if [[ $ec2 -eq 0 ]]; then
+  webdir="/homes/chuangw/.www/benchmark/$application"
+  url_prefix="/homes/chuangw/benchmark/$application/"
+else
+  webdir="/var/www/benchmark/$application"
+  url_prefix="/benchmark/$application/"
+
+fi
 
 # find the latest log set
 echo "logdir=${logdir}"

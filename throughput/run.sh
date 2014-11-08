@@ -3,7 +3,7 @@
 application="throughput"
 source ../common.sh
 
-mace_start_port=13000
+mace_start_port=10000
 scale=8
 
 runtime=50 # duration of the experiment
@@ -59,6 +59,8 @@ function GenerateBenchmarkParameter (){
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
+  echo "SERVER_CONFFILE = ${conf_dir}/params-run-client.conf" >> $conf_file
+  echo "CLIENT_CONFFILE = ${conf_dir}/params-run-server.conf" >> $conf_file
   if [[ $ec2 -eq 1 ]]; then
     echo "EC2 = 1" >> ${conf_file}
     echo "SYNC_CONF_FILES = 1" >> ${conf_file}
@@ -171,9 +173,9 @@ function aggregate_output () {
   cd $cwd
 }
 
-for t_server_machines in 7; do
-  for t_client_machines in 4; do
-    for t_clients in 8; do
+for t_server_machines in 15; do
+  for t_client_machines in 8; do
+    for t_clients in 16; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
@@ -188,9 +190,9 @@ for t_server_machines in 7; do
           ./run-avg.sh
           cd $cwd
           # publish plots and parameters and logs to web page
-          if [[ $ec2 -eq 0 ]]; then
+          #if [[ $ec2 -eq 0 ]]; then
             ./publish.sh $log_set_dir
-          fi
+          #fi
         done # end of nruns
 
         #TODO: compute avg and stddev, and plot error bar.
@@ -198,10 +200,10 @@ for t_server_machines in 7; do
 
         # what to plot? the average throughput w/ error
         aggregate_output $log_set_dir $t_clients $t_primes 
-        if [[ $ec2 -eq 0 ]]; then
+        #if [[ $ec2 -eq 0 ]]; then
           ./publish_webindex.sh $log_set_dir
-        fi
-        plot_service.sh
+        #fi
+        ./plot_service.sh
       done # end of total_events
     done
   done

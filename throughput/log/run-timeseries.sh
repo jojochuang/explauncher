@@ -27,6 +27,10 @@ gnuplot < timeseries-throughput-combined.plot
 
 # generate pdf files using the eps file.
 cd result
+if [[ ! -f "throughput.eps" ]]; then
+  echo "throughput.eps not found!"
+  exit 1
+fi
 ls *.eps | xargs --max-lines=1 epspdf
 mogrify -format png *.eps
 rm *.eps
