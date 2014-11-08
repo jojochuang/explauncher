@@ -62,28 +62,3 @@ out_avg="${cwd}/data/avg-throughput.ts"
 echo "out_avg "  $out_avg;
 ${cwd}/aggregator.pl  $out_avg ${input_ts[@]}  $logdir
 
-exit;
-# TODO: use the new 
-
-# copy the template
-#cp ${cwd}/avg-throughput.plot ${cwd}/avg-throughput-combined.plot
-
-# append to the template
-#n=2
-#input_size=${#input_ts[@]}
-#linewidth=3
-#for f in "${input_ts[@]}"; do
-#  sep=", \\"
-#  if [ $(($n-2+1)) -eq $input_size ]; then
-#    sep=""
-#  fi
-#  color=$(($n-2))
-#  nopath=`echo $f|sed 's/^.*\///'` #remove the  path name
-#  echo "'$out_column'    using 1:(\$${n}) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${cwd}/avg-throughput-combined.plot
-#  n=$(($n+1))
-#done
-
-# Process the file
-#newout="${cwd}/data/client-latency.ts"
-#echo "producing $newout"
-#cat $out | sort -k +1n | ${cwd}/sma.awk P=50 > $newout

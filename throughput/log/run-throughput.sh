@@ -42,7 +42,7 @@ echo "label = $label"
 #awk $out_avg 'BEGIN{avg=0;run=0;stddev=0.0}{avg+=$6;run++}END{avg /=run;}'
 gen-stat.pl $out_avg $stat_throughput $label
 # generate eps plot using the data points
-gnuplot < avg-throughput.plot
+gnuplot < stat-throughput.plot
 
 # generate pdf files using the eps file.
 cd result

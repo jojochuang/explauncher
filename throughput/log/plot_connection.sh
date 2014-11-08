@@ -5,17 +5,18 @@ source ../../common.sh
 
 # find the latest log set
 echo $logdir
-last_log_set=`ls -tr ${logdir} | tail -n1`
-echo $last_log_set
+last_log_set=`ls -trd ${logdir}/${application}-* | tail -n1`
+echo "plot_connection.sh: last_log_set=$last_log_set"
 #logfiles=(`find ${logdir}/$last_log_set -regex '.*\(server\|client\|head\).*gz'`)
 
-last_log_dir=`ls -tr ${logdir}/${last_log_set} | tail -n1`
-echo $last_log_dir
-logfiles=(`find ${logdir}/${last_log_set}/${last_log_dir} -regex '.*\(server\|client\|head\).*gz'`)
+#last_log_dir=`ls -tr ${logdir}/${last_log_set} | tail -n1`
+#echo $last_log_dir
+logfiles=(`find ${last_log_set} -regex '.*\(server\|client\|head\).*gz'`)
 
-echo $logfiles
+echo "plot_connection.sh: logfiles= $logfiles"
 
 rm /tmp/connection_log
+touch /tmp/connection_log
 for f in "${logfiles[@]}"; do
   echo $f
   zgrep -e "\(TcpTransport::connect\|BaseTransport::BaseTransport\)" $f > /tmp/nacho_log 

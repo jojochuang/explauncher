@@ -4,15 +4,18 @@ application="throughput"
 source ../../common.sh
 
 if [[ $# -lt 1 ]]; then
-  logset=`ls -tr ${logdir} | tail -n1`
+  logset=`ls -trd ${logdir}/${application}-* | tail -n1`
 else
   logset=$1
 fi 
 
+echo "logdir=$logdir"
+echo "logset=$logset"
+
 type="instant"
 
 # check for assertion failures in the latest logs
-./check-assert.sh $type $logset
+./check-assert.sh $type ${logset}
 if [[ $? -ne 0 ]]; then
   echo "There is assertion failure."
   #exit 0

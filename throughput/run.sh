@@ -3,7 +3,7 @@
 application="throughput"
 source ../common.sh
 
-mace_start_port=10000
+mace_start_port=13000
 scale=8
 
 runtime=50 # duration of the experiment
@@ -153,10 +153,11 @@ function runexp (){
 }
 
 function aggregate_output () {
-  t_clients=$1
-  t_primes=$2
+  log_set_dir=$1
+  t_clients=$2
+  t_primes=$3
   # create a new directory for the set of logs
-  log_set_dir=`date --iso-8601="seconds"`
+  #log_set_dir=`date --iso-8601="seconds"`
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
   mv ${logdir}/${application}-* ${logdir}/${log_set_dir}/
@@ -174,6 +175,7 @@ for t_server_machines in 7; do
   for t_client_machines in 4; do
     for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
+        log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $t_clients $t_primes
@@ -183,17 +185,25 @@ for t_server_machines in 7; do
           cd log
           ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
           ./run-timeseries.sh
+          ./run-avg.sh
           cd $cwd
           # publish plots and parameters and logs to web page
-          ./publish.sh
+          if [[ $ec2 -eq 0 ]]; then
+            ./publish.sh $log_set_dir
+          fi
         done # end of nruns
 
         #TODO: compute avg and stddev, and plot error bar.
         # Find the last $nruns log, aggregate the compute/plot error bar
 
         # what to plot? the average throughput w/ error
-        aggregate_output $t_clients $t_primes
+        aggregate_output $log_set_dir $t_clients $t_primes 
+        if [[ $ec2 -eq 0 ]]; then
+          ./publish_webindex.sh $log_set_dir
+        fi
+        plot_service.sh
       done # end of total_events
     done
   done
 done
+
