@@ -23,6 +23,8 @@ unless (@ARGV) {
 
 }
 
+# get the list of active nodes except the local host
+# ec2din |grep INSTANCE |awk '$4 !~ "stopped" {print $5}'| grep -v `hostname`
 
 my $mace_rsync = 0;
 my $fullcontext_rsync = 0;
@@ -53,7 +55,6 @@ my $ec2_pass = get_ec2pass();
 my $ec2_instance = get_ec2instance();
 my $key_pair_name = get_keypairname();
 #sed -i".bak" '/ecdsa/d' known_hosts
-#my $ami_id = "ami-3a49f353";
 
 # Create new AMI image
 if( $image_create ) {
