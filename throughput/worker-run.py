@@ -15,9 +15,14 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     assert app_type == "server" or app_type == "client"
 
     # Sleep
-    sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
-    if app_type == "client": # add additional time before the client starts
-      sleep_time += int(param["CLIENT_WAIT_TIME"])
+    if param["flavor"] == "nacho":
+        sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
+        if app_type == "client": # add additional time before the client starts
+          sleep_time += int(param["CLIENT_WAIT_TIME"])
+    elif param["flavor"] == "context":
+        sleep_time = float(boot_wait_time)
+        if app_type == "client": # add additional time before the client starts
+          sleep_time += int(param["CLIENT_WAIT_TIME"])
 
     logger.info("Sleeping %d...", sleep_time )
 
@@ -88,7 +93,13 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     # Sleep
     logger.info("Sleeping %s...", boot_wait_time)
-    sleep(float(boot_wait_time))
+    sleep_time = float(boot_wait_time)
+    if param["flavor"] == "nacho":
+        sleep_time += 0
+    elif param["flavor"] == "context":
+        # the fullcontext runtime assumes all peer nodes are ready when the head starts
+        sleep_time += int(param["WORKER_JOIN_WAIT_TIME"])
+    sleep( sleep_time )
 
     # Log filename
     logdir = param["SCRATCHDIR"]

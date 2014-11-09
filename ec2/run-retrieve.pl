@@ -40,9 +40,9 @@ my $delete = "";
 GetOptions("mace_rsync" => \$mace_rsync,
            "fullcontext_rsync" => \$fullcontext_rsync,
            "benchmark_rsync" => \$benchmark_rsync,
+           "regenerate" => \$regenerate,
            "pssh" => \$pssh,
            "action=s" => \$action,
-           "regenerate" => \$regenerate,
            "sync" => \$sync,
            "image_create" => \$image_create,
            "delete=s" => \$delete,
@@ -60,7 +60,8 @@ my $key_pair_name = get_keypairname();
 if( $image_create ) {
     my $ami_name_old = trim(`cat conf/ami-id | awk '{print \$1}'`);
     my $ami_name_new = $ami_name_old+1;
-    my $run = "ec2-create-image -O ${ec2_key} -W ${ec2_pass} ${ec2_instance} -name shyoo-mace${ami_name_new} --no-reboot | awk '{print \$2}'";
+    my $run = "ec2-create-image -O ${ec2_key} -W ${ec2_pass} ${ec2_instance} -name nacho-${ami_name_new} --no-reboot | awk '{print \$2}'";
+    # TODO: add description of the nacho runtime and explauncher
     print "\$ ${run}\n";
     my $out = trim(`$run`);
     print "${out}\n";
@@ -96,7 +97,12 @@ if( $action eq "START" ) {
 
 # Create instances
 if( $action eq "CREATE" ) {
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small --availability-zone us-east-1a | grep INSTANCE | awk '{print \$2}'";
+    my $param_security_group="";
+    my $secgroup = get_securitygroup();
+    if ( $secgroup ne "" ){
+        $param_security_group="-g $secgroup"
+    }
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small --availability-zone us-east-1a $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -123,7 +129,12 @@ if( $action eq "CREATE" ) {
 }
 
 if( $action eq "ADD" ) {
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small | grep INSTANCE | awk '{print \$2}'";
+    my $param_security_group="";
+    my $secgroup = get_securitygroup();
+    if ( $secgroup ne "" ){
+        $param_security_group="-g $secgroup"
+    }
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");

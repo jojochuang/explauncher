@@ -6,10 +6,16 @@ fi
 application=$1
 source ../common.sh
 
-ec2din  -O $ACCESS_KEY -W $SECRET_KEY | grep INSTANCE > /tmp/inst
+if [ -z $ACCESS_KEY ] && [ -z $SECRET_KEY ]; then
+  ec2din  | grep INSTANCE > /tmp/inst
+else
+  ec2din  -O $ACCESS_KEY -W $SECRET_KEY | grep INSTANCE > /tmp/inst
+fi
 cat /tmp/inst | awk '{if( $6 == "running" ){print $5}}'| grep -v `hostname` > /tmp/hosts
 
 cat /tmp/hosts
+nl=`wc /tmp/hosts`
+echo "===${nl} nodes==="
 echo "sure to overwrite hosts of application ${application}? (y/N)"
 read ans
 echo $ans

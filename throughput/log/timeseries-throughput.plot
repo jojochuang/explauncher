@@ -7,6 +7,7 @@ set xtics nomirror
 set ytics nomirror
 #set y2tics tc lt 1
 set terminal postscript enhanced eps color "Helvetica" 22
+set size ratio -3
 
 # Get latency's range
 #plot "data/client-latency.ts" u 1:2

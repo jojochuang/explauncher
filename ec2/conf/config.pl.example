@@ -3,9 +3,11 @@ my $ec2_key = "";
 my $ec2_pass = "";
 my $ec2_instance = "";
 my $key_pair_name = "";
+my $security_group = "";
 
 sub get_ec2key { return $ec2_key; }
 sub get_ec2pass { return $ec2_pass; }
 sub get_ec2instance { return $ec2_instance; }
 sub get_keypairname { return $key_pair_name; }
+sub get_securitygroup { return $security_group; }
 1;

@@ -3,10 +3,10 @@
 application="throughput"
 source ../common.sh
 
-mace_start_port=10000
+mace_start_port=30000
 scale=8
 
-runtime=50 # duration of the experiment
+runtime=100 # duration of the experiment
 boottime=10   # total time to boot.
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
@@ -14,7 +14,8 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 #nruns=1      # number of replicated runs
 nruns=5      # number of replicated runs
 
-flavor="nacho"
+#flavor="nacho"
+flavor="context"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -54,8 +55,8 @@ function GenerateBenchmarkParameter (){
   echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 10" >>  ${conf_file}
-  echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = 60" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = 30" >> ${conf_file}
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
@@ -173,9 +174,20 @@ function aggregate_output () {
   cd $cwd
 }
 
-for t_server_machines in 15; do
-  for t_client_machines in 8; do
-    for t_clients in 16; do
+function init() {
+  # create directories on all nodes
+  pssh -h conf/hosts -t 30 mkdir -p $scratchdir
+  #if [[ $ec2 -eq 1 ]]; then
+  #else
+
+  #fi
+}
+
+init
+
+for t_server_machines in 1; do
+  for t_client_machines in  1; do
+    for t_clients in 2; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do

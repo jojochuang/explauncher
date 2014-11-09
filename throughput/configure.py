@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+##!/usr/bin/python2.7
 
 from optparse import OptionParser
 import logging
@@ -121,10 +121,6 @@ def main(options):
     assert len(ipaddr) > 0, "Number of machines in host file should exist at least one"
     assert len(ipaddr) >= num_machines, "number of machines in host file is smaller than the machine we should use"
 
-    # read the hosts file to get the "head" of the server address
-    with open(options.paramfile, "a") as f:
-      f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( hostname[0], options.port ) );
-
     # Write to output boot file (This is only for physical machines)
     with open(options.boot, "w") as f:
         # Write (id, time_to_boot, ip_addr, host_name)
@@ -165,7 +161,15 @@ def main(options):
                     g.write("%s\n" % h)
 
     # Write to output server conf file
+    #with open(options.paramfile, "a") as f:
+    # read the hosts file to get the "head" of the server address
     with open(options.paramfile, "a") as f:
+      f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( hostname[0], options.port ) );
+      # TODO: write lib.MApplication.nodeset
+      if param["flavor"] == "context":
+        for j in range(num_servers+1):
+          f.write( "ServiceConfig.Throughput.nodeset = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
+
         serveraddr = []
 
         # print nodeset
@@ -554,15 +558,15 @@ def main(options):
         else:
             assert 0, "Please specify EXPERIMENT_TYPE!"
 
-
-
-    
-#echo "ServiceConfig.Throughput.receiver_addr = IPV4/tiberius01:4000" >>  ${conf_client_file}
-
     # Write to output client conf file
     with open(options.clientfile, "a") as f:
-        for j in range(num_servers+1):
-          f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
+        if param["flavor"] == "nacho":
+            for j in range(num_servers+1):
+              f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
+        elif param["flavor"] == "context":
+          f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[0 ], port=options.port ));
+        elif param["flavor"] == "mace":
+            raise Exception( "mace flavor not supported" )
 
         # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
         f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))

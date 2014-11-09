@@ -25,6 +25,9 @@ fi
 # generate eps plot using the data points
 gnuplot < timeseries-throughput-combined.plot
 
+rm data/server*.ts
+rm data/head*.ts
+
 # generate pdf files using the eps file.
 cd result
 if [[ ! -f "throughput.eps" ]]; then
