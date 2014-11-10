@@ -1,4 +1,4 @@
-##!/usr/bin/python2.7
+#!/usr/bin/python2.7
 
 from optparse import OptionParser
 import logging
@@ -164,11 +164,12 @@ def main(options):
     #with open(options.paramfile, "a") as f:
     # read the hosts file to get the "head" of the server address
     with open(options.paramfile, "a") as f:
-      f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( hostname[0], options.port ) );
-      # TODO: write lib.MApplication.nodeset
-      if param["flavor"] == "context":
-        for j in range(num_servers+1):
-          f.write( "ServiceConfig.Throughput.nodeset = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
+        # TODO: write lib.MApplication.nodeset
+        if param["flavor"] == "nacho":
+          f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( hostname[0], options.port ) );
+        elif param["flavor"] == "context":
+          for j in range(num_servers+1):
+            f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
 
         serveraddr = []
 
@@ -223,8 +224,6 @@ def main(options):
                   print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
                   sys.exit()
 
-                #f.write( 'mapping = {}:Building[{}]\n'.format(
-                #    sid, i))
                 f.write( 'lib.MApplication.{}.mapping = {}:Receiver[{}]\n'.format(
                     service_name, sid, i))
 

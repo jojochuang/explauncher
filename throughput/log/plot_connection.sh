@@ -22,6 +22,6 @@ for f in "${logfiles[@]}"; do
   zgrep -e "\(TcpTransport::connect\|BaseTransport::BaseTransport\)" $f > /tmp/nacho_log 
   ./parse-connection.pl /tmp/nacho_log   >> /tmp/connection_log
 done
-./genplot-connection.pl /tmp/connection_log conf/boot data/conn.dot
+./genplot-connection.pl /tmp/connection_log ../conf/boot data/conn.dot
 neato -Tpdf data/conn.dot -o result/conn_$label.pdf
 neato -Tpng data/conn.dot -o result/conn_$label.png

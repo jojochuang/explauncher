@@ -49,7 +49,8 @@ def main(options):
     # Killall the experiment
     cmd = 'killall python2.7 worker-run.py {binary}'.format(
             binary=param["BINARY"])
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
@@ -102,7 +103,8 @@ def main(options):
             bin=param["BIN"],
             paramfile="%s/%s" % (param["BIN"], options.paramfile),
             clientfile="%s/%s" % (param["BIN"], options.clientfile))
-    Utils.shell_launch('pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+    Utils.shell_launch('{pssh_dir}/pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         run_time=int(param["run_time"]) + int(param["WORKER_JOIN_WAIT_TIME"]) + 
                  int(param["CLIENT_WAIT_TIME"]) + int(param["TOTAL_BOOT_TIME"]) + 10,
@@ -112,7 +114,8 @@ def main(options):
     # Killall the experiment
     cmd = 'killall python2.7 worker-run.py {binary} sar worker-sar.sh'.format(
             binary=param["BINARY"])
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTRUNFILE"],
         command=cmd))
@@ -123,7 +126,8 @@ def main(options):
             paramfile="%s/%s" % (param["BIN"], options.paramfile),
             logdir=log_dir)
 
-    Utils.shell_exec('ulimit -c unlimited; pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+    Utils.shell_exec('ulimit -c unlimited; {pssh_dir}/pssh -v -p {num_machines} -P -t {run_time} -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         run_time=param["run_time"],
         hostfile=param["HOSTRUNFILE"],

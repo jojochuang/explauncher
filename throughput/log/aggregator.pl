@@ -13,11 +13,13 @@ my %throughput;
 my $total_throughput = 0;
 for ($n = 1; $n < $nargs; $n++ ){
   open ( FILE, $ARGV[$n] );
+  #print "aggregator.pl: open file " . $ARGV[$n] . "\n";
   while( <FILE> ){
     chomp;
     my @lines = split("\t");
     my $data_time = $lines[0];
     my $data_throughput = $lines[1];
+    #print "read time $data_time throughput $data_throughput\n";
 
     if ( not exists $throughput{ $data_time } ){
       $throughput{ $data_time } = $data_throughput;

@@ -14,8 +14,8 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 #nruns=1      # number of replicated runs
 nruns=5      # number of replicated runs
 
-#flavor="nacho"
-flavor="context"
+flavor="nacho"
+#flavor="context"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -47,21 +47,24 @@ function GenerateBenchmarkParameter (){
 
   echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
   echo "BINARY = ${application}_${flavor}" >> ${conf_file}
+  echo "flavor = ${flavor}" >> ${conf_file}
   echo "MACE_START_PORT = ${mace_start_port}" >> ${conf_file}
 
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 60" >>  ${conf_file}
-  echo "CLIENT_WAIT_TIME = 30" >> ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = 40" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
   echo "SERVER_CONFFILE = ${conf_dir}/params-run-client.conf" >> $conf_file
   echo "CLIENT_CONFFILE = ${conf_dir}/params-run-server.conf" >> $conf_file
+
+  echo "GRAPHVIZ_FILE = /tmp/gv.dot" >> $conf_file
   if [[ $ec2 -eq 1 ]]; then
     echo "EC2 = 1" >> ${conf_file}
     echo "SYNC_CONF_FILES = 1" >> ${conf_file}
@@ -176,7 +179,7 @@ function aggregate_output () {
 
 function init() {
   # create directories on all nodes
-  pssh -h conf/hosts -t 30 mkdir -p $scratchdir
+  ${psshdir}/pssh -h conf/hosts -t 30 mkdir -p $scratchdir
   #if [[ $ec2 -eq 1 ]]; then
   #else
 
@@ -185,9 +188,9 @@ function init() {
 
 init
 
-for t_server_machines in 1; do
-  for t_client_machines in  1; do
-    for t_clients in 2; do
+for t_server_machines in 7; do
+  for t_client_machines in  4; do
+    for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
@@ -199,7 +202,6 @@ for t_server_machines in 1; do
           cd log
           ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
           ./run-timeseries.sh
-          ./run-avg.sh
           cd $cwd
           # publish plots and parameters and logs to web page
           #if [[ $ec2 -eq 0 ]]; then
@@ -212,10 +214,13 @@ for t_server_machines in 1; do
 
         # what to plot? the average throughput w/ error
         aggregate_output $log_set_dir $t_clients $t_primes 
-        #if [[ $ec2 -eq 0 ]]; then
-          ./publish_webindex.sh $log_set_dir
-        #fi
+        cwd=`pwd`
+        cd log
+        ./run-avg.sh
         ./plot_service.sh
+        cd $cwd
+
+        ./publish_webindex.sh $log_set_dir
       done # end of total_events
     done
   done

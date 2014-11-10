@@ -22,7 +22,7 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     elif param["flavor"] == "context":
         sleep_time = float(boot_wait_time)
         if app_type == "client": # add additional time before the client starts
-          sleep_time += int(param["CLIENT_WAIT_TIME"])
+          sleep_time += int(param["CLIENT_WAIT_TIME"])+int(param["WORKER_JOIN_WAIT_TIME"])
 
     logger.info("Sleeping %d...", sleep_time )
 
@@ -142,7 +142,8 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     #cmd = 'killall python2.7 worker-run.py {binary}'.format(
     cmd = 'killall python2.7 {binary}'.format(
             binary=param["BINARY"])
-    Utils.shell_exec('pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+    Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
+        pssh_dir=param["PSSHDIR"],
         num_machines=param["num_machines"], 
         hostfile=param["HOSTNOHEADFILE"],
         command=cmd))

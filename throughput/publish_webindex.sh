@@ -39,12 +39,15 @@ echo "copy avg-throughput.ts"
 cp log/data/avg-throughput.ts ${webdir}/${log_set_dir}/
 echo "copy avg-throughput.png"
 cp log/result/avg-throughput.png ${webdir}/${log_set_dir}/
+echo "copy service_struct.png"
+cp log/result/service_struct.png ${webdir}/${log_set_dir}/
 
 # add an entry to the web page
 index_page="${webdir}/index.html"
 cat <<EOF >> ${index_page}
 <table border=1>
 <tr> <td>${log_set_dir}</td> </tr>
+<tr> <td> <p>Service structure </p><a href="${url_prefix}${log_set_dir}/service_struct.png"><img src="${url_prefix}${log_set_dir}/service_struct.png"></a> </td> </tr>
 <tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.ts">avg-throughput.ts</a> </td> </tr>
 <tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.png">
   <p>Average Throughput </p>
