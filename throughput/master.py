@@ -96,6 +96,7 @@ def main(options):
             confdir=param["CONFDIR"]))
 
 
+    print "parafile : " + options.paramfile 
     # Run worker-run-microbenchmark.py with PSSH
     # PSSH will be launched via fork() to catch Ctrl+C to stop the
     # experiment.

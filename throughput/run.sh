@@ -61,8 +61,8 @@ function GenerateBenchmarkParameter (){
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
-  echo "SERVER_CONFFILE = ${conf_dir}/params-run-client.conf" >> $conf_file
-  echo "CLIENT_CONFFILE = ${conf_dir}/params-run-server.conf" >> $conf_file
+  echo "CLIENT_CONFFILE = $conf_client_file" >> $conf_file
+  echo "SERVER_CONFFILE = $conf_file" >> $conf_file
 
   echo "GRAPHVIZ_FILE = /tmp/gv.dot" >> $conf_file
   if [[ $ec2 -eq 1 ]]; then

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-application="throughput"
+application="ranger"
 source ../common.sh
 
 # copy to cs website the logs, parameters:

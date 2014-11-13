@@ -1,6 +1,6 @@
 #!/bin/bash
 
-application="throughput"
+application="ranger"
 source ../../common.sh
 #logdir=/u/tiberius06_s/chuangw/logs/throughput
 cwd=`pwd`

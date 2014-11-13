@@ -1,6 +1,6 @@
 #!/bin/bash
 
-application="throughput"
+application="ranger"
 source ../../common.sh
 
 if [[ $# -lt 1 ]]; then

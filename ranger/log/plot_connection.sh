@@ -1,5 +1,5 @@
 #!/bin/bash
-application="throughput"
+application="ranger"
 label=$1
 source ../../common.sh
 
