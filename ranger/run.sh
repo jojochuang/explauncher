@@ -10,6 +10,7 @@ server_scale=1
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
 t_client_machines=1
 #n_client_logicalnode=2
+t_ncontexts=4
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
@@ -18,6 +19,8 @@ logical_nodes_per_physical_nodes=2
 
 runtime=100 # duration of the experiment
 boottime=10   # total time to boot.
+server_join_wait_time=0
+client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
@@ -71,8 +74,8 @@ function GenerateBenchmarkParameter (){
   echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 40" >>  ${conf_file}
-  echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = ${client_wait_time}" >> ${conf_file}
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
@@ -96,6 +99,8 @@ function runexp (){
   t_primes=$4
 
   # For each server machine, run only one server process.
+  # minus the bootstrapper node
+  #t_servers=$(( $t_server_machines - $n_server_logicalnode ))
   t_servers=$t_server_machines
 
   #t_clients_per_machine=$(($t_clients/$t_client_machines))
@@ -105,10 +110,6 @@ function runexp (){
   # TODO: include the head node
   t_machines=$(($t_server_machines + $t_client_machines ))
 
-  #for t_ncontexts in 24; do  # Number of total buildings across all the servers
-  #t_scale=$(($t_server_machines+1))
-  t_scale=$n_server_logicalnode
-  t_ncontexts=$(($t_scale*6 ))
 
   #initial_server_size=$(($t_server_machines+1))
   initial_server_size=$(($t_server_machines))
@@ -149,13 +150,17 @@ function runexp (){
 
   #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
   echo "role = client" >>  ${conf_client_file}
+  #echo "lib.MApplication.services = PRTrafficGenerator" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
+
+  echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
+  echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
 
   # copy the param file for the server
   #echo -e "\n# Specific parameters for server" >> ${conf_file}
 
-  echo "role = server" >>  ${conf_client_file}
+  echo "role = server" >>  ${conf_file}
   echo "lib.MApplication.services = ParkRanger" >> ${conf_file}
   echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}

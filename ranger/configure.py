@@ -95,20 +95,30 @@ class Configuration:
       num_server_machines = self.num_server_machines
       # Put all the contexts in different node
 
+      server_scale = int ( param["lib.MApplication.initial_size"] )
       # Building
       for i in range(self.num_contexts):
           if param["CONTEXT_ASSIGNMENT_POLICY"] == "NO_SHIFT":
-            sid = (0 + i % (num_server_machines) ) % self.num_machines
+            #sid = (0 + i % (num_server_machines) ) % self.num_machines
+            sid = i % server_scale
           elif param["CONTEXT_ASSIGNMENT_POLICY"] == "SHIFT_BY_ONE":
-            sid = (0 + (i+1) % (num_server_machines) ) % self.num_machines
+            #sid = (0 + (i+1) % (num_server_machines) ) % self.num_machines
+            sid = (i+1) % server_scale
           elif param["CONTEXT_ASSIGNMENT_POLICY"] == "RANDOM":
-            sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines) ) % self.num_machines
+            #sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines) ) % self.num_machines
+            sid = random.randint(0, (server_scale-1) )
           else:
             print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
             sys.exit()
 
-          f.write( 'lib.MApplication.{}.mapping = {}:Receiver[{}]\n'.format(
+          f.write( 'lib.MApplication.{}.mapping = {}:Path[{}]\n'.format(
               service_name, sid, i))
+          f.write( 'lib.MApplication.WCPaxos.mapping = {}:Proposal[{}]\n'.format(
+              sid, i))
+          f.write( 'lib.MApplication.WCPaxos.mapping = {}:Acceptor[{}]\n'.format(
+              sid, i))
+          f.write( 'lib.MApplication.WCPaxos.mapping = {}:Client[{}]\n'.format(
+              sid, i))
 
       # Kids
       #for i in range(num_clients):
@@ -129,7 +139,7 @@ class Configuration:
       for i in range(self.num_contexts):
           #f.write( 'mapping = {}:Building[{}]\n'.format(
           #    1, i))
-          f.write( 'lib.MApplication.{}.mapping = {}:Receiver[{}]\n'.format(
+          f.write( 'lib.MApplication.{}.mapping = {}:Path[{}]\n'.format(
               service_name, 1, i))
 
       # Kids
@@ -178,7 +188,7 @@ class Configuration:
       for i in range(self.num_contexts):
           #f.write( 'mapping = {}:Building[{}]\n'.format(
           #    1, i))
-          f.write( 'lib.MApplication.{}.mapping = {}:Receiver[{}]\n'.format(
+          f.write( 'lib.MApplication.{}.mapping = {}:Path[{}]\n'.format(
               service_name, 1, i))
 
       # Kids
@@ -456,7 +466,8 @@ class Configuration:
 
   def writeBoot( self ):
       # Write to output boot file (This is only for physical machines)
-      num_processes = 1 + self.num_servers + self.num_clients
+      #num_processes = 1 + self.num_servers + self.num_clients
+      num_processes = self.num_servers + self.num_clients
       options = self.options
       hostname = self.hostname
       with open(options.boot, "w") as f:
@@ -475,15 +486,16 @@ class Configuration:
             boot_time += boot_period
 
           # Write for servers
-          for j in range(self.num_servers):
-              sid = (1 + j % self.num_server_machines) % self.num_machines
+          for j in range(self.num_servers - server_nodes):
+              #sid = (1 + j % self.num_server_machines) % self.num_machines
+              sid = (j % self.num_server_machines) % self.num_machines
               self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
               i += 1
               boot_time += boot_period
 
           # Write for clients
           for j in range(self.num_clients):
-              sid = (1 + self.num_server_machines + j % self.num_client_machines) % self.num_machines
+              sid = ( self.num_server_machines + j % self.num_client_machines) % self.num_machines
               self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "client", f) 
               i += 1
               boot_time += boot_period
@@ -556,17 +568,16 @@ class Configuration:
       day_period = self.day_period
       # Write to output client conf file
       with open(options.clientfile, "a") as f:
-
-          # write service configs:
-          # ServiceConfig.PRTrafficGenerator.NKEYS
-          # ServiceConfig.PRTrafficGenerator.READ_RATIO
           if param["flavor"] == "nacho":
-              for j in range(self.num_servers+1):
-                f.write( "ServiceConfig.Ranger.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
+              for j in range(self.num_servers):
+                f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
           elif param["flavor"] == "context":
-            f.write( "ServiceConfig.Ranger.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[0 ], port=options.port ));
+            server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+            for j in range(server_nodes):
+              f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
           elif param["flavor"] == "mace":
               raise Exception( "mace flavor not supported" )
+
 
           # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
           f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))

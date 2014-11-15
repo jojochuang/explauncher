@@ -14,6 +14,10 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
 
     assert app_type == "client"
 
+
+    # re-load parameters for the specific server
+    param = Utils.param_reader(options.clientfile)
+
     # Sleep
     if param["flavor"] == "nacho":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
@@ -24,6 +28,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
 
     logger.info("Sleeping %d...", sleep_time )
 
+    #sleep_time=0
     sleep( sleep_time )
   
     # Log filename
@@ -42,23 +47,29 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     server_scale = int( param["lib.MApplication.initial_size"] )
     nservers = int( param["SERVER_LOGICAL_NODES"] )
     sender_id = int(nid) - server_scale * nservers
+    receivers = param["LAUNCHER.receiver_addr"]
+
+    # TODO: translate client id to corresponding address
+    raddr = receivers[ int(nid) - nservers*server_scale]
 
     logfile = '{}/client-{}-{}.log'.format(
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port}'.format(
+    logger.info('$ {application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
         application=app,
         pfile=clientfile,
         service=param["client_service"],
         sid=sender_id,
-        port=ipaddr.strip().split(":")[1]))
-    r = Utils.process_exec('{application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port}'.format(
+        port=ipaddr.strip().split(":")[1],
+        raddr=raddr))
+    r = Utils.process_exec('{application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
         application=app,
         pfile=clientfile,
         service=param["client_service"],
         sid=sender_id,
-        port=ipaddr.strip().split(":")[1]),
+        port=ipaddr.strip().split(":")[1],
+        raddr=raddr),
         log=logfile)
 
     end_time = Utils.unixTime()
@@ -66,7 +77,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     logger.info("Process %s exited." % nid)
     logger.info("Total execution time : %f sec", end_time - start_time)
 
-def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,clientfile):
+def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
 
     assert app_type == "server"
@@ -241,7 +252,7 @@ def main(options):
             elif app_type == "server":
                 logger.info("launching worker nid = %s" % nid)
                 if int(nid) > 0:
-                    p = Process(target=execute_server, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, options.clientfile))
+                    p = Process(target=execute_server, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
                     plist.append(p)
 
             elif app_type == "client":
