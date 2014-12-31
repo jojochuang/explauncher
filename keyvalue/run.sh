@@ -1,39 +1,41 @@
 #!/bin/bash
 # This is the script that runs multiple throughput benchmarks of the nacho runtime. 
-application="ranger"
+source conf/conf.sh
 source ../common.sh
 
 mace_start_port=30000
 # number of server logical nodes does not change
-n_server_logicalnode=3
-server_scale=1
+n_server_logicalnode=1
+server_scale=2
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
 t_client_machines=1
 #n_client_logicalnode=2
 t_ncontexts=4
+t_ngroups=1 # number of partitions at server
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
 
-logical_nodes_per_physical_nodes=2
+logical_nodes_per_physical_nodes=1
 
 runtime=100 # duration of the experiment
 boottime=10   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
+memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
 nruns=1      # number of replicated runs
 
-flavor="nacho"
+flavor="context"
 #flavor="context"
 
-#context_policy="NO_SHIFT"
+context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
-context_policy="RANDOM"
+#context_policy="RANDOM"
 
 # migration pattern parameters
 t_days=6
@@ -71,7 +73,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -150,27 +152,29 @@ function runexp (){
 
   #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
   echo "role = client" >>  ${conf_client_file}
-  #echo "lib.MApplication.services = PRTrafficGenerator" >> ${conf_client_file}
+  echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
-  echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
-  echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
+  #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
+  #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
 
   # copy the param file for the server
-  #echo -e "\n# Specific parameters for server" >> ${conf_file}
+  echo -e "\n# Specific parameters for server" >> ${conf_file}
 
   echo "role = server" >>  ${conf_file}
-  echo "lib.MApplication.services = ParkRanger" >> ${conf_file}
+  echo "lib.MApplication.services = KeyValueServer" >> ${conf_file}
   echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
+  echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
+  echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
 
   # copy the server parameter file template 
-  for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
-  do
-    #echo $i
-    cp ${conf_file} ${conf_file}${i}
-  done
+  #for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
+  #do
+  #  #echo $i
+  #  cp ${conf_file} ${conf_file}${i}
+  #done
 
   # print out bootfile & param for servers
   echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
@@ -228,7 +232,6 @@ function init() {
 init
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
-#for t_server_machines in 3; do
   #for t_client_machines in  4; do
     n_client_logicalnode=$(( $t_client_machines * $logical_nodes_per_physical_nodes ))
 
@@ -267,5 +270,4 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
       done # end of total_events
     #done
   #done
-#done
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-application="ranger"
+source ../conf/conf.sh
 source ../../common.sh
 #logdir=/u/tiberius06_s/chuangw/logs/ranger
 cwd=`pwd`

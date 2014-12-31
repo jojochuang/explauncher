@@ -1,6 +1,6 @@
 #!/bin/bash
 
-application="ranger"
+source ../conf/conf.sh
 source ../../common.sh
 cwd=`pwd`
 
