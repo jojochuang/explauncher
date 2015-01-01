@@ -123,9 +123,10 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
         #pfile=paramfile,
         #port=ipaddr.strip().split(":")[1])
     #logger.info("cmd = %s" % cmd)
-    r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port}'.format(
+    r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
         application=app,
         service=param["head_service"],
+        sid=sender_id,
         pfile=paramfile,
         port=ipaddr.strip().split(":")[1]),
         log=logfile)
