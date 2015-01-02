@@ -470,38 +470,36 @@ class Configuration:
           i=0  # id
           boot_time = 0
 
+          server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+          # Write for head
+          # the first few lines of boot file are for the bootstrapping nodes
           if self.param["flavor"] == "nacho":
-            # Write for head
-            # the first few lines of boot file are for the bootstrapping nodes
-            server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
-            for j in range( server_nodes ):
-              self.boot(i, boot_time, self.ipaddr[i % self.num_machines], options.port+i* self.port_shift, hostname[i%self.num_machines], "head", f) 
+            boot_time = 0
+          elif self.param["flavor"] == "context":
+            boot_time = boot_period * server_nodes
+          else:
+              raise Exception( "mace flavor not supported" )
+            
+          for j in range( server_nodes ):
+            self.boot(i, boot_time, self.ipaddr[i % self.num_machines], options.port+i* self.port_shift, hostname[i%self.num_machines], "head", f) 
+            i += 1
+            boot_time += boot_period
+
+          if self.param["flavor"] == "nacho":
+            boot_time = boot_period * (self.num_servers - server_nodes)
+          elif self.param["flavor"] == "context":
+            boot_time = 0
+          else:
+              raise Exception( "mace flavor not supported" )
+          # Write for servers
+          for j in range(self.num_servers - server_nodes):
+              #sid = (1 + j % self.num_server_machines) % self.num_machines
+              sid = (j % self.num_server_machines) % self.num_machines
+              self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
               i += 1
               boot_time += boot_period
 
-            # Write for servers
-            for j in range(self.num_servers - server_nodes):
-                #sid = (1 + j % self.num_server_machines) % self.num_machines
-                sid = (j % self.num_server_machines) % self.num_machines
-                self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
-                i += 1
-                boot_time += boot_period
-          elif self.param["flavor"] == "context":
-            # print servers followed by heads
-            server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
-            # Write for servers
-            for j in range(self.num_servers - server_nodes):
-                #sid = (1 + j % self.num_server_machines) % self.num_machines
-                sid = (j % self.num_server_machines) % self.num_machines
-                self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
-                i += 1
-                boot_time += boot_period
-            # Write for head
-            # the first few lines of boot file are for the bootstrapping nodes
-            for j in range( server_nodes ):
-              self.boot(i, boot_time, self.ipaddr[i % self.num_machines], options.port+i* self.port_shift, hostname[i%self.num_machines], "head", f) 
-              i += 1
-              boot_time += boot_period
+          boot_time = boot_period * self.num_servers
 
 
           # Write for clients

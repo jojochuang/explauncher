@@ -154,7 +154,7 @@ function runexp (){
   echo "role = client" >>  ${conf_client_file}
   echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
-  echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
+  echo "MACE_LOG_AUTO_ALL = 1" >> ${conf_client_file}
 
   #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
   #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
