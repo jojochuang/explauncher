@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 # TODO: exit if no file name in the argument is given
 
 

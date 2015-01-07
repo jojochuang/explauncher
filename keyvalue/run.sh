@@ -1,4 +1,5 @@
 #!/bin/bash
+#set -e
 # This is the script that runs multiple throughput benchmarks of the nacho runtime. 
 source conf/conf.sh
 source ../common.sh
@@ -6,9 +7,9 @@ source ../common.sh
 mace_start_port=30000
 # number of server logical nodes does not change
 n_server_logicalnode=1
-server_scale=2
+server_scale=4
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=1
+t_client_machines=4
 #n_client_logicalnode=2
 t_ncontexts=4
 t_ngroups=1 # number of partitions at server
@@ -19,7 +20,7 @@ t_ngroups=1 # number of partitions at server
 logical_nodes_per_physical_nodes=1
 
 runtime=100 # duration of the experiment
-boottime=10   # total time to boot.
+boottime=20   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
@@ -28,14 +29,14 @@ memory_rounds=1000 # frequency of memory usage log printing
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
-flavor="context"
+flavor="nacho"
 #flavor="context"
 
-context_policy="NO_SHIFT"
+#context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
-#context_policy="RANDOM"
+context_policy="RANDOM"
 
 # migration pattern parameters
 t_days=6
@@ -73,7 +74,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -154,7 +155,7 @@ function runexp (){
   echo "role = client" >>  ${conf_client_file}
   echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
-  echo "MACE_LOG_AUTO_ALL = 1" >> ${conf_client_file}
+  echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
   #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
   #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
@@ -188,14 +189,14 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}\e[00m"
+      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
 
     else
       # do not use monitor
       #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
       echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
     fi
     sleep 10
   fi

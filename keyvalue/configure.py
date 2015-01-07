@@ -486,17 +486,18 @@ class Configuration:
             boot_time += boot_period
 
           if self.param["flavor"] == "nacho":
-            boot_time = boot_period * (self.num_servers - server_nodes)
+            boot_time = boot_period * ( server_nodes)
           elif self.param["flavor"] == "context":
             boot_time = 0
           else:
               raise Exception( "mace flavor not supported" )
           # Write for servers
-          for j in range(self.num_servers - server_nodes):
+          for j in range(server_nodes, self.num_servers):
               #sid = (1 + j % self.num_server_machines) % self.num_machines
-              sid = (j % self.num_server_machines) % self.num_machines
-              self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
-              i += 1
+              #sid = (j % self.num_server_machines) % self.num_machines
+              self.boot(i, boot_time, self.ipaddr[j], options.port+j* self.port_shift, hostname[j], "server", f) 
+              #i += 1
+              i = j
               boot_time += boot_period
 
           boot_time = boot_period * self.num_servers
@@ -504,9 +505,11 @@ class Configuration:
 
           # Write for clients
           for j in range(self.num_clients):
-              sid = ( self.num_server_machines + j % self.num_client_machines) % self.num_machines
-              self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "client", f) 
-              i += 1
+              i = j + self.num_servers
+              #sid = ( self.num_server_machines + j % self.num_client_machines) % self.num_machines
+              #self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "client", f) 
+              self.boot(i, boot_time, self.ipaddr[i], options.port+i* self.port_shift, hostname[i], "client", f) 
+              #i += 1
               boot_time += boot_period
       return
 
@@ -591,7 +594,7 @@ class Configuration:
               raise Exception( "mace flavor not supported" )
           f.write( "lib.MApplication.{service_name}.mapping = 0:ABC\n".format( 
             service_name = param["client_service"] ));
-          f.write( "ServiceConfig.KeyValueClient.DHT_NODES = IPV4/{host}:{port}\n".format( host= self.hostname[0 ], port=options.port ));
+          #f.write( "ServiceConfig.KeyValueClient.DHT_NODES = IPV4/{host}:{port}\n".format( host= self.hostname[0 ], port=options.port ));
 
 
           # write down hostname0, which is the experiment initiator. (it may not be in hosts file)

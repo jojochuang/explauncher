@@ -1,5 +1,5 @@
 #!/bin/bash
-
+#set -e
 source ../conf/conf.sh
 source ../../common.sh
 #logdir=/u/tiberius06_s/chuangw/logs/ranger
@@ -37,19 +37,25 @@ for f in "${headfile[@]}"; do
   echo "head = $f"
 
   #start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
-  start_time_us=`zgrep -a -e "mace::Init" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
+  #start_time_us=`zgrep -a -e "mace::Init" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
+  start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
   #start_time=$(($start_time_us / 1000000))
-  start_time=$(($start_time_us))
+  start_time=$start_time_us
 
+  if [ -z "$start_time" ]; then
+    echo "start time not found in the log"
+    exit 1
+  else
   echo "start time at $start_time"
 
-  # throughput
-  out="${cwd}/data/head-throughput.ts"
-  if [ -f $out ]; then
-    rm $out
+    # throughput
+    out="${cwd}/data/head-throughput.ts"
+    if [ -f $out ]; then
+      rm $out
+    fi
+    echo "producing $out"
+    zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
   fi
-  echo "producing $out"
-  zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
 done
 

@@ -73,4 +73,7 @@ set output "result/throughput.eps"
 #'data/nocpu_migration_varying_context_size-l6400000.ts'    using 1:($2) title "S=6.4MB"   lt 7 pt 0 lw 1, \
 
 plot \
-'/homes/chuangw/benchmark/keyvalue/log/data/column-throughput.ts'    using 1:($2) title "head-throughput.ts"   lt 0 pt 0 lw 3 axes x1y1 
+'/homes/chuangw/benchmark/keyvalue/log/data/column-throughput.ts'    using 1:($2) title "head-throughput.ts"   lt 0 pt 0 lw 3 axes x1y1 , \
+'/homes/chuangw/benchmark/keyvalue/log/data/column-throughput.ts'    using 1:($3) title "server-tiberius03-1.ts"   lt 1 pt 0 lw 3 axes x1y1 , \
+'/homes/chuangw/benchmark/keyvalue/log/data/column-throughput.ts'    using 1:($4) title "server-tiberius04-2.ts"   lt 2 pt 0 lw 3 axes x1y1 , \
+'/homes/chuangw/benchmark/keyvalue/log/data/column-throughput.ts'    using 1:($5) title "server-tiberius02-1.ts"   lt 3 pt 0 lw 3 axes x1y1 

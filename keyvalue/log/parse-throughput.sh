@@ -1,4 +1,5 @@
 #!/bin/bash
+#set -e
 
 source ../conf/conf.sh
 source ../../common.sh
@@ -20,22 +21,41 @@ svfile=(`find . -name 'server-*.gz'`)
 echo "svfile = $svfile"
 
 start_time=0
-rm ${cwd}/data/server-*.ts
-rm ${cwd}/data/head-throughput.ts
+#rm ${cwd}/data/server-*.ts
+#rm ${cwd}/data/head-throughput.ts
+fs=`find ${cwd}/data -name 'server-*.ts'`
+if [ -z $fs ]; then
+  echo "no server-*.ts found in ${cwd}/data/"
+else
+  rm $fs
+fi
+#for f in "${cwd}/data/server-*.ts"; do
+#  rm $f
+#done
+#for f in ${cwd}/data/head-throughput.ts; do
+if [ -f "${cwd}/data/head-throughput.ts" ]; then
+  rm ${cwd}/data/head-throughput.ts
+fi
 # For headfile, generate plot file
 for f in "${headfile[@]}"; do
   echo "head = $f"
 
   #start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
-  start_time_us=`zgrep -a -e "mace::Init" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
+  #start_time_us=`zgrep -a -e "mace::Init" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
+  start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
   echo "start time=$start_time_us"
   #start_time=$(($start_time_us / 1000000))
-  start_time=$(($start_time_us))
+  start_time=$start_time_us
 
-  # throughput
-  out="${cwd}/data/head-throughput.ts"
-  echo "producing $out"
-  zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
+  if [ -z "$start_time" ]; then
+    echo "start time not found in the log"
+    exit 1
+  else
+    # throughput
+    out="${cwd}/data/head-throughput.ts"
+    echo "producing $out"
+    zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
+  fi
 done
 
 echo "start= " $start_time

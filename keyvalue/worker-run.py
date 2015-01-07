@@ -49,21 +49,24 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     sender_id = int(nid) - server_scale * nservers
     receivers = param["LAUNCHER.receiver_addr"]
 
+    #print "len=%d, nid=%d, nservers=%d, server_scale=%d" % ( len(receivers), int(nid) , nservers, server_scale )
+
+
     # TODO: translate client id to corresponding address
-    raddr = receivers[ int(nid) - nservers*server_scale]
+    raddr = receivers[ int(nid) - len(receivers) ]
 
     logfile = '{}/client-{}-{}.log'.format(
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
+    logger.info('$ {application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
         application=app,
         pfile=clientfile,
         service=param["client_service"],
         sid=sender_id,
         port=ipaddr.strip().split(":")[1],
         raddr=raddr))
-    r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
+    r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
         application=app,
         pfile=clientfile,
         service=param["client_service"],
@@ -109,7 +112,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     server_scale = int( param["lib.MApplication.initial_size"] )
     nservers = int( param["SERVER_LOGICAL_NODES"] )
     assert server_scale > 1
-    sid = (nid - nservers) / ( server_scale-1)
+    sid = (int( nid ) - nservers) / ( server_scale-1)
 
     # re-load parameters for the specific server
     param = Utils.param_reader(options.paramfile)
@@ -124,8 +127,8 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
         application=app,
         pfile=pfn,
         service=param["server_service"],
-        port=ipaddr.strip().split(":")[1]),
-        sid)
+        port=ipaddr.strip().split(":")[1],
+        sid=sid))
     r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}  -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
         application=app,
         pfile=pfn,
@@ -171,7 +174,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     start_time = Utils.unixTime()
 
-    sid = nid
+    #sid = nid
 
     # re-load parameters for the specific server
     param = Utils.param_reader(options.paramfile)
