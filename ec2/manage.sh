@@ -17,6 +17,7 @@ fi
 if [ "$action" = "connect" ]; then
   host=`ec2din -O $ACCESS_KEY -W $SECRET_KEY $instance_id | grep "INSTANCE" | awk '{print $4}'`
   echo "ssh -i $pem_file ubuntu@$host"
+  ssh -i $pem_file ubuntu@$host
 elif [ "$action" = "stop" ]; then
   echo "stopping"
   ec2stop -O $ACCESS_KEY -W $SECRET_KEY $instance_id

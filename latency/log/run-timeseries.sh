@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../conf/conf.sh
+source ../conf/config.sh
 source ../../common.sh
 
 if [[ $# -lt 1 ]]; then

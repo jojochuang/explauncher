@@ -1,6 +1,6 @@
 #!/bin/bash
+source ../conf/config.sh
 label=$1
-source ../conf/conf.sh
 source ../../common.sh
 
 # find the latest log set

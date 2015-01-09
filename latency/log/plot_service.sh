@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../conf/conf.sh
+source ../conf/config.sh
 source ../../common.sh
 
 ./parse-service.sh

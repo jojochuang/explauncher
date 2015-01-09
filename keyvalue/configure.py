@@ -476,7 +476,7 @@ class Configuration:
           if self.param["flavor"] == "nacho":
             boot_time = 0
           elif self.param["flavor"] == "context":
-            boot_time = boot_period * server_nodes
+            boot_time = boot_period * (self.num_servers - server_nodes )
           else:
               raise Exception( "mace flavor not supported" )
             

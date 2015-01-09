@@ -31,8 +31,8 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 #nruns=1      # number of replicated runs
 nruns=5      # number of replicated runs
 
-flavor="nacho"
-#flavor="context"
+#flavor="nacho"
+flavor="context"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"

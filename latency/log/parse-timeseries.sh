@@ -1,8 +1,8 @@
 #!/bin/bash
 
-source conf/conf.sh
+source ../conf/config.sh
 source ../../common.sh
-#logdir=/u/tiberius06_s/chuangw/logs/ranger
+#logdir=/u/tiberius06_s/chuangw/logs/throughput
 cwd=`pwd`
 #echo $cwd
 
@@ -20,12 +20,12 @@ if [[ "$type" = "instant" ]]; then
   echo "dir=$dir"
   # find the latest log set in the dir
   headfile=(`find $dir -name 'head-*.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.gz'`)
+  clifile=(`find $dir -name 'client*.gz'`)
   svfile=(`find $dir -name 'server-*.gz'`)
 else
   dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
   headfile=(`find $dir -name 'head*.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.gz'`)
+  clifile=(`find $dir -name 'client*.gz'`)
   nsfile=(`find $dir -name '*.nserver.conf' | tail -1`)
   cutoff=220000000
 fi
@@ -36,11 +36,8 @@ echo "headfile = $headfile"
 for f in "${headfile[@]}"; do
   echo "head = $f"
 
-  #start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
-  #start_time_us=`zgrep -a -e "mace::Init" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
-  start_time_us=`zgrep -a -e "HeadTransportTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
-  #start_time=$(($start_time_us / 1000000))
-  start_time=$(($start_time_us))
+  start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
+  start_time=$(($start_time_us / 1000000))
 
   echo "start time at $start_time"
 
@@ -65,7 +62,25 @@ for f in "${svfile[@]}"; do
   zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
 done
-  echo "start time at $start_time"
+
+# Check the log in the client side.
+#for f in "${clifile[@]}"; do
+#  echo "client file = $f"
+  
+#  out="${cwd}/data/"`echo $f|sed 's/^.*\///'| sed 's/\.log\.gz//'`".ts" #remove the file name suffix
+#  rm $out
+#  echo "producing $out"
+  # Modify. get latency
+  # the 8th field
+  # I think just measure the GET request, because that's the majority in real settings.
+#  zgrep -a -e "GET" $f |  awk '{if($3 == "\[BS_KeyValueClient\]" ){print $8} }'  > $out
+
+  #zgrep -a -e "PUT" $f |  awk '{if($3 == "\[BS_KeyValueClient\]" ){print $8} }'  > $out
+
+#done
+zgrep -a -e "GET" "${clifile[@]}" | awk 'BEGIN{a=0}{if($3 == "[BS_KeyValueClient]" ){a+=$8} }END{printf "%d %d %f\n", a, NR, a/NR}' | awk '{print $3}' >> data/avg-latency.ts
+
+echo "start time at $start_time"
 input_ts=(`find ${cwd}/data -regex '.*\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_column="${cwd}/data/column-throughput.ts"
@@ -88,13 +103,13 @@ for f in "${input_ts[@]}"; do
 done
 
 
-if [[ "$type" = "publish" ]]; then
-  # For nserver file
-  for f in "${nsfile[@]}"; do
-    echo "nserver = $f"
-    out="${cwd}/data/head-nservers.ts"
-    echo "producing $out"
-    zgrep -a -e " num_servers" $f | awk "{ T=int(\$3); printf \"%.3f\t%d\n\", (T/1000000), \$4}" > $out
-  done
-fi
+#if [[ "$type" = "publish" ]]; then
+#  # For nserver file
+#  for f in "${nsfile[@]}"; do
+#    echo "nserver = $f"
+#    out="${cwd}/data/head-nservers.ts"
+#    echo "producing $out"
+#    zgrep -a -e " num_servers" $f | awk "{ T=int(\$3); printf \"%.3f\t%d\n\", (T/1000000), \$4}" > $out
+#  done
+#fi
 
