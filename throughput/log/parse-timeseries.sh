@@ -17,7 +17,7 @@ cd $logdir
 if [[ "$type" = "instant" ]]; then
   # find the latest log dir
   dir="."
-  echo "dir=$dir"
+  #echo "dir=$dir"
   # find the latest log set in the dir
   headfile=(`find $dir -name 'head-*.gz' | tail -1`)
   clifile=(`find $dir -name '*player*.gz'`)
@@ -34,7 +34,7 @@ start_time=0
 echo "headfile = $headfile"
 # For headfile, generate plot file
 for f in "${headfile[@]}"; do
-  echo "head = $f"
+  #echo "head = $f"
 
   start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
   start_time=$(($start_time_us / 1000000))
@@ -46,7 +46,7 @@ for f in "${headfile[@]}"; do
   if [ -f $out ]; then
     rm $out
   fi
-  echo "producing $out"
+  #echo "producing $out"
   zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
 done
@@ -54,19 +54,21 @@ done
 # For svfile, generate plot file
 # assuming timers on all machines are all sync'ed.
 for f in "${svfile[@]}"; do
-  echo "server file = $f"
+  #echo "server file = $f"
   
   out="${cwd}/data/"`echo $f|sed 's/^.*\///'| sed 's/\.log\.gz//'`".ts" #remove the file name suffix
-  rm $out
-  echo "producing $out"
+  if [ -f $out ]; then
+    rm $out
+  fi
+  #echo "producing $out"
   zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
 done
-  echo "start time at $start_time"
+#echo "start time at $start_time"
 input_ts=(`find ${cwd}/data -regex '.*\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_column="${cwd}/data/column-throughput.ts"
-echo "out_column "  $out_column;
+#echo "out_column "  $out_column;
 ${cwd}/columnizer.pl $out_column ${input_ts[@]} 
 
 cp ${cwd}/timeseries-throughput.plot ${cwd}/timeseries-throughput-combined.plot

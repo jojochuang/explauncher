@@ -6,15 +6,15 @@ source ../common.sh
 mace_start_port=30000
 scale=8
 
-runtime=100 # duration of the experiment
-boottime=10   # total time to boot.
+runtime=50 # duration of the experiment
+boottime=20   # total time to boot.
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
-nruns=5      # number of replicated runs
+nruns=1      # number of replicated runs
 
-flavor="nacho"
+flavor="context"
 #flavor="context"
 
 #context_policy="NO_SHIFT"
@@ -37,6 +37,8 @@ if [ $# -eq 0 ]; then
 else
     id=$1
 fi
+
+config_only=0 # don't run the experiment. just generate config files.
 
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
@@ -86,13 +88,15 @@ function runexp (){
   #t_clients_per_machine=$(($t_clients/$t_client_machines))
 
   # Get actual number of machines you will be using
-  t_machines=$(($t_server_machines + $t_client_machines + 1))
+  t_machines=$(($t_server_machines + $t_client_machines))
 
   #for t_ncontexts in 24; do  # Number of total buildings across all the servers
-  t_scale=$(($t_server_machines+1))
+  #t_scale=$(($t_server_machines+1))
+  t_scale=$(($t_server_machines))
   t_ncontexts=$(($t_scale*6 ))
 
-  initial_server_size=$(($t_server_machines+1))
+  #initial_server_size=$(($t_server_machines+1))
+  initial_server_size=$(($t_server_machines))
 
   cp ${conf_orig_file} ${conf_file}
 
@@ -143,18 +147,20 @@ function runexp (){
     exit 1;
   fi
 
-  if [[ $ec2 -eq 0 ]]; then
-    # do not use monitor
-    echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
-    ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+  if [ $config_only -eq 0 ]; then
+    if [[ $ec2 -eq 0 ]]; then
+      # do not use monitor
+      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
+      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
 
-  else
-    # do not use monitor
-    #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-    echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-    ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+    else
+      # do not use monitor
+      #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
+      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
+      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+    fi
+    sleep 10
   fi
-  sleep 10
 
 }
 
@@ -178,17 +184,15 @@ function aggregate_output () {
 }
 
 function init() {
-  # create directories on all nodes
-  ${psshdir}/pssh -h conf/hosts -t 30 mkdir -p $scratchdir
-  #if [[ $ec2 -eq 1 ]]; then
-  #else
-
-  #fi
+  if [ $config_only -eq 0 ]; then
+    # create directories on all nodes
+    ${psshdir}/pssh -h conf/hosts -t 30 mkdir -p $scratchdir
+  fi
 }
 
 init
 
-for t_server_machines in 7; do
+for t_server_machines in 8; do
   for t_client_machines in  4; do
     for t_clients in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
@@ -197,30 +201,34 @@ for t_server_machines in 7; do
           mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $t_clients $t_primes
 
-          # generate plots
-          cwd=`pwd`
-          cd log
-          ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
-          ./run-timeseries.sh
-          cd $cwd
-          # publish plots and parameters and logs to web page
-          #if [[ $ec2 -eq 0 ]]; then
-            ./publish.sh $log_set_dir
-          #fi
+          if [ $config_only -eq 0 ]; then
+            # generate plots
+            cwd=`pwd`
+            cd log
+            ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
+            ./run-timeseries.sh
+            cd $cwd
+            # publish plots and parameters and logs to web page
+            #if [[ $ec2 -eq 0 ]]; then
+              ./publish.sh $log_set_dir
+            #fi
+          fi
         done # end of nruns
 
         #TODO: compute avg and stddev, and plot error bar.
         # Find the last $nruns log, aggregate the compute/plot error bar
 
         # what to plot? the average throughput w/ error
-        aggregate_output $log_set_dir $t_clients $t_primes 
-        cwd=`pwd`
-        cd log
-        ./run-avg.sh
-        ./plot_service.sh
-        cd $cwd
+        if [ $config_only -eq 0 ]; then
+          aggregate_output $log_set_dir $t_clients $t_primes 
+          cwd=`pwd`
+          cd log
+          ./run-avg.sh
+          ./plot_service.sh
+          cd $cwd
 
-        ./publish_webindex.sh $log_set_dir
+          ./publish_webindex.sh $log_set_dir
+        fi
       done # end of total_events
     done
   done

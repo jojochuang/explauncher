@@ -101,7 +101,7 @@ def main(options):
     day_error = float(param["day_error"])
     
 
-    assert num_machines == num_server_machines + num_client_machines + 1
+    assert num_machines == num_server_machines + num_client_machines
     assert num_machines > 0
     assert num_servers >= num_server_machines
     assert num_clients >= num_client_machines
@@ -129,23 +129,43 @@ def main(options):
         i=0  # id
         boot_time = 0
 
-        # Write for head
+        server_nodes = 1 #int( param["SERVER_LOGICAL_NODES"] )
+        if param["flavor"] == "nacho":
+          boot_time = 0
+        elif param["flavor"] == "context":
+          boot_time = boot_period * (num_servers - server_nodes )
+        else:
+            raise Exception( "mace flavor not supported" )
+
+        # Write for head: single head
         boot(i, boot_time, ipaddr[i % num_machines], options.port+i*5, hostname[i%num_machines], "head", f) 
         i += 1
         boot_time += boot_period
 
+        if param["flavor"] == "nacho":
+          boot_time = boot_period * ( server_nodes)
+        elif param["flavor"] == "context":
+          boot_time = 0
+        else:
+            raise Exception( "mace flavor not supported" )
+
         # Write for servers
-        for j in range(num_servers):
-            sid = (1 + j % num_server_machines) % num_machines
-            boot(i, boot_time, ipaddr[sid], options.port+i*5, hostname[sid], "server", f) 
-            i += 1
+        #for j in range(num_servers):
+        for j in range(server_nodes, num_servers):
+            #sid = (1 + j % num_server_machines) % num_machines
+            sid = j
+            #print "j=%d sid=%d\n" % (j , sid)
+            boot(j, boot_time, ipaddr[sid], options.port+j*5, hostname[sid], "server", f) 
+            #i += 1
             boot_time += boot_period
+
+        boot_time = boot_period * num_servers
 
         # Write for clients
         for j in range(num_clients):
             sid = (1 + num_server_machines + j % num_client_machines) % num_machines
+            i = j + num_servers
             boot(i, boot_time, ipaddr[sid], options.port+i*5, hostname[sid], "client", f) 
-            i += 1
             boot_time += boot_period
 
     # Write to output host file
@@ -168,7 +188,7 @@ def main(options):
         if param["flavor"] == "nacho":
           f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( hostname[0], options.port ) );
         elif param["flavor"] == "context":
-          for j in range(num_servers+1):
+          for j in range(num_servers):
             f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
 
         serveraddr = []
@@ -215,11 +235,11 @@ def main(options):
             # Building
             for i in range(num_contexts):
                 if param["CONTEXT_ASSIGNMENT_POLICY"] == "NO_SHIFT":
-                  sid = (0 + i % (num_server_machines+1) ) % num_machines
+                  sid = (0 + i % (num_server_machines) ) % num_machines
                 elif param["CONTEXT_ASSIGNMENT_POLICY"] == "SHIFT_BY_ONE":
-                  sid = (0 + (i+1) % (num_server_machines+1) ) % num_machines
+                  sid = (0 + (i+1) % (num_server_machines) ) % num_machines
                 elif param["CONTEXT_ASSIGNMENT_POLICY"] == "RANDOM":
-                  sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines+1) ) % num_machines
+                  sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines) ) % num_machines
                 else:
                   print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
                   sys.exit()
