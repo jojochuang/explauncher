@@ -1,21 +1,38 @@
 #!/bin/bash
+#set -e
 # This is the script that runs multiple throughput benchmarks of the nacho runtime. 
-application="throughput"
+source conf/conf.sh
 source ../common.sh
 
 mace_start_port=30000
-scale=8
+# number of server logical nodes does not change
+n_server_logicalnode=1
+server_scale=4
+t_server_machines=$(( $n_server_logicalnode * $server_scale ))
+t_client_machines=4
+#n_client_logicalnode=2
+t_ncontexts=4
+t_ngroups=1 # number of partitions at server
 
-runtime=50 # duration of the experiment
+# to save cost, the number of client physical nodes are less than that of the client logical nodes
+# so client logical nodes are equally distributed to the physical nodes.
+
+logical_nodes_per_physical_nodes=1
+
+runtime=100 # duration of the experiment
 boottime=20   # total time to boot.
+server_join_wait_time=0
+client_wait_time=0
+port_shift=10  # spacing of ports between different nodes
+memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
-#flavor="context"
-flavor="nacho"
+#flavor="nacho"
+flavor="context"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -45,6 +62,8 @@ function GenerateBenchmarkParameter (){
   conf_file=$1
 
   echo "application = ${application}" >> ${conf_file}
+  echo "port_shift = ${port_shift}" >> ${conf_file}
+  echo "SERVER_LOGICAL_NODES = ${n_server_logicalnode}" >> ${conf_file}
   echo "TOTAL_BOOT_TIME = ${boottime}" >> ${conf_file}
 
   echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
@@ -55,16 +74,16 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 40" >>  ${conf_file}
-  echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = ${client_wait_time}" >> ${conf_file}
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
-  echo "CLIENT_CONFFILE = $conf_client_file" >> $conf_file
   echo "SERVER_CONFFILE = $conf_file" >> $conf_file
+  echo "CLIENT_CONFFILE = $conf_client_file" >> $conf_file
 
   echo "GRAPHVIZ_FILE = /tmp/gv.dot" >> $conf_file
   if [[ $ec2 -eq 1 ]]; then
@@ -82,18 +101,18 @@ function runexp (){
   t_clients=$3
   t_primes=$4
 
-  # For each server machine, you will run only one server process.
+  # For each server machine, run only one server process.
+  # minus the bootstrapper node
+  #t_servers=$(( $t_server_machines - $n_server_logicalnode ))
   t_servers=$t_server_machines
 
   #t_clients_per_machine=$(($t_clients/$t_client_machines))
 
   # Get actual number of machines you will be using
-  t_machines=$(($t_server_machines + $t_client_machines))
+  #t_machines=$(($t_server_machines + $t_client_machines + 1))
+  # TODO: include the head node
+  t_machines=$(($t_server_machines + $t_client_machines ))
 
-  #for t_ncontexts in 24; do  # Number of total buildings across all the servers
-  #t_scale=$(($t_server_machines+1))
-  t_scale=$(($t_server_machines))
-  t_ncontexts=$(($t_scale*6 ))
 
   #initial_server_size=$(($t_server_machines+1))
   initial_server_size=$(($t_server_machines))
@@ -104,9 +123,16 @@ function runexp (){
   GenerateBenchmarkParameter ${conf_file}
 
   # Generate parameters common to server and clients in this benchmark
-  echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
-  echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
-  echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
+  #echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
+  #echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
+  #echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
+
+  # write ServiceConfig.WCPaxos.UPCALL_REGID = 
+  # write ServiceConfig.WCPaxos.ROLE = 
+  # write ServiceConfig.WCPaxos.ROUNDS1 = 
+  # write ServiceConfig.WCPaxos.WRITE = 
+  # write ServiceConfig.WCPaxos.ACCEPTORS = 
+  # write ServiceConfig.WCPaxos.PROPOSAL_NUM = 
 
   echo "num_machines = ${t_machines}" >> ${conf_file}
   echo "num_server_machines = ${t_server_machines}" >> ${conf_file}
@@ -125,18 +151,31 @@ function runexp (){
 
   echo -e "\n# Specific parameters for client" >> ${conf_client_file}
 
-  echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
+  #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
+  echo "role = client" >>  ${conf_client_file}
+  echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
-  echo "ServiceConfig.Throughput.role = 1" >>  ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
+
+  #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
+  #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
 
   # copy the param file for the server
   echo -e "\n# Specific parameters for server" >> ${conf_file}
 
-  echo "lib.MApplication.services = Throughput" >> ${conf_file}
-  echo "lib.MApplication.initial_size = ${initial_server_size}" >> ${conf_file}
-  echo "ServiceConfig.Throughput.role = 2" >>  ${conf_file}
+  echo "role = server" >>  ${conf_file}
+  echo "lib.MApplication.services = KeyValueServer" >> ${conf_file}
+  echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
+  echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
+  echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
+
+  # copy the server parameter file template 
+  #for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
+  #do
+  #  #echo $i
+  #  cp ${conf_file} ${conf_file}${i}
+  #done
 
   # print out bootfile & param for servers
   echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
@@ -150,14 +189,14 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}\e[00m"
+      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
 
     else
       # do not use monitor
       #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
       echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
     fi
     sleep 10
   fi
@@ -169,7 +208,6 @@ function aggregate_output () {
   t_clients=$2
   t_primes=$3
   # create a new directory for the set of logs
-  #log_set_dir=`date --iso-8601="seconds"`
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
   mv ${logdir}/${application}-* ${logdir}/${log_set_dir}/
@@ -180,57 +218,57 @@ function aggregate_output () {
   cwd=`pwd`
   cd log
   ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
+  ./run-avg.sh
+  ./plot_service.sh
   cd $cwd
 }
 
 function init() {
   if [ $config_only -eq 0 ]; then
-    # create directories on all nodes
-    ${psshdir}/pssh -h conf/hosts -t 30 mkdir -p $scratchdir
+    # create log directories on all nodes
+    ${psshdir}/pssh -h $host_orig_file -t 30 mkdir -p $scratchdir
   fi
 }
 
 init
 
-for t_server_machines in 8; do
-  for t_client_machines in  4; do
-    for t_clients in 8; do
+n_machines=`wc ${host_orig_file} | awk '{print $1}' `
+  #for t_client_machines in  4; do
+    n_client_logicalnode=$(( $t_client_machines * $logical_nodes_per_physical_nodes ))
+
+    used_machines=$(( $t_client_machines +  $t_server_machines ))
+
+    # make sure client physical nodes + server physical nodes <= all physical nodes
+    if [ $used_machines -gt $n_machines ]; then
+      echo "use machines: ${used_machines} > machine list: ${n_machines} "
+      exit 1
+    fi
+    #for n_client_logicalnode in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
-          runexp $t_server_machines $t_client_machines $t_clients $t_primes
+          runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes
 
           if [ $config_only -eq 0 ]; then
-            # generate plots
+            # generate plots for each run
             cwd=`pwd`
             cd log
-            ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
+            ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
             ./run-timeseries.sh
             cd $cwd
             # publish plots and parameters and logs to web page
-            #if [[ $ec2 -eq 0 ]]; then
-              ./publish.sh $log_set_dir
-            #fi
+            ./publish.sh $log_set_dir
           fi
         done # end of nruns
 
-        #TODO: compute avg and stddev, and plot error bar.
-        # Find the last $nruns log, aggregate the compute/plot error bar
-
-        # what to plot? the average throughput w/ error
         if [ $config_only -eq 0 ]; then
-          aggregate_output $log_set_dir $t_clients $t_primes 
-          cwd=`pwd`
-          cd log
-          ./run-avg.sh
-          ./plot_service.sh
-          cd $cwd
+          # plot the average throughput w/ error across all runs
+          aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
 
           ./publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
-    done
-  done
-done
+    #done
+  #done
 
