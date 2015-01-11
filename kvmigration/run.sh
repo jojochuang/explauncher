@@ -12,7 +12,7 @@ t_server_machines=$(( $n_server_logicalnode * $server_scale ))
 t_client_machines=4
 #n_client_logicalnode=2
 t_ncontexts=4
-t_ngroups=1 # number of partitions at server
+t_ngroups=$t_ncontexts # number of partitions at server
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
@@ -28,8 +28,8 @@ memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-#nruns=1      # number of replicated runs
-nruns=5      # number of replicated runs
+nruns=1      # number of replicated runs
+#nruns=5      # number of replicated runs
 
 #flavor="nacho"
 flavor="context"
@@ -39,8 +39,8 @@ flavor="context"
 context_policy="RANDOM"
 
 # migration pattern parameters
-t_days=6
-day_period=40000000
+t_days=25
+day_period=4000000
 day_join=0.2
 day_leave=0.5
 day_error=0.2
@@ -74,7 +74,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"ContextService::requestContextMigrationCommon ContextService::handle__event_MigrateContext mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -153,7 +153,7 @@ function runexp (){
 
   #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
   echo "role = client" >>  ${conf_client_file}
-  echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
+  #echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
@@ -166,7 +166,7 @@ function runexp (){
   echo "role = server" >>  ${conf_file}
   echo "lib.MApplication.services = KeyValueServer" >> ${conf_file}
   echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
-  echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
+  echo "MACE_LOG_AUTO_ALL = 1" >> ${conf_file}
   echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
   echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
 
@@ -256,6 +256,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
             cd log
             ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
             ./run-timeseries.sh
+            ./run-net.sh
             cd $cwd
             # publish plots and parameters and logs to web page
             ./publish.sh $log_set_dir

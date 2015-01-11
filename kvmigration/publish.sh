@@ -52,6 +52,8 @@ cp log/data/conn.dot ${webdir}/${log_set_dir}/$last_log_dir
 conn_graph=`ls -tr log/result/conn*.png | tail -n1 | awk -F/ '{print $NF}' `
 cp log/result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
 cp log/result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
+cp log/result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
+cp log/result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
 
 # add an entry to the web page
 
@@ -76,6 +78,12 @@ cat <<EOF > ${log_page}
 <tr> <td> <a href="conn.dot">conn.dot</a> </td> </tr>
 
 <tr> <td> client logs, server logs... </td> </tr>
+<tr> <td> <a href="net-write.png">
+  <p>Network Write time series</p>
+  <img src="net-write.png"></img></a> </td> </tr>
+<tr> <td> <a href="net-read.png">
+  <p>Network Read time series</p>
+  <img src="net-read.png"></img></a> </td> </tr>
 <tr> <td> <a href="throughput.png">
   <p>Throughput time series</p>
   <img src="throughput.png"></img></a> </td> </tr>

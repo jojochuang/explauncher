@@ -59,10 +59,6 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     elif param["flavor"] == "context":
       raddr = receivers
 
-
-
-
-
     logfile = '{}/client-{}-{}.log'.format(
             logdir,
             hostname,

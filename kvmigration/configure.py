@@ -134,7 +134,7 @@ class Configuration:
           #f.write( 'mapping = {}:Building[{}]\n'.format(
           #    1, i))
           f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
-              service_name, 1, i))
+              service_name, 0, i))
 
       # Kids
       #for i in range(num_clients):
@@ -190,7 +190,7 @@ class Configuration:
           #f.write( 'mapping = {}:Building[{}]\n'.format(
           #    1, i))
           f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
-              service_name, 1, i))
+              service_name, 0, i))
 
       # Kids
       #for i in range(num_clients):
@@ -601,8 +601,8 @@ class Configuration:
             server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
             for j in range(server_nodes):
               f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
-            for j in range(num_clients):
-              f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= self.hostname[j+ self.num_servers ], port=options.port+(j+self.num_servers)*self.port_shift ));
+            #for j in range(num_clients):
+            #  f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= self.hostname[j+ self.num_servers ], port=options.port+(j+self.num_servers)*self.port_shift ));
           elif param["flavor"] == "mace":
               raise Exception( "mace flavor not supported" )
           f.write( "lib.MApplication.{service_name}.mapping = 0:ABC\n".format( 
