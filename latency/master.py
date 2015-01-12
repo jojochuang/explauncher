@@ -33,6 +33,7 @@ def main(options):
     log_name = datetime.datetime.now().strftime("%Y%m%d-%H-%M-%S")
     log_dir = "%s/%s-%s" % (param["LOGDIR"], options.identifier, log_name)
 
+    Utils.mkdirp( param["LOGDIR"] )
     Utils.mkdirp(log_dir)    
 
     console_log = "%s/console.log" % log_dir
@@ -83,7 +84,7 @@ def main(options):
             hostnoheadfile=param["HOSTNOHEADFILE"],
             confdir=param["CONFDIR"]))
 
-        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}'.format(
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile}* {confdir}'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
             conffile=param["SERVER_CONFFILE"],
@@ -96,7 +97,6 @@ def main(options):
             confdir=param["CONFDIR"]))
 
 
-    print "parafile : " + options.paramfile 
     # Run worker-run-microbenchmark.py with PSSH
     # PSSH will be launched via fork() to catch Ctrl+C to stop the
     # experiment.

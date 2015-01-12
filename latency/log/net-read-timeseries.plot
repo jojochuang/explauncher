@@ -25,13 +25,13 @@ set terminal postscript enhanced eps color "Helvetica" 22
 set autoscale
 
 #set ylabel "Number of players" font "Helvetica,22"
-set ylabel "Head node throughput (evt/sec)" font "Helvetica,22" tc lt 1
+set ylabel "Server Network Read Throughput (KBs)" font "Helvetica,22" tc lt 1
 
 #set ytics 0,.25,1
 #set xrange [0:200]
 #set mytics 5
 set style data linesp
-set key right top 
+set key right  bottom
 
 # MaceKen:    circle, black
 # Plain Mace: triangle, red
@@ -50,7 +50,7 @@ set key right top
 #unset key
 
 set xlabel "Time (sec)" font "Helvetica,22"
-set output "result/throughput.eps"
+set output "result/net-read.eps"
 
 #set arrow 1 from 171,29000 to 165,31000 lt 1 lw 3
 #set label 1 "Migration for all context" at 151,28500 tc rgb "#ff0000"

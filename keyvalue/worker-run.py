@@ -88,6 +88,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     logger.info("Process %s exited." % nid)
     logger.info("Total execution time : %f sec", end_time - start_time)
 
+import os
 def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
 
@@ -106,6 +107,9 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     # Log filename
     logdir = param["SCRATCHDIR"]
 
+    # re-load parameters for the specific server
+    #param = Utils.param_reader(options.paramfile)
+
     # Create and move into subdir
     subdir='{}/client-{}'.format(logdir,nid)
     Utils.mkdirp(subdir)
@@ -122,27 +126,22 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     assert server_scale > 1
     sid = (int( nid ) - nservers) / ( server_scale-1)
 
-    # re-load parameters for the specific server
-    param = Utils.param_reader(options.paramfile)
-
     #pfn = paramfile + str( sid )
     pfn = paramfile
     logfile = '{}/server-{}-{}.log'.format(
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -service {service}  -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+    logger.info('$ {application} {pfile} -service {service}  -MACE_PORT {port}'.format(
         application=app,
         pfile=pfn,
         service=param["server_service"],
-        port=ipaddr.strip().split(":")[1],
-        raddr=raddr))
-    r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}  -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+        port=ipaddr.strip().split(":")[1]))
+    r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}  '.format(
         application=app,
         pfile=pfn,
         service=param["server_service"],
-        port=ipaddr.strip().split(":")[1],
-        raddr=raddr),
+        port=ipaddr.strip().split(":")[1]),
         log=logfile)
 
     end_time = Utils.unixTime()
@@ -185,7 +184,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     #sid = nid
 
     # re-load parameters for the specific server
-    param = Utils.param_reader(options.paramfile)
+    #param = Utils.param_reader(options.paramfile)
 
     #pfn = paramfile + str( sid )
     pfn = paramfile

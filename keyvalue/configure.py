@@ -479,6 +479,7 @@ class Configuration:
             boot_time = boot_period * (self.num_servers - server_nodes )
           else:
               raise Exception( "mace flavor not supported" )
+
             
           for j in range( server_nodes ):
             self.boot(i, boot_time, self.ipaddr[i % self.num_machines], options.port+i* self.port_shift, hostname[i%self.num_machines], "head", f) 
@@ -495,7 +496,7 @@ class Configuration:
           for j in range(server_nodes, self.num_servers):
               #sid = (1 + j % self.num_server_machines) % self.num_machines
               #sid = (j % self.num_server_machines) % self.num_machines
-              self.boot(i, boot_time, self.ipaddr[j], options.port+j* self.port_shift, hostname[j], "server", f) 
+              self.boot(j, boot_time, self.ipaddr[j], options.port+j* self.port_shift, hostname[j], "server", f) 
               #i += 1
               i = j
               boot_time += boot_period
@@ -588,8 +589,8 @@ class Configuration:
             server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
             for j in range(server_nodes):
               f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
-            for j in range(num_clients):
-              f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= self.hostname[j+ self.num_servers ], port=options.port+(j+self.num_servers)*self.port_shift ));
+            #for j in range(num_clients):
+            #  f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= self.hostname[j+ self.num_servers ], port=options.port+(j+self.num_servers)*self.port_shift ));
           elif param["flavor"] == "mace":
               raise Exception( "mace flavor not supported" )
           f.write( "lib.MApplication.{service_name}.mapping = 0:ABC\n".format( 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ../conf/config.sh
+source ../conf/conf.sh
 source ../../common.sh
 
 if [[ $# -lt 1 ]]; then
@@ -21,18 +21,26 @@ if [[ $? -ne 0 ]]; then
   #exit 0
 fi
 # generate data points from the log
-#./parse-timeseries.sh $type $logset
+./parse-latency.sh $logset
+#exit 0
 # generate eps plot using the data points
-gnuplot < avg-latency.plot
+gnuplot < get-latency.plot
+gnuplot < put-latency.plot
 
-rm data/avg-latency.ts
+rm data/get-latency.ts
+rm data/put-latency.ts
 
 # generate pdf files using the eps file.
 cd result
-if [[ ! -f "avg-latency.eps" ]]; then
-  echo "avg-latency.eps not found!"
+if [[ ! -f "get-latency.eps" ]]; then
+  echo "get-latency.eps not found!"
   exit 1
 fi
+if [[ ! -f "put-latency.eps" ]]; then
+  echo "put-latency.eps not found!"
+  exit 1
+fi
+
 ls *.eps | xargs --max-lines=1 epspdf
 mogrify -format png *.eps
 rm *.eps

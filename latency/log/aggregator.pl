@@ -1,5 +1,4 @@
 #!/usr/bin/perl
-
 # TODO: exit if no file name in the argument is given
 
 
@@ -36,12 +35,6 @@ my $max_threshold = $total_throughput * 0.9;
 
 my $min_time;
 my $max_time;
-
-my $ln=0;
-if ( -e $fn ){
-  $ln=`wc $fn| awk '{print $1}'`;
-}
-$ln++;
 open( FILE, '>>', $fn );
 # sort and output
 my $sum_throughput = 0;
@@ -68,5 +61,5 @@ for my $timeval ( sort {$a <=> $b} keys %throughput ){
 # find when 90% event is finished
 # compute average throughput = ( ev at 90% - ev at 10% )/( time at 90% - time at 10% )
 my $avg = ( $max_throughput - $min_throughput ) / ( $max_time - $min_time );
-print FILE "$total_throughput $max_throughput $max_time $min_throughput $min_time $avg $ln LABEL:$logdir_label\n";
+print FILE "$total_throughput $max_throughput $max_time $min_throughput $min_time $avg LABEL:$logdir_label\n";
 close FILE;

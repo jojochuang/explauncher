@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source conf/config.sh
+source conf/conf.sh
 source ../common.sh
 
 # copy to cs website the logs, parameters:
@@ -31,6 +31,11 @@ else
   #url_prefix="http://ec2-54-81-182-184.compute-1.amazonaws.com/benchmark/$application/${log_set_dir}/${last_log_dir}/"
 fi
 
+if [ ! -d $webdir ]; then
+  mkdir $webdir
+  chmod 755 $webdir
+fi
+
 if [ ! -d $webdir/$log_set_dir ]; then
   mkdir $webdir/$log_set_dir
 fi
@@ -47,6 +52,10 @@ cp log/data/conn.dot ${webdir}/${log_set_dir}/$last_log_dir
 conn_graph=`ls -tr log/result/conn*.png | tail -n1 | awk -F/ '{print $NF}' `
 cp log/result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
 cp log/result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
+cp log/result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
+cp log/result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
+cp log/result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+cp log/result/put-latency.png ${webdir}/${log_set_dir}/$last_log_dir
 
 # add an entry to the web page
 
@@ -71,6 +80,18 @@ cat <<EOF > ${log_page}
 <tr> <td> <a href="conn.dot">conn.dot</a> </td> </tr>
 
 <tr> <td> client logs, server logs... </td> </tr>
+<tr> <td> <a href="get-latency.png">
+  <p>Round-trip latency of Get request</p>
+  <img src="get-latency.png"></img></a> </td> </tr>
+<tr> <td> <a href="put-latency.png">
+  <p>Round-trip latency of Put request</p>
+  <img src="put-latency.png"></img></a> </td> </tr>
+<tr> <td> <a href="net-write.png">
+  <p>Network Write time series</p>
+  <img src="net-write.png"></img></a> </td> </tr>
+<tr> <td> <a href="net-read.png">
+  <p>Network Read time series</p>
+  <img src="net-read.png"></img></a> </td> </tr>
 <tr> <td> <a href="throughput.png">
   <p>Throughput time series</p>
   <img src="throughput.png"></img></a> </td> </tr>

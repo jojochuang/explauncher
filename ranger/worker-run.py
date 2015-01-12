@@ -112,7 +112,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     sid = (nid - nservers) / ( server_scale-1)
 
     # re-load parameters for the specific server
-    param = Utils.param_reader(options.paramfile)
+    #param = Utils.param_reader(options.paramfile)
 
     pfn = paramfile + str( sid )
     logfile = '{}/server-{}-{}.log'.format(
@@ -171,7 +171,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     sid = nid
 
     # re-load parameters for the specific server
-    param = Utils.param_reader(options.paramfile)
+    #param = Utils.param_reader(options.paramfile)
 
     pfn = paramfile + str( sid )
     app = "%s/%s" % (param["BIN"], param["BINARY"])

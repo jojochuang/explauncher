@@ -20,4 +20,4 @@ set style histogram gap 2
 set style data histogram
 set style fill solid border -1 
 plot \
-  'data/avg-throughput.ts' using 6:xticlabels(7) title "Average" linecolor rgb "#FF0000"
+  'data/avg-throughput.ts' using 6 title "Average" linecolor rgb "#FF0000"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source conf/config.sh
+source conf/conf.sh
 source ../common.sh
 
 # copy to cs website the logs, parameters:
@@ -39,6 +39,8 @@ echo "copy avg-throughput.ts"
 cp log/data/avg-throughput.ts ${webdir}/${log_set_dir}/
 echo "copy avg-throughput.png"
 cp log/result/avg-throughput.png ${webdir}/${log_set_dir}/
+echo "copy avg-latency.png"
+cp log/result/avg-latency.png ${webdir}/${log_set_dir}/
 echo "copy service_struct.png"
 cp log/result/service_struct.png ${webdir}/${log_set_dir}/
 
@@ -52,6 +54,9 @@ cat <<EOF >> ${index_page}
 <tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.png">
   <p>Average Throughput </p>
   <img src="${url_prefix}${log_set_dir}/avg-throughput.png"></a> </td> </tr>
+<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-latency.png">
+  <p>Average Latency </p>
+  <img src="${url_prefix}${log_set_dir}/avg-latency.png"></a> </td> </tr>
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat_throughput.ts">stat_throughput.ts</a> </td> </tr>
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-throughput.png">
   <p>Throughput histogram</p>

@@ -12,7 +12,7 @@ t_server_machines=$(( $n_server_logicalnode * $server_scale ))
 t_client_machines=4
 #n_client_logicalnode=2
 t_ncontexts=4
-t_ngroups=1 # number of partitions at server
+t_ngroups=4 # number of partitions at server
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
@@ -20,7 +20,7 @@ t_ngroups=1 # number of partitions at server
 logical_nodes_per_physical_nodes=1
 
 runtime=100 # duration of the experiment
-boottime=20   # total time to boot.
+boottime=40   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
@@ -74,7 +74,8 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
+  #echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport BS_KeyValueServer BS_KeyValueClient DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -153,7 +154,7 @@ function runexp (){
 
   #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
   echo "role = client" >>  ${conf_client_file}
-  echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
+  #echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
@@ -256,6 +257,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
             cd log
             ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
             ./run-timeseries.sh
+            ./run-net.sh
             cd $cwd
             # publish plots and parameters and logs to web page
             ./publish.sh $log_set_dir

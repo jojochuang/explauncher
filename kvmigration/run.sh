@@ -20,7 +20,7 @@ t_ngroups=$t_ncontexts # number of partitions at server
 logical_nodes_per_physical_nodes=1
 
 runtime=100 # duration of the experiment
-boottime=20   # total time to boot.
+boottime=40   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes

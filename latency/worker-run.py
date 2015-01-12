@@ -9,25 +9,26 @@ import Utils
 
 logger = logging.getLogger('Benchmark.Worker')
 
-def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,clientfile):
+def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,clientfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
 
-    assert app_type == "server" or app_type == "client"
+    assert app_type == "client"
+
+
+    # re-load parameters for the specific server
+    param = Utils.param_reader(options.clientfile)
 
     # Sleep
     if param["flavor"] == "nacho":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
-        if app_type == "client": # add additional time before the client starts
-          sleep_time += int(param["CLIENT_WAIT_TIME"])
+        sleep_time += int(param["CLIENT_WAIT_TIME"])
     elif param["flavor"] == "context":
         sleep_time = float(boot_wait_time)
-        if app_type == "client": # add additional time before the client starts
-          sleep_time += int(param["CLIENT_WAIT_TIME"])+int(param["WORKER_JOIN_WAIT_TIME"])
+        sleep_time += int(param["CLIENT_WAIT_TIME"])+int(param["WORKER_JOIN_WAIT_TIME"])
 
     logger.info("Sleeping %d...", sleep_time )
 
-    #sleep(float(boot_wait_time))
-    #sleep(int(param["WORKER_JOIN_WAIT_TIME"]))
+    #sleep_time=0
     sleep( sleep_time )
   
     # Log filename
@@ -42,7 +43,14 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     start_time = Utils.unixTime()
 
     app = "%s/%s" % (param["BIN"], param["BINARY"])
+
+    server_scale = int( param["lib.MApplication.initial_size"] )
+    nservers = int( param["SERVER_LOGICAL_NODES"] )
+    sender_id = int(nid) - server_scale * nservers
     receivers = param["LAUNCHER.receiver_addr"]
+
+    #print "len=%d, nid=%d, nservers=%d, server_scale=%d" % ( len(receivers), int(nid) , nservers, server_scale )
+
 
     # TODO: translate client id to corresponding address
     raddr = ""
@@ -51,44 +59,90 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     elif param["flavor"] == "context":
       raddr = receivers
 
-    if app_type == "server":
-        logfile = '{}/server-{}-{}.log'.format(
-                logdir,
-                hostname,
-                nid)
-        logger.info('$ {application} {pfile} -service {service} -lib.MApplication.services {service} -MACE_PORT {port}  -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
-            application=app,
-            pfile=paramfile,
-            service=param["server_service"],
-            port=ipaddr.strip().split(":")[1]),
-            raddr=raddr)
-        r = Utils.process_exec('{application} {pfile} -service {service} -lib.MApplication.services {service} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
-            application=app,
-            pfile=paramfile,
-            service=param["server_service"],
-            port=ipaddr.strip().split(":")[1],
-            raddr=raddr),
-            log=logfile)
-    else: # client
-        sender_id = int(nid) - int(param["lib.MApplication.initial_size"])
 
-        logfile = '{}/client-{}-{}.log'.format(
-                logdir,
-                hostname,
-                nid)
-        logger.info('$ {application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
-            application=app,
-            pfile=clientfile,
-            service=param["client_service"],
-            sid=sender_id,
-            port=ipaddr.strip().split(":")[1]))
-        r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
-            application=app,
-            pfile=clientfile,
-            service=param["client_service"],
-            sid=sender_id,
-            port=ipaddr.strip().split(":")[1]),
-            log=logfile)
+
+
+
+    logfile = '{}/client-{}-{}.log'.format(
+            logdir,
+            hostname,
+            nid)
+    logger.info('$ {application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+        application=app,
+        pfile=clientfile,
+        service=param["client_service"],
+        sid=sender_id,
+        port=ipaddr.strip().split(":")[1],
+        raddr=raddr))
+    r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+        application=app,
+        pfile=clientfile,
+        service=param["client_service"],
+        sid=sender_id,
+        port=ipaddr.strip().split(":")[1],
+        raddr=raddr),
+        log=logfile)
+
+    end_time = Utils.unixTime()
+
+    logger.info("Process %s exited." % nid)
+    logger.info("Total execution time : %f sec", end_time - start_time)
+
+import os
+def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
+    logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
+
+    assert app_type == "server"
+
+    # Sleep
+    if param["flavor"] == "nacho":
+        sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
+    elif param["flavor"] == "context":
+        sleep_time = float(boot_wait_time)
+
+    logger.info("Sleeping %d...", sleep_time )
+
+    sleep( sleep_time )
+  
+    # Log filename
+    logdir = param["SCRATCHDIR"]
+
+    # re-load parameters for the specific server
+    #param = Utils.param_reader(options.paramfile)
+
+    # Create and move into subdir
+    subdir='{}/client-{}'.format(logdir,nid)
+    Utils.mkdirp(subdir)
+    Utils.chdir(subdir)
+
+    # Run the application
+    start_time = Utils.unixTime()
+
+    app = "%s/%s" % (param["BIN"], param["BINARY"])
+
+    # determine which bootstrapping node to associate with
+    server_scale = int( param["lib.MApplication.initial_size"] )
+    nservers = int( param["SERVER_LOGICAL_NODES"] )
+    assert server_scale > 1
+    sid = (int( nid ) - nservers) / ( server_scale-1)
+
+    #pfn = paramfile + str( sid )
+    pfn = paramfile
+    logfile = '{}/server-{}-{}.log'.format(
+            logdir,
+            hostname,
+            nid)
+    logger.info('$ {application} {pfile} -service {service}  -MACE_PORT {port}'.format(
+        application=app,
+        pfile=pfn,
+        service=param["server_service"],
+        port=ipaddr.strip().split(":")[1]))
+    r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}  '.format(
+        application=app,
+        pfile=pfn,
+        service=param["server_service"],
+        port=ipaddr.strip().split(":")[1]),
+        log=logfile)
 
     end_time = Utils.unixTime()
 
@@ -127,16 +181,18 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     start_time = Utils.unixTime()
 
+    #sid = nid
+
+    # re-load parameters for the specific server
+    #param = Utils.param_reader(options.paramfile)
+
+    #pfn = paramfile + str( sid )
+    pfn = paramfile
     app = "%s/%s" % (param["BIN"], param["BINARY"])
-    #cmd = '{application} {pfile} -MACE_PORT {port}'.format(
-        #application=app,
-        #pfile=paramfile,
-        #port=ipaddr.strip().split(":")[1])
-    #logger.info("cmd = %s" % cmd)
-    r = Utils.process_exec('{application} {pfile} -service {service} -lib.MApplication.services {service} -MACE_PORT {port}'.format(
+    r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port}'.format(
         application=app,
-        service=param["head_service"],
-        pfile=paramfile,
+        pfile=pfn,
+        service=param["server_service"],
         port=ipaddr.strip().split(":")[1]),
         log=logfile)
 
@@ -149,7 +205,6 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     logger.info("Head is trying to kill rest of the machines.")
 
-    #cmd = 'killall python2.7 worker-run.py {binary}'.format(
     cmd = 'killall python2.7 {binary}'.format(
             binary=param["BINARY"])
     Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
@@ -174,9 +229,6 @@ def main(options):
         myhost = Utils.shell_exec('hostname -f', verbose=False)
     else:
         myhost = Utils.shell_exec('hostname -s', verbose=False)
-    #myhost = Utils.shell_exec('hostname -s', verbose=False)
-    #ulimit = Utils.shell_exec('ulimit -n 10000; ulimit -a', verbose=False)
-    #ulimit = Utils.shell_exec('ulimit -a', verbose=False)
     myhost = myhost.strip()
     Utils.mkdirp(param["SCRATCHDIR"])
     Utils.chdir(param["SCRATCHDIR"])
@@ -188,7 +240,6 @@ def main(options):
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
-    #logger.info("ulimit\n%s\n" % ulimit)
 
     # Launching sar
     #Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
@@ -207,16 +258,25 @@ def main(options):
             logger.info("processing boot = %s" % line)
             #node_id, time_to_boot, ip_addr, hostname
             nid, boot_wait_time, ipaddr, hostname, app_type = line.strip().split(" ")
-            if myhost == hostname:
-                if nid == "0":
-                    logger.info("launching head nid = %s" % nid)
-                    p = Process(target=execute_head, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
+            if myhost != hostname:
+              continue
+
+            if app_type == "head":
+                p = Process(target=execute_head, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
+                plist.append(p)
+            elif app_type == "server":
+                logger.info("launching worker nid = %s" % nid)
+                if int(nid) > 0:
+                    p = Process(target=execute_server, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
                     plist.append(p)
-                else:
-                    logger.info("launching worker nid = %s" % nid)
-                    if int(nid) > 0:
-                        p = Process(target=execute_worker, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, options.clientfile))
-                        plist.append(p)
+
+            elif app_type == "client":
+                logger.info("launching worker nid = %s" % nid)
+                if int(nid) > 0:
+                    p = Process(target=execute_client, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, options.clientfile))
+                    plist.append(p)
+            else:
+              raise Exception("unknown app type=" + app_type)
 
         # Now start process
         for p in plist:

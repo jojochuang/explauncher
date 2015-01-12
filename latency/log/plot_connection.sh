@@ -1,5 +1,5 @@
 #!/bin/bash
-source ../conf/config.sh
+source ../conf/conf.sh
 label=$1
 source ../../common.sh
 
@@ -15,7 +15,9 @@ logfiles=(`find ${last_log_set} -regex '.*\(server\|client\|head\).*gz'`)
 
 echo "plot_connection.sh: logfiles= $logfiles"
 
-rm /tmp/connection_log
+if [ -f "/tmp/connection_log" ]; then
+  rm /tmp/connection_log
+fi
 touch /tmp/connection_log
 for f in "${logfiles[@]}"; do
   echo $f

@@ -94,8 +94,17 @@ def param_reader(filename):
             l = line.strip().split("#")[0]
             #print("line = %s" % l)
             key, value = l.partition("=")[::2]
-            if len(key.strip()) > 0 and len(value.strip()) > 0:
-                kv[key.strip()] = value.strip()
+            v = value.strip()
+            k = key.strip()
+            if len( k ) > 0 and len( v ) > 0:
+                if k not in kv:
+                  kv[ k ] = v
+                elif isinstance( kv[k], list ):
+                  kv[ k ].append( v )
+                else:
+                  # convert from scalar to list
+                  varr = [ kv[k], v ]
+                  kv[ k ] = varr
     return kv
 
 def get_machines(hostfile, num_machines):
