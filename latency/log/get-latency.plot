@@ -6,7 +6,7 @@ set terminal postscript enhanced eps color "Helvetica" 22
 set yrange [0:100]
 set autoscale ymax
 
-set xrange [0:1000]
+set xrange [0:2000]
 #set autoscale xmax
 
 set ylabel "Frequency" font "Helvetica,22" tc lt 1

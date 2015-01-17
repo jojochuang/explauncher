@@ -29,6 +29,7 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 nruns=1      # number of replicated runs
 
 flavor="nacho"
+#flavor="mango"
 #flavor="context"
 
 #context_policy="NO_SHIFT"

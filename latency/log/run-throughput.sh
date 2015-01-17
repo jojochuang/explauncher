@@ -16,9 +16,9 @@ type="instant"
 cwd=`pwd`
 out_avg="${cwd}/data/avg-throughput.ts"
 stat_throughput="${cwd}/data/stat_throughput.ts"
-if [ -f $out_avg ]; then
-  rm $out_avg
-fi
+#if [ -f $out_avg ]; then
+#  rm $out_avg
+#fi
 
 for log in $logset/*
 do

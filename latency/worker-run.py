@@ -241,13 +241,14 @@ def main(options):
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
 
-    # Launching sar
-    #Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        #binary = param["BINARY"],
-        #logdir = param["SCRATCHDIR"],
-        #logname = "client-%s-sar.log",
-        #interval = "1",
-        #runtime = param["run_time"]))
+    if param["EC2"] == 1:
+      # Launching sar
+      Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+          binary = param["BINARY"],
+          logdir = param["SCRATCHDIR"],
+          logname = "client-%s-sar.log",
+          interval = "1",
+          runtime = param["run_time"]))
 
 
     # Read boot file and launch the application.

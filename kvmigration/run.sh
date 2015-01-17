@@ -31,16 +31,16 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 nruns=1      # number of replicated runs
 #nruns=5      # number of replicated runs
 
-#flavor="nacho"
-flavor="context"
+flavor="nacho"
+#flavor="context"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
 context_policy="RANDOM"
 
 # migration pattern parameters
-t_days=25
-day_period=4000000
+t_days=20
+day_period=10000000
 day_join=0.2
 day_leave=0.5
 day_error=0.2

@@ -4,7 +4,7 @@
 source conf/conf.sh
 source ../common.sh
 
-mace_start_port=30000
+mace_start_port=40000
 # number of server logical nodes does not change
 n_server_logicalnode=1
 server_scale=4
@@ -28,8 +28,8 @@ memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-#nruns=1      # number of replicated runs
-nruns=5      # number of replicated runs
+nruns=2      # number of replicated runs
+#nruns=5      # number of replicated runs
 
 #flavor="nacho"
 flavor="context"
@@ -156,6 +156,8 @@ function runexp (){
   #echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
+  echo "ServiceConfig.KeyValueClient.PER_TIMER_ROUNDS = 5" >> ${conf_client_file}
+  echo "ServiceConfig.KeyValueClient.AVG_ROUNDS = 1" >> ${conf_client_file}
 
   #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
   #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
@@ -220,6 +222,7 @@ function aggregate_output () {
   ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
   ./run-avg.sh
   ./avg-latency.sh
+  ./avg-utilization.sh
   ./plot_service.sh
   cd $cwd
 }
@@ -228,6 +231,17 @@ function init() {
   if [ $config_only -eq 0 ]; then
     # create log directories on all nodes
     ${psshdir}/pssh -h $host_orig_file -t 30 mkdir -p $scratchdir
+    
+    f1="log/data/utilization.ts"
+    f2="log/data/get-latency.ts"
+    f3="log/data/put-latency.ts"
+    f4="log/data/avg-throughput.ts"
+    f5="log/data/avg-latency"
+    for f in $f1 $f2 $f3 $f4; do
+      if [ -f $f ]; then
+        rm -f $f
+      fi
+    done
   fi
 }
 
@@ -259,6 +273,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
             ./run-timeseries.sh
             ./run-net.sh
             ./run-latency.sh
+            ./parse-utilization.sh
             cd $cwd
             # publish plots and parameters and logs to web page
             ./publish.sh $log_set_dir

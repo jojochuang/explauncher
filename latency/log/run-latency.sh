@@ -27,8 +27,8 @@ fi
 gnuplot < get-latency.plot
 gnuplot < put-latency.plot
 
-rm data/get-latency.ts
-rm data/put-latency.ts
+#rm data/get-latency.ts
+#rm data/put-latency.ts
 
 # generate pdf files using the eps file.
 cd result

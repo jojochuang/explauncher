@@ -9,18 +9,27 @@ if [[ $ec2 -eq 0 ]]; then
   home="/homes/chuangw"                                       # Home directory
   bin="/homes/chuangw/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
+  logdir_base="/u/tiberius06_s/chuangw/logs"        # Log collection directory
   logdir="/u/tiberius06_s/chuangw/logs/${application}"        # Log collection directory
   scratchdir="/scratch/chuangw/tmp/${application}"            # Scratch directory location
   psshdir="/homes/chuangw/pssh/bin"
+  webdir_base="/homes/chuangw/.www/benchmark"
+  webdir="/homes/chuangw/.www/benchmark/$application"
+  url_prefix="/homes/chuangw/benchmark/$application/"
 else
   user="ubuntu"
   home="/home/ubuntu"                                       # Home directory
   bin="/home/ubuntu/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
+  logdir_base="/home/ubuntu/logs"        # Log collection directory
   logdir="/home/ubuntu/logs/${application}"        # Log collection directory
   scratchdir="/run/shm/tmp/${application}"            # Scratch directory location
   psshdir="/home/ubuntu/pssh-2.2/bin"
+  webdir_base="/var/www/benchmark"
+  webdir="/var/www/benchmark/$application"
+  url_prefix="/benchmark/$application/"
 fi
+
 conf_dir="${bin}/conf"                    # Configuration directory
 conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
 host_orig_file="conf/hosts"

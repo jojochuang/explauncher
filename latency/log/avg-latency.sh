@@ -7,4 +7,4 @@ epspdf result/avg-latency.eps
 mogrify -format png result/avg-latency.eps
 rm result/avg-latency.eps
 
-rm data/avg-latency.ts
+#rm data/avg-latency.ts

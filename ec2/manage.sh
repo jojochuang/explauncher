@@ -14,6 +14,10 @@ fi
 #echo $id
 #echo $id
 
+if [ $# -eq 2 ]; then
+  instance_id=$2
+fi
+
 if [ "$action" = "connect" ]; then
   host=`ec2din -O $ACCESS_KEY -W $SECRET_KEY $instance_id | grep "INSTANCE" | awk '{print $4}'`
   echo "ssh -i $pem_file ubuntu@$host"

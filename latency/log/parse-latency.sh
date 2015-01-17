@@ -45,27 +45,18 @@ if [ -f $avglat ];  then
 fi
 ln=$(($ln/2))
 ln=$(($ln+1))
-awk -v vln="$ln" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-GET " sum/NR " " sqrt(sumsq/NR)}' $get_out >> $avglat 
-awk -v vln="$ln" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-PUT " sum/NR " " sqrt(sumsq/NR)}' $put_out >> $avglat
 
-#input_ts=(`find ${cwd}/data -regex '.*.*ts'`)
-#echo "input_ts="  ${input_ts[@]};
-#out_column="${cwd}/data/column-throughput.ts"
-#echo "out_column "  $out_column;
-#${cwd}/columnizer.pl $out_column ${input_ts[@]} 
-#
-#cp ${cwd}/timeseries-throughput.plot ${cwd}/timeseries-throughput-combined.plot
-#n=2
-#input_size=${#input_ts[@]}
-#linewidth=3
-#for f in "${input_ts[@]}"; do
-#  sep=", \\"
-#  if [ $(($n-2+1)) -eq $input_size ]; then
-#    sep=""
-#  fi
-#  color=$(($n-2))
-#  nopath=`echo $f|sed 's/^.*\///'` #remove the  path name
-#  echo "'$out_column'    using 1:(\$${n}) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${cwd}/timeseries-throughput-combined.plot
-#  n=$(($n+1))
-#done
+sort -n $get_out -o $get_out
+sort -n $put_out -o $put_out
+# number of lines in 
+num_lines=`wc -l $get_out | cut -d" " -f1`
+# get the median number
+median_element=$(( $num_lines/2 ))
+# get average
+
+# get 90th percentile
+ninetyth=$(( $num_lines*9/10 ))
+
+awk -v vln="$ln" -v me="$median_element" -v ne="$ninetyth" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-GET " sum/NR " " sqrt(sumsq/NR) " " array[me] " " array[ne] }' $get_out >> $avglat 
+awk -v vln="$ln" -v me="$median_element" -v ne="$ninetyth" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-PUT " sum/NR " " sqrt(sumsq/NR) " " array[me] " " array[ne] }' $put_out >> $avglat
 
