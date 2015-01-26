@@ -163,7 +163,8 @@ def main(options):
 
         # Write for clients
         for j in range(num_clients):
-            sid = (1 + num_server_machines + j % num_client_machines) % num_machines
+            #sid = (1 + num_server_machines + j % num_client_machines) % num_machines
+            sid = ( j % (num_machines - num_servers)) + num_servers
             i = j + num_servers
             boot(i, boot_time, ipaddr[sid], options.port+i*5, hostname[sid], "client", f) 
             boot_time += boot_period
@@ -580,7 +581,7 @@ def main(options):
     # Write to output client conf file
     with open(options.clientfile, "a") as f:
         if param["flavor"] == "nacho":
-            for j in range(num_servers+1):
+            for j in range(num_servers):
               f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[j ], port=options.port+j*5 ));
         elif param["flavor"] == "context":
           f.write( "ServiceConfig.Throughput.receiver_addr = IPV4/{host}:{port}\n".format( host= hostname[0 ], port=options.port ));

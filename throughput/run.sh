@@ -4,15 +4,15 @@ application="throughput"
 source ../common.sh
 
 mace_start_port=30000
-scale=8
+scale=2
 
-runtime=50 # duration of the experiment
-boottime=20   # total time to boot.
+runtime=200 # duration of the experiment
+boottime=50   # total time to boot.
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
 #flavor="context"
 flavor="nacho"
@@ -166,8 +166,9 @@ function runexp (){
 
 function aggregate_output () {
   log_set_dir=$1
-  t_clients=$2
-  t_primes=$3
+  t_servers=$2
+  t_clients=$3
+  t_primes=$4
   # create a new directory for the set of logs
   #log_set_dir=`date --iso-8601="seconds"`
   mkdir ${logdir}/${log_set_dir}
@@ -179,7 +180,7 @@ function aggregate_output () {
   # append to the output file
   cwd=`pwd`
   cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
+  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_servers-$t_clients-$t_primes
   cd $cwd
 }
 
@@ -192,10 +193,15 @@ function init() {
 
 init
 
-for t_server_machines in 8; do
-  for t_client_machines in  4; do
-    for t_clients in 8; do
-      for t_primes in 1; do  # Additional computation payload at the server.
+for t_server_machines in 1 2; do
+#for t_server_machines in 1; do
+
+  #for t_client_machines in  2; do
+    t_client_machines=$t_server_machines
+    #for t_clients in 4; do
+    t_clients=$(( $t_client_machines * 2 ))
+      for t_primes in 1 10 20 50 ; do  # Additional computation payload at the server.
+      #for t_primes in 50 ; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
@@ -220,7 +226,7 @@ for t_server_machines in 8; do
 
         # what to plot? the average throughput w/ error
         if [ $config_only -eq 0 ]; then
-          aggregate_output $log_set_dir $t_clients $t_primes 
+          aggregate_output $log_set_dir $t_server_machines $t_clients $t_primes 
           cwd=`pwd`
           cd log
           ./run-avg.sh
@@ -230,7 +236,7 @@ for t_server_machines in 8; do
           ./publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
-    done
-  done
+    #done
+  #done
 done
 
