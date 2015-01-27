@@ -2,7 +2,7 @@
 
 # Configures parameters that are shared by all benchmarks
 
-ec2=1        # set this if you are experimenting on EC2
+ec2=0        # set this if you are experimenting on EC2
 
 if [[ $ec2 -eq 0 ]]; then
   user="chuangw"

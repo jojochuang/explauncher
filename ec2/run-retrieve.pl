@@ -48,7 +48,7 @@ GetOptions("mace_rsync" => \$mace_rsync,
            "delete=s" => \$delete,
            "num_instances=i" => \$num_instances,
        );
-
+my $instance_type="m1.medium";
 
 my $ec2_key = get_ec2key();
 my $ec2_pass = get_ec2pass();
@@ -102,7 +102,7 @@ if( $action eq "CREATE" ) {
     if ( $secgroup ne "" ){
         $param_security_group="-g $secgroup"
     }
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small --availability-zone us-east-1a $param_security_group| grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type --availability-zone us-east-1a $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -116,16 +116,6 @@ if( $action eq "CREATE" ) {
     print OUT join("\n", map { trim($_) } @instances)."\n";
     close(OUT);
 
-    ## print all-list.txt
-    #$run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$4}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
-    #print "\$ ${run}\n";
-
-    #my @hosts = `$run`;
-    #open(OUT, ">all-list.txt") or die "cannot open all-list.txt for output";
-    #print OUT join("\n", map { trim($_) } @hosts);
-    #print "Hosts : ".join(" ", map { trim($_) } @hosts)."\n";
-    #close(OUT);
-
 }
 
 if( $action eq "ADD" ) {
@@ -134,7 +124,7 @@ if( $action eq "ADD" ) {
     if ( $secgroup ne "" ){
         $param_security_group="-g $secgroup"
     }
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small $param_security_group| grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -147,16 +137,6 @@ if( $action eq "ADD" ) {
     open(OUT, ">>conf/instance") or die "cannot open conf/instance for output";
     print OUT join("\n", map { trim($_) } @instances)."\n";
     close(OUT);
-
-    ## print all-list.txt
-    #$run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$4}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
-    #print "\$ ${run}\n";
-
-    #my @hosts = `$run`;
-    #open(OUT, ">all-list.txt") or die "cannot open all-list.txt for output";
-    #print OUT join("\n", map { trim($_) } @hosts);
-    #print "Hosts : ".join(" ", map { trim($_) } @hosts)."\n";
-    #close(OUT);
 
 }
 
@@ -185,7 +165,11 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || 
     print "Listed instances : ${instances_list}\n";
 
     #my $run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$4}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
+    
+    # if in ec2
     my $run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$5}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
+    # if from cloud machines
+    #my $run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$5}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     my @hosts = `$run`;

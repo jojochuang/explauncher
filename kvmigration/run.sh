@@ -56,6 +56,8 @@ else
 fi
 
 config_only=0 # don't run the experiment. just generate config files.
+no_config=1 # whether to run configure.py for new configs
+
 
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
@@ -117,69 +119,71 @@ function runexp (){
   #initial_server_size=$(($t_server_machines+1))
   initial_server_size=$(($t_server_machines))
 
-  cp ${conf_orig_file} ${conf_file}
+  if [ $no_config -eq 0 ]; then
+    cp ${conf_orig_file} ${conf_file}
 
-  GenerateCommonParameter ${conf_file}
-  GenerateBenchmarkParameter ${conf_file}
+    GenerateCommonParameter ${conf_file}
+    GenerateBenchmarkParameter ${conf_file}
 
-  # Generate parameters common to server and clients in this benchmark
-  #echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
-  #echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
-  #echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
+    # Generate parameters common to server and clients in this benchmark
+    #echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
+    #echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
+    #echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
 
-  # write ServiceConfig.WCPaxos.UPCALL_REGID = 
-  # write ServiceConfig.WCPaxos.ROLE = 
-  # write ServiceConfig.WCPaxos.ROUNDS1 = 
-  # write ServiceConfig.WCPaxos.WRITE = 
-  # write ServiceConfig.WCPaxos.ACCEPTORS = 
-  # write ServiceConfig.WCPaxos.PROPOSAL_NUM = 
+    # write ServiceConfig.WCPaxos.UPCALL_REGID = 
+    # write ServiceConfig.WCPaxos.ROLE = 
+    # write ServiceConfig.WCPaxos.ROUNDS1 = 
+    # write ServiceConfig.WCPaxos.WRITE = 
+    # write ServiceConfig.WCPaxos.ACCEPTORS = 
+    # write ServiceConfig.WCPaxos.PROPOSAL_NUM = 
 
-  echo "num_machines = ${t_machines}" >> ${conf_file}
-  echo "num_server_machines = ${t_server_machines}" >> ${conf_file}
-  echo "num_client_machines = ${t_client_machines}" >> ${conf_file}
-  echo "num_servers = ${t_servers}" >> ${conf_file}
-  echo "num_clients = ${t_clients}" >> ${conf_file}
-  echo "num_contexts = ${t_ncontexts}" >> ${conf_file}
-  echo "day_period = ${day_period}" >> ${conf_file}
-  echo "day_join = ${day_join}" >> ${conf_file}
-  echo "day_leave = ${day_leave}" >> ${conf_file}
-  echo "day_error = ${day_error}" >> ${conf_file}
-  echo "num_days = ${t_days}" >> ${conf_file}
+    echo "num_machines = ${t_machines}" >> ${conf_file}
+    echo "num_server_machines = ${t_server_machines}" >> ${conf_file}
+    echo "num_client_machines = ${t_client_machines}" >> ${conf_file}
+    echo "num_servers = ${t_servers}" >> ${conf_file}
+    echo "num_clients = ${t_clients}" >> ${conf_file}
+    echo "num_contexts = ${t_ncontexts}" >> ${conf_file}
+    echo "day_period = ${day_period}" >> ${conf_file}
+    echo "day_join = ${day_join}" >> ${conf_file}
+    echo "day_leave = ${day_leave}" >> ${conf_file}
+    echo "day_error = ${day_error}" >> ${conf_file}
+    echo "num_days = ${t_days}" >> ${conf_file}
 
-  # copy the param file for clients
-  cp ${conf_file} ${conf_client_file}
+    # copy the param file for clients
+    cp ${conf_file} ${conf_client_file}
 
-  echo -e "\n# Specific parameters for client" >> ${conf_client_file}
+    echo -e "\n# Specific parameters for client" >> ${conf_client_file}
 
-  #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
-  echo "role = client" >>  ${conf_client_file}
-  #echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
-  echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
-  echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
+    #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
+    echo "role = client" >>  ${conf_client_file}
+    #echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
+    echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
+    echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
-  #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
-  #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
+    #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
+    #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
 
-  # copy the param file for the server
-  echo -e "\n# Specific parameters for server" >> ${conf_file}
+    # copy the param file for the server
+    echo -e "\n# Specific parameters for server" >> ${conf_file}
 
-  echo "role = server" >>  ${conf_file}
-  echo "lib.MApplication.services = KeyValueServer" >> ${conf_file}
-  echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
-  echo "MACE_LOG_AUTO_ALL = 1" >> ${conf_file}
-  echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
-  echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
+    echo "role = server" >>  ${conf_file}
+    echo "lib.MApplication.services = KeyValueServer" >> ${conf_file}
+    echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
+    echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
+    echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
+    echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
 
-  # copy the server parameter file template 
-  #for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
-  #do
-  #  #echo $i
-  #  cp ${conf_file} ${conf_file}${i}
-  #done
+    # copy the server parameter file template 
+    #for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
+    #do
+    #  #echo $i
+    #  cp ${conf_file} ${conf_file}${i}
+    #done
 
-  # print out bootfile & param for servers
-  echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
-  ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
+    # print out bootfile & param for servers
+    echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
+    ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
+  fi
 
   if [[ $? -ne 0 ]]; then
     echo "Error occurred while processing ./configure-${application}.py. Terminated."

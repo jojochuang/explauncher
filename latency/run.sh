@@ -56,6 +56,7 @@ else
 fi
 
 config_only=0 # don't run the experiment. just generate config files.
+no_config=0 # whether to run configure.py for new configs
 
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
@@ -103,18 +104,12 @@ function runexp (){
 
   # For each server machine, run only one server process.
   # minus the bootstrapper node
-  #t_servers=$(( $t_server_machines - $n_server_logicalnode ))
   t_servers=$t_server_machines
 
-  #t_clients_per_machine=$(($t_clients/$t_client_machines))
-
   # Get actual number of machines you will be using
-  #t_machines=$(($t_server_machines + $t_client_machines + 1))
   # TODO: include the head node
   t_machines=$(($t_server_machines + $t_client_machines ))
 
-
-  #initial_server_size=$(($t_server_machines+1))
   initial_server_size=$(($t_server_machines))
 
   cp ${conf_orig_file} ${conf_file}
@@ -123,16 +118,6 @@ function runexp (){
   GenerateBenchmarkParameter ${conf_file}
 
   # Generate parameters common to server and clients in this benchmark
-  #echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
-  #echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
-  #echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
-
-  # write ServiceConfig.WCPaxos.UPCALL_REGID = 
-  # write ServiceConfig.WCPaxos.ROLE = 
-  # write ServiceConfig.WCPaxos.ROUNDS1 = 
-  # write ServiceConfig.WCPaxos.WRITE = 
-  # write ServiceConfig.WCPaxos.ACCEPTORS = 
-  # write ServiceConfig.WCPaxos.PROPOSAL_NUM = 
 
   echo "num_machines = ${t_machines}" >> ${conf_file}
   echo "num_server_machines = ${t_server_machines}" >> ${conf_file}
@@ -159,9 +144,6 @@ function runexp (){
   echo "ServiceConfig.KeyValueClient.PER_TIMER_ROUNDS = 5" >> ${conf_client_file}
   echo "ServiceConfig.KeyValueClient.AVG_ROUNDS = 1" >> ${conf_client_file}
 
-  #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
-  #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
-
   # copy the param file for the server
   echo -e "\n# Specific parameters for server" >> ${conf_file}
 
@@ -172,16 +154,11 @@ function runexp (){
   echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
   echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
 
-  # copy the server parameter file template 
-  #for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
-  #do
-  #  #echo $i
-  #  cp ${conf_file} ${conf_file}${i}
-  #done
-
   # print out bootfile & param for servers
-  echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
-  ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
+  if [ $no_config -eq 0 ]; then
+    echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
+    ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}
+  fi
 
   if [[ $? -ne 0 ]]; then
     echo "Error occurred while processing ./configure-${application}.py. Terminated."
