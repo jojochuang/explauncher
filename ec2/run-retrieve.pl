@@ -14,7 +14,7 @@ unless (@ARGV) {
 
     print "  -r (regenerate conf/slave from conf/instance)\n";
     print "  -p (do parallel ssh for pwd)\n";
-    print "  -t (terminate all running instances) [ unimplemented ]\n";
+    #print "  -t (terminate all running instances) [ unimplemented ]\n";
     print "  -a [CREATE ADD START STOP TERMINATE] instances\n";
 
     print "  -s (sync machine lists)\n";
@@ -36,6 +36,7 @@ my $num_instances = 0;
 my $sync = 0;
 my $image_create = 0;
 my $delete = "";
+my $instance_type = "m1.medium";
 
 GetOptions("mace_rsync" => \$mace_rsync,
            "fullcontext_rsync" => \$fullcontext_rsync,
@@ -102,7 +103,7 @@ if( $action eq "CREATE" ) {
     if ( $secgroup ne "" ){
         $param_security_group="-g $secgroup"
     }
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small --availability-zone us-east-1a $param_security_group| grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type --availability-zone us-east-1a $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -116,16 +117,6 @@ if( $action eq "CREATE" ) {
     print OUT join("\n", map { trim($_) } @instances)."\n";
     close(OUT);
 
-    ## print all-list.txt
-    #$run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$4}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
-    #print "\$ ${run}\n";
-
-    #my @hosts = `$run`;
-    #open(OUT, ">all-list.txt") or die "cannot open all-list.txt for output";
-    #print OUT join("\n", map { trim($_) } @hosts);
-    #print "Hosts : ".join(" ", map { trim($_) } @hosts)."\n";
-    #close(OUT);
-
 }
 
 if( $action eq "ADD" ) {
@@ -134,7 +125,7 @@ if( $action eq "ADD" ) {
     if ( $secgroup ne "" ){
         $param_security_group="-g $secgroup"
     }
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t m1.small $param_security_group| grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -147,16 +138,6 @@ if( $action eq "ADD" ) {
     open(OUT, ">>conf/instance") or die "cannot open conf/instance for output";
     print OUT join("\n", map { trim($_) } @instances)."\n";
     close(OUT);
-
-    ## print all-list.txt
-    #$run = "ec2-describe-instances -O ${ec2_key} -W ${ec2_pass} ${instances_list} | grep INSTANCE | awk '{print \$4}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'";
-    #print "\$ ${run}\n";
-
-    #my @hosts = `$run`;
-    #open(OUT, ">all-list.txt") or die "cannot open all-list.txt for output";
-    #print OUT join("\n", map { trim($_) } @hosts);
-    #print "Hosts : ".join(" ", map { trim($_) } @hosts)."\n";
-    #close(OUT);
 
 }
 
@@ -171,7 +152,7 @@ if( $delete ne "" ) {
     print `$run`;
 }
 
-# Generate all-list.txt if needed
+# Generate conf/slave
 if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || $regenerate )
 {
     if( $action eq "CREATE" || $action eq "ADD" ) {
@@ -195,15 +176,6 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || 
     close(OUT);
 }
 
-#exit(0);
-
-# Retrieve machine list
-
-#my @hosts = `ec2-host -k ${ec2_key} -s ${ec2_pass} shyoo-mace-slave | awk '{print \$2}' | xargs --max-lines=1 -I {} host {} | awk '{print \$4, \$1}' | sort -n -t . -k 1,1 -k 2,2 -k 3,3 -k 4,4 | awk '{print \$2}'`;
-
-#open(OUT, ">all-list.txt") or die "cannot open all-list.txt for output";
-#print OUT join("\n", map { trim($_) } @hosts);
-#close(OUT);
 open(FILE, "conf/slave") or die("Unable to read conf/slave\n");
 my @hosts = <FILE>;
 close FILE;
@@ -247,28 +219,9 @@ if( $benchmark_rsync) {
     print "\$ cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark\n";
     print `cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark`
 }
-    
-#print "\$ cp all-list.txt fullcontext-list.txt\n";
-#print "\$ cp all-list.txt gol-list.txt\n";
-#print `cp all-list.txt fullcontext-list.txt`;
-#print `cp all-list.txt gol-list.txt`;
-#print "\$ ./process-list.rb all fullcontext gol\n";
-#print `./process-list.rb all fullcontext gol`;
-
-# Copy "hostname -s" only to conf/hosts.
 
 print "\$ cp conf/slave ../microbenchmark/conf/hosts\n";
 print `cp conf/slave ../microbenchmark/conf/hosts`;
-#print "\$ cat conf/slave | cut -f1 -d'.' > ../microbenchmark/conf/hosts\n";
-#print `cat conf/slave | cut -f1 -d'.' > ../microbenchmark/conf/hosts`;
-
-#if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $sync ) {
-    #if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" ) {
-        #sleep(30);
-    #}
-    #print "\$ /home/ubuntu/pssh-2.2/bin/pscp -h conf/slave ~/machine-list/* ~/machine-list"."\n";
-    #print `/home/ubuntu/pssh-2.2/bin/pscp -h conf/slave ~/machine-list/* ~/machine-list`."\n";
-#}
 
 sub subexecute {
     my $cmd = shift;
@@ -277,8 +230,6 @@ sub subexecute {
 
 EXEC:
     my $exec = qq{sh -c "$cmd $host $rcmd 2>&1"};
-
-    #print "* RUNNING : $exec\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
     my @result = `$exec`;

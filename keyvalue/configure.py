@@ -507,10 +507,8 @@ class Configuration:
           # Write for clients
           for j in range(self.num_clients):
               i = j + self.num_servers
-              #sid = ( self.num_server_machines + j % self.num_client_machines) % self.num_machines
-              #self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "client", f) 
-              self.boot(i, boot_time, self.ipaddr[i], options.port+i* self.port_shift, hostname[i], "client", f) 
-              #i += 1
+              machine_id = (j % self.num_client_machines) + self.num_servers
+              self.boot(i, boot_time, self.ipaddr[machine_id], options.port+i* self.port_shift, hostname[machine_id], "client", f) 
               boot_time += boot_period
       return
 

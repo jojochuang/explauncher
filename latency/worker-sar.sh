@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 dir=$1
 name=$2

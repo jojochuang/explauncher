@@ -31,9 +31,6 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 nruns=1      # number of replicated runs
 #nruns=5      # number of replicated runs
 
-flavor="nacho"
-#flavor="context"
-
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
 context_policy="RANDOM"
@@ -54,8 +51,6 @@ if [ $# -eq 0 ]; then
 else
     id=$1
 fi
-
-config_only=0 # don't run the experiment. just generate config files.
 
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
@@ -222,15 +217,6 @@ function aggregate_output () {
   ./plot_service.sh
   cd $cwd
 }
-
-function init() {
-  if [ $config_only -eq 0 ]; then
-    # create log directories on all nodes
-    ${psshdir}/pssh -h $host_orig_file -t 30 mkdir -p $scratchdir
-  fi
-}
-
-init
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
   #for t_client_machines in  4; do

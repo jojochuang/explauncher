@@ -34,6 +34,8 @@ echo "copy avg-latency.png"
 cp log/result/avg-latency.png ${webdir}/${log_set_dir}/
 echo "copy service_struct.png"
 cp log/result/service_struct.png ${webdir}/${log_set_dir}/
+echo "copy avg-utilization.png"
+cp log/result/avg-utilization.png ${webdir}/${log_set_dir}/
 
 # add an entry to the web page
 index_page="${webdir}/index.html"
@@ -52,6 +54,9 @@ cat <<EOF >> ${index_page}
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-throughput.png">
   <p>Throughput histogram</p>
   <img src="${url_prefix}${log_set_dir}/stat-throughput.png"></a> </td> </tr>
+<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-utilization.png">
+  <p>Average Utilization</p>
+  <img src="${url_prefix}${log_set_dir}/avg-utilization.png"></a> </td> </tr>
 
 EOF
 

@@ -14,6 +14,18 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
 
     assert app_type == "client"
 
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="client-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["BIN"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
+
 
     # re-load parameters for the specific server
     param = Utils.param_reader(options.clientfile)
@@ -94,6 +106,19 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
 
     assert app_type == "server"
 
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="server-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["BIN"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
+
+
     # Sleep
     if param["flavor"] == "nacho":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
@@ -154,6 +179,19 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s" % (nid, boot_wait_time, ipaddr, hostname))
 
     assert app_type == "head"
+
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="head-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["BIN"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
+
 
     # Sleep
     logger.info("Sleeping %s...", boot_wait_time)
@@ -240,15 +278,6 @@ def main(options):
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
-
-    if param["EC2"] == 1:
-      # Launching sar
-      Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-          binary = param["BINARY"],
-          logdir = param["SCRATCHDIR"],
-          logname = "client-%s-sar.log",
-          interval = "1",
-          runtime = param["run_time"]))
 
 
     # Read boot file and launch the application.

@@ -53,8 +53,6 @@ else
     id=$1
 fi
 
-config_only=0 # don't run the experiment. just generate config files.
-
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
   conf_file=$1
@@ -218,15 +216,6 @@ function aggregate_output () {
   ./plot_service.sh
   cd $cwd
 }
-
-function init() {
-  if [ $config_only -eq 0 ]; then
-    # create log directories on all nodes
-    ${psshdir}/pssh -h $host_orig_file -t 30 mkdir -p $scratchdir
-  fi
-}
-
-init
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 #for t_server_machines in 3; do

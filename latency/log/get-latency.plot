@@ -7,7 +7,7 @@ set yrange [0:100]
 set autoscale ymax
 
 set xrange [0:2000]
-#set autoscale xmax
+set autoscale xmax
 
 set ylabel "Frequency" font "Helvetica,22" tc lt 1
 
@@ -20,7 +20,7 @@ set style histogram gap 2
 set style data histogram
 set style fill solid border -1 
 
-bw = 10
+bw = 50
 bin(x,width)=width*floor(x/width)
 x=system("wc data/get-latency.ts|awk '{print $1}'")
 

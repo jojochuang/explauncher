@@ -46,7 +46,9 @@ if [[ ! -f "net-read.eps" ]]; then
   exit 1
 fi
 ls *.eps | xargs --max-lines=1 epspdf
-mogrify -size 640x480 -format png *.eps
+#mogrify -size 640x480 -format png *.eps
+convert -density 150  net-write.pdf net-write.png
+convert -density 150  net-read.pdf net-read.png
 #rm *.eps
 
 #for f in *.eps; do
