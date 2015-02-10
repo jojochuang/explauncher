@@ -10,6 +10,8 @@ source ../common.sh
 #   log/result/throughput.pdf, log/result/stat-throughput.pdf/png
 #   log/result/conn*.pdf
 
+echo "\$application = $application, \$logdir = $logdir, \$log_set_dir = $log_set_dir, \$webdir = $webdir"
+
 log_set_dir=$1
 
 if [[ $# -lt 1 ]]; then

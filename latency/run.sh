@@ -169,14 +169,13 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}-l${t_payload}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}-l${t_payload}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}-l${t_payload}
 
     else
       # do not use monitor
-      #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}-l${t_payload}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-l${t_payload}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}-l${t_payload}
     fi
     sleep 10
   fi
@@ -196,14 +195,14 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  cwd=`pwd`
-  cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes-$t_payload
-  ./run-avg.sh
-  ./avg-latency.sh
-  ./avg-utilization.sh $flavor-$t_clients-$t_primes-$t_payload
-  ./plot_service.sh
-  cd $cwd
+  #cwd=`pwd`
+  #cd log
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes-$t_payload
+  $plotter/run-avg.sh
+  $plotter/avg-latency.sh
+  $plotter/avg-utilization.sh $flavor-$t_clients-$t_primes-$t_payload
+  $plotter/plot_service.sh
+  #cd $cwd
 }
 
 
@@ -227,16 +226,16 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 
           if [ $config_only -eq 0 ]; then
             # generate plots for each run
-            cwd=`pwd`
-            cd log
-            ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
-            ./run-timeseries.sh
-            ./run-net.sh
-            ./run-latency.sh
-            ./parse-utilization.sh
-            cd $cwd
+            #cwd=`pwd`
+            #cd log
+            $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
+            $plotter/run-timeseries.sh
+            $plotter/run-net.sh
+            $plotter/run-latency.sh
+            $plotter/parse-utilization.sh
+            #cd $cwd
             # publish plots and parameters and logs to web page
-            ./publish.sh $log_set_dir
+            $common/publish.sh $log_set_dir
           fi
         done # end of nruns
 
@@ -244,7 +243,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
           # plot the average throughput w/ error across all runs
           aggregate_output $log_set_dir $n_client_logicalnode $t_primes  $t_payload
 
-          ./publish_webindex.sh $log_set_dir
+          $common/publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
     #done

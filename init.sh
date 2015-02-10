@@ -20,11 +20,11 @@ function init() {
     f4="log/data/avg-throughput.ts"
     f5="log/data/avg-latency"
 
-    if [ ! -d log/data ]; then
-      mkdir -p log/data
+    if [ ! -d data ]; then
+      mkdir -p data
     fi
-    if [ ! -d log/result ]; then
-      mkdir -p log/result
+    if [ ! -d result ]; then
+      mkdir -p result
     fi
 
     for f in $f1 $f2 $f3 $f4; do

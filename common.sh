@@ -7,6 +7,7 @@ ec2=1        # set this if you are experimenting on EC2
 if [[ $ec2 -eq 0 ]]; then
   user="chuangw"
   home="/homes/chuangw"                                       # Home directory
+  benchmark_root="/homes/chuangw/benchmark"
   bin="/homes/chuangw/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
   logdir_base="/u/tiberius06_s/chuangw/logs"        # Log collection directory
@@ -19,6 +20,7 @@ if [[ $ec2 -eq 0 ]]; then
 else
   user="ubuntu"
   home="/home/ubuntu"                                       # Home directory
+  benchmark_root="/homes/ubuntu/benchmark"
   bin="/home/ubuntu/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
   logdir_base="/home/ubuntu/logs"        # Log collection directory
@@ -29,10 +31,12 @@ else
   webdir="/var/www/benchmark/$application"
   url_prefix="/benchmark/$application/"
 fi
+common="$benchmark_root/common"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
+plotter="$benchmark_root/common/plotter"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
 conf_dir="${bin}/conf"                    # Configuration directory
 conf_orig_file="conf/params-basic.conf"   # Relative directory of conf_orig_file
-host_orig_file="conf/hosts"
+host_orig_file="../ec2/conf/hosts"
 host_run_file="conf/hosts-run"
 boot_file="conf/boot"
 
@@ -45,6 +49,7 @@ function GenerateCommonParameter () {
   conf_file=$1
   echo "USER = ${user}" >> ${conf_file}
   echo "HOME = ${home}" >> ${conf_file}
+  echo "COMMON = ${common}" >> ${conf_file}
   echo "BIN = ${bin}" >> ${conf_file}
   echo "CONFDIR = ${conf_dir}" >> ${conf_file}
   echo "HOSTRUNFILE = ${conf_dir}/hosts-run" >> $conf_file

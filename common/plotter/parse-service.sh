@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source ../conf/conf.sh
-source ../../common.sh
+source conf/conf.sh
+source ../common.sh
 cwd=`pwd`
 
 logset=`ls -trd ${logdir}/* | tail -n1`

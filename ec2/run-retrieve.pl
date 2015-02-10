@@ -8,16 +8,16 @@ require "conf/config.pl";
 
 unless (@ARGV) {
     print "usage: $0\n";
-    print "  -m (rsync maceclean-project)\n";
-    print "  -f (rsync mace-project)\n";
+    #print "  -m (rsync maceclean-project)\n";
+    #print "  -f (rsync mace-project)\n";
     print "  -b (rsync benchmark)\n";
 
-    print "  -r (regenerate conf/slave from conf/instance)\n";
+    print "  -r (regenerate conf/hosts from conf/instance)\n";
     print "  -p (do parallel ssh for pwd)\n";
     #print "  -t (terminate all running instances) [ unimplemented ]\n";
     print "  -a [CREATE ADD START STOP TERMINATE] instances\n";
 
-    print "  -s (sync machine lists)\n";
+    #print "  -s (sync machine lists)\n";
     print "  -i (create new ami image)\n";
     print "  -d (instance name to delete)\n";
 
@@ -26,25 +26,25 @@ unless (@ARGV) {
 # get the list of active nodes except the local host
 # ec2din |grep INSTANCE |awk '$4 !~ "stopped" {print $5}'| grep -v `hostname`
 
-my $mace_rsync = 0;
+#my $mace_rsync = 0;
 my $fullcontext_rsync = 0;
 my $benchmark_rsync = 0;
 my $pssh = 0;
 my $action = "";
 my $regenerate = 0;
 my $num_instances = 0;
-my $sync = 0;
+#my $sync = 0;
 my $image_create = 0;
 my $delete = "";
 my $instance_type = "m1.medium";
 
-GetOptions("mace_rsync" => \$mace_rsync,
-           "fullcontext_rsync" => \$fullcontext_rsync,
+GetOptions(#"mace_rsync" => \$mace_rsync,
+    #"fullcontext_rsync" => \$fullcontext_rsync,
            "benchmark_rsync" => \$benchmark_rsync,
            "regenerate" => \$regenerate,
            "pssh" => \$pssh,
            "action=s" => \$action,
-           "sync" => \$sync,
+           #"sync" => \$sync,
            "image_create" => \$image_create,
            "delete=s" => \$delete,
            "num_instances=i" => \$num_instances,
@@ -92,6 +92,9 @@ if( $action eq "STOP" ) {
 
 if( $action eq "START" ) {
     my $run = "cat conf/instance | paste -sd \" \" | xargs ec2-start-instances -O ${ec2_key} -W ${ec2_pass}";
+    if( $num_instances > 0 ){
+        $run = "cat conf/instance |head -n $num_instances | paste -sd \" \" | xargs ec2-start-instances -O ${ec2_key} -W ${ec2_pass}";
+    }
     print "\$ ${run}\n";
     print `$run`;
 }
@@ -152,7 +155,7 @@ if( $delete ne "" ) {
     print `$run`;
 }
 
-# Generate conf/slave
+# Generate conf/hosts
 if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || $regenerate )
 {
     if( $action eq "CREATE" || $action eq "ADD" ) {
@@ -160,7 +163,13 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || 
     }
     open(FILE, "conf/instance") or die "cannot open conf/instance for read";
     my @instances = <FILE>;
-    my $instances_list = join(" ", map { trim($_) } @instances); 
+    my @some_instances = ();
+    if( $num_instances == 0 ){
+        @some_instances = @instances;
+    }else{
+        @some_instances = @instances[ 0 .. ($num_instances-1) ];
+    }
+    my $instances_list = join(" ", map { trim($_) } @some_instances); 
     close FILE;
 
     print "Listed instances : ${instances_list}\n";
@@ -170,13 +179,13 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || 
     print "\$ ${run}\n";
 
     my @hosts = `$run`;
-    open(OUT, ">conf/slave") or die "cannot open conf/slave for output";
+    open(OUT, ">conf/hosts") or die "cannot open conf/hosts for output";
     print OUT join("\n", map { trim($_) } @hosts)."\n";
     print "Hosts : ".join(" ", map { trim($_) } @hosts)."\n";
     close(OUT);
 }
 
-open(FILE, "conf/slave") or die("Unable to read conf/slave\n");
+open(FILE, "conf/hosts") or die("Unable to read conf/hosts\n");
 my @hosts = <FILE>;
 close FILE;
 
@@ -205,23 +214,23 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $pssh ) {
     }
 }
 
-if( $mace_rsync ) {
-    print "\$ cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/maceclean-project/ {}:~/maceclean-project\n";
-    print `cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/maceclean-project/ {}:~/maceclean-project`
-}
-
-if( $fullcontext_rsync) {
-    print "\$ cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/mace-project/ {}:~/mace-project\n";
-    print `cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/mace-project/ {}:~/mace-project`
-}
+#if( $mace_rsync ) {
+#    print "\$ cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ~/maceclean-project/ {}:~/maceclean-project\n";
+#    print `cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ~/maceclean-project/ {}:~/maceclean-project`
+#}
+#
+#if( $fullcontext_rsync) {
+#    print "\$ cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ~/mace-project/ {}:~/mace-project\n";
+#    print `cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ~/mace-project/ {}:~/mace-project`
+#}
 
 if( $benchmark_rsync) {
-    print "\$ cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark\n";
-    print `cat conf/slave | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark`
+    print "\$ cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark\n";
+    print `cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ~/benchmark/ {}:~/benchmark`
 }
 
-print "\$ cp conf/slave ../microbenchmark/conf/hosts\n";
-print `cp conf/slave ../microbenchmark/conf/hosts`;
+print "\$ cp conf/hosts ../microbenchmark/conf/hosts\n";
+print `cp conf/hosts ../microbenchmark/conf/hosts`;
 
 sub subexecute {
     my $cmd = shift;

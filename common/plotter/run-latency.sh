@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source ../conf/conf.sh
-source ../../common.sh
+source conf/conf.sh
+source ../common.sh
 
 if [[ $# -lt 1 ]]; then
   logset=`ls -trd ${logdir}/${application}-* | tail -n1`

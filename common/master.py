@@ -123,7 +123,7 @@ def main(options):
 
     # Copying logs
     cmd = '{bin}/worker-log.py -p {paramfile} -l {logdir}'.format(
-            bin=param["BIN"],
+            bin=param["COMMON"],
             paramfile="%s/%s" % (param["BIN"], options.paramfile),
             logdir=log_dir)
 

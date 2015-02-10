@@ -1,10 +1,8 @@
 #!/bin/bash
 #set -e
-source ../conf/conf.sh
-source ../../common.sh
-#logdir=/u/tiberius06_s/chuangw/logs/ranger
+source conf/conf.sh
+source ../common.sh
 cwd=`pwd`
-#echo $cwd
 
 if [[ $# -ge 2 ]]; then
   type=$1
@@ -126,16 +124,5 @@ for f in "${input_ts[@]}"; do
   echo "'$out_column'    using 1:(\$${n}/1024) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${cwd}/net-read-timeseries-combined.plot
   n=$(($n+1))
 done
-
-
-#if [[ "$type" = "publish" ]]; then
-#  # For nserver file
-#  for f in "${nsfile[@]}"; do
-#    echo "nserver = $f"
-#    out="${cwd}/data/head-nservers.ts"
-#    echo "producing $out"
-#    zgrep -a -e " num_servers" $f | awk "{ T=int(\$3); printf \"%.3f\t%d\n\", (T/1000000), \$4}" > $out
-#  done
-#fi
 
 

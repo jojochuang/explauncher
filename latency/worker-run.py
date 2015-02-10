@@ -5,6 +5,8 @@ from multiprocessing import Process
 from time import sleep
 import logging
 
+import sys
+sys.path.append("../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Worker')
@@ -18,7 +20,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     # Launching sar
     logname="client-{nid}-sar.log".format( nid=nid )
     cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        bin = param["BIN"],
+        bin = param["COMMON"],
         logdir = param["SCRATCHDIR"],
         logname = logname,
         interval = "1",
@@ -110,7 +112,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     # Launching sar
     logname="server-{nid}-sar.log".format( nid=nid )
     cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        bin = param["BIN"],
+        bin = param["COMMON"],
         logdir = param["SCRATCHDIR"],
         logname = logname,
         interval = "1",
@@ -184,7 +186,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     # Launching sar
     logname="head-{nid}-sar.log".format( nid=nid )
     cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        bin = param["BIN"],
+        bin = param["COMMON"],
         logdir = param["SCRATCHDIR"],
         logname = logname,
         interval = "1",

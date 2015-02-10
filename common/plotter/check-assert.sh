@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source ../conf/conf.sh
-source ../../common.sh
+source conf/conf.sh
+source ../common.sh
 #logdir=/u/tiberius06_s/chuangw/logs/throughput
 cwd=`pwd`
 #echo $cwd

@@ -1,7 +1,7 @@
 #!/bin/bash
-source ../conf/conf.sh
+source conf/conf.sh
 label=$1
-source ../../common.sh
+source ../common.sh
 
 # find the latest log set
 echo $logdir

@@ -1,8 +1,8 @@
 #!/bin/bash
 #set -e
 
-source ../conf/conf.sh
-source ../../common.sh
+source conf/conf.sh
+source ../common.sh
 cwd=`pwd`
 
 if [[ $# -ge 2 ]]; then

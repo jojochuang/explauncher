@@ -207,6 +207,13 @@ function aggregate_output () {
 
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
+for scale in 4 2 1; do
+  for t_payload  in 1 1000 10000; do
+  server_scale=$scale
+  t_server_machines=$(( $n_server_logicalnode * $server_scale ))
+  t_client_machines=$scale
+  t_ncontexts=$(( $server_scale* 6))
+  t_ngroups=$t_ncontexts # number of partitions at server
   #for t_client_machines in  4; do
     n_client_logicalnode=$(( $t_client_machines * $logical_nodes_per_physical_nodes ))
 
@@ -247,3 +254,5 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
     #done
   #done
 
+done
+done
