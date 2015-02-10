@@ -5,14 +5,18 @@ source ../common.sh
 source ../init.sh
 
 mace_start_port=30000
+scale=2
 
 runtime=200 # duration of the experiment
 boottime=50   # total time to boot.
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
-#nruns=5      # number of replicated runs
+#nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
+
+#flavor="context"
+flavor="nacho"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -34,6 +38,8 @@ if [ $# -eq 0 ]; then
 else
     id=$1
 fi
+
+config_only=0 # don't run the experiment. just generate config files.
 
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
@@ -179,7 +185,23 @@ function aggregate_output () {
   cd $cwd
 }
 
-for t_server_machines in 8; do
+function init() {
+  if [ $config_only -eq 0 ]; then
+    # create directories on all nodes
+    ${psshdir}/pssh -h conf/hosts -t 30 mkdir -p $scratchdir
+
+    # sync executable
+    executable_file_name="${application}_${flavor}"
+    if [[ $ec2 -eq 1 ]]; then
+      echo "rsync executable $executable_file_name ..."
+      `cat conf/hosts | xargs --max-lines=1 -I {} | rsync -vauz $executable_file_name {}:~/benchmark/$application/$executable_file_name`
+    fi
+  fi
+}
+
+init
+
+for t_server_machines in 4; do
 #for t_server_machines in 1; do
 
   #for t_client_machines in  2; do
