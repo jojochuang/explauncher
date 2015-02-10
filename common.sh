@@ -20,7 +20,7 @@ if [[ $ec2 -eq 0 ]]; then
 else
   user="ubuntu"
   home="/home/ubuntu"                                       # Home directory
-  benchmark_root="/homes/ubuntu/benchmark"
+  benchmark_root="/home/ubuntu/benchmark"
   bin="/home/ubuntu/benchmark/${application}"               # Default explauncher experiment directory. Also, binary executable exists at this directory.
 
   logdir_base="/home/ubuntu/logs"        # Log collection directory

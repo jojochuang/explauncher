@@ -75,9 +75,9 @@ input_ts=(`find ${cwd}/data -regex '.*\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_column="${cwd}/data/column-throughput.ts"
 echo "out_column "  $out_column;
-${cwd}/columnizer.pl $out_column ${input_ts[@]} 
+$plotter/columnizer.pl $out_column ${input_ts[@]} 
 
-cp ${cwd}/timeseries-throughput.plot ${cwd}/timeseries-throughput-combined.plot
+cp $plotter/timeseries-throughput.plot $plotter/timeseries-throughput-combined.plot
 n=2
 input_size=${#input_ts[@]}
 linewidth=3

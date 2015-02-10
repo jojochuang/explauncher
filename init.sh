@@ -8,10 +8,10 @@ function init() {
     executable_file_name="${application}_${flavor}"
     if [[ $ec2 -eq 1 ]]; then
       echo "rsync scripts ..."
-      cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz ../*.sh {}:~/benchmark
-      cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz *.sh *.py {}:~/benchmark/$application
+      cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz ../*.sh {}:~/benchmark
+      cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz *.sh *.py {}:~/benchmark/$application
       echo "rsync executable $executable_file_name ..."
-      cat conf/hosts | xargs --max-lines=1 -I {} rsync -vauz $executable_file_name {}:~/benchmark/$application
+      cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz $executable_file_name {}:~/benchmark/$application
     fi
     echo "remove statics data"
     f1="log/data/utilization.ts"

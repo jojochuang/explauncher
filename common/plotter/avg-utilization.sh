@@ -1,4 +1,6 @@
 #!/bin/bash
+source conf/conf.sh
+source ../common.sh
 label=$1
 input_util="data/utilization.ts"
 output="data/stat-utilization.ts"
@@ -13,7 +15,7 @@ fi
 
 # plot
 # generate eps plot using the data points
-gnuplot < avg-utilization.plot
+gnuplot < $plotter/avg-utilization.plot
 
 # generate pdf files using the eps file.
 cd result

@@ -22,15 +22,6 @@ sarfile=(`find . -name '[head|server]*sar.log.gz'`)
 
 # get the latency of both get and put requests at the client side
 
-#get_out="${cwd}/data/get-latency.ts" #remove the file name suffix
-#if [ -f $get_out ]; then
-#  rm $get_out
-#fi
-#put_out="${cwd}/data/put-latency.ts" #remove the file name suffix
-#if [ -f $put_out ]; then
-#  rm $put_out
-#fi
-
 rm ${cwd}/data/*.tmp
 
 touch ${cwd}/data/cpu.tmp

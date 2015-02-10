@@ -1,10 +1,9 @@
 #!/bin/bash
+source conf/conf.sh
+source ../common.sh
 
-gnuplot < avg-latency.plot
-#ls result/*.eps
+gnuplot < $plotter/avg-latency.plot
 epspdf result/avg-latency.eps
-#ls *.eps | xargs --max-lines=1 epspdf
 mogrify -format png result/avg-latency.eps
 rm result/avg-latency.eps
 
-#rm data/avg-latency.ts

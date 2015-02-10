@@ -16,15 +16,15 @@ echo "logset=$logset"
 type="instant"
 
 # check for assertion failures in the latest logs
-./check-assert.sh $type ${logset}
+$plotter/check-assert.sh $type ${logset}
 if [[ $? -ne 0 ]]; then
   echo "There is assertion failure."
   #exit 0
 fi
 # generate data points from the log
-./parse-timeseries.sh $type $logset
+$plotter/parse-timeseries.sh $type $logset
 # generate eps plot using the data points
-gnuplot < timeseries-throughput-combined.plot
+gnuplot < $plotter/timeseries-throughput-combined.plot
 
 fs=`find data/ -name 'server*.ts'`
 if [ -z $fs ]; then

@@ -87,9 +87,9 @@ input_ts=(`find ${cwd}/data -regex '.*net-write-\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_column="${cwd}/data/column-net-write.ts"
 echo "out_column "  $out_column;
-${cwd}/columnizer.pl $out_column ${input_ts[@]} 
+${plotter}/columnizer.pl $out_column ${input_ts[@]} 
 
-cp ${cwd}/net-write-timeseries.plot ${cwd}/net-write-timeseries-combined.plot
+cp ${plotter}/net-write-timeseries.plot ${plotter}/net-write-timeseries-combined.plot
 n=2
 input_size=${#input_ts[@]}
 linewidth=3
@@ -100,7 +100,7 @@ for f in "${input_ts[@]}"; do
   fi
   color=$(($n-2))
   nopath=`echo $f|sed 's/^.*\///'` #remove the  path name
-  echo "'$out_column'    using 1:(\$${n}/1024) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${cwd}/net-write-timeseries-combined.plot
+  echo "'$out_column'    using 1:(\$${n}/1024) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${plotter}/net-write-timeseries-combined.plot
   n=$(($n+1))
 done
 
@@ -108,9 +108,9 @@ input_ts=(`find ${cwd}/data -regex '.*net-read-\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_column="${cwd}/data/column-net-read.ts"
 echo "out_column "  $out_column;
-${cwd}/columnizer.pl $out_column ${input_ts[@]} 
+${plotter}/columnizer.pl $out_column ${input_ts[@]} 
 
-cp ${cwd}/net-read-timeseries.plot ${cwd}/net-read-timeseries-combined.plot
+cp ${plotter}/net-read-timeseries.plot ${plotter}/net-read-timeseries-combined.plot
 n=2
 input_size=${#input_ts[@]}
 linewidth=3
@@ -121,7 +121,7 @@ for f in "${input_ts[@]}"; do
   fi
   color=$(($n-2))
   nopath=`echo $f|sed 's/^.*\///'` #remove the  path name
-  echo "'$out_column'    using 1:(\$${n}/1024) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${cwd}/net-read-timeseries-combined.plot
+  echo "'$out_column'    using 1:(\$${n}/1024) title \"$nopath\"   lt $color pt 0 lw $linewidth axes x1y1 $sep" >> ${plotter}/net-read-timeseries-combined.plot
   n=$(($n+1))
 done
 

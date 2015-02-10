@@ -3,7 +3,7 @@
 source conf/conf.sh
 source ../common.sh
 
-./parse-service.sh
+$plotter/parse-service.sh
 
 cwd=`pwd`
 # generated from parse-service.sh
