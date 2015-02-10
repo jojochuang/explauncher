@@ -185,22 +185,6 @@ function aggregate_output () {
   cd $cwd
 }
 
-function init() {
-  if [ $config_only -eq 0 ]; then
-    # create directories on all nodes
-    ${psshdir}/pssh -h conf/hosts -t 30 mkdir -p $scratchdir
-
-    # sync executable
-    executable_file_name="${application}_${flavor}"
-    if [[ $ec2 -eq 1 ]]; then
-      echo "rsync executable $executable_file_name ..."
-      `cat conf/hosts | xargs --max-lines=1 -I {} | rsync -vauz $executable_file_name {}:~/benchmark/$application/$executable_file_name`
-    fi
-  fi
-}
-
-init
-
 for t_server_machines in 4; do
 #for t_server_machines in 1; do
 
