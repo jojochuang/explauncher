@@ -46,18 +46,18 @@ fi
 echo "copy log directory"
 cp -R ${logdir}/$last_log_dir ${webdir}/${log_set_dir}/${last_log_dir}
 echo "copy column-throughput.ts"
-cp log/data/column-throughput.ts ${webdir}/${log_set_dir}/$last_log_dir
+cp data/column-throughput.ts ${webdir}/${log_set_dir}/$last_log_dir
 echo "copy conn.dot"
-cp log/data/conn.dot ${webdir}/${log_set_dir}/$last_log_dir
+cp data/conn.dot ${webdir}/${log_set_dir}/$last_log_dir
 
 # find the latest connection graph
-conn_graph=`ls -tr log/result/conn*.png | tail -n1 | awk -F/ '{print $NF}' `
-cp log/result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
-cp log/result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
-cp log/result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
-cp log/result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
-cp log/result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
-cp log/result/put-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+conn_graph=`ls -tr result/conn*.png | tail -n1 | awk -F/ '{print $NF}' `
+cp result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
+cp result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
+cp result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
+cp result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
+cp result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+cp result/put-latency.png ${webdir}/${log_set_dir}/$last_log_dir
 
 # add an entry to the web page
 

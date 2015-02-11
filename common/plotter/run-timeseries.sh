@@ -54,7 +54,8 @@ if [[ ! -f "throughput.eps" ]]; then
   exit 1
 fi
 ls *.eps | xargs --max-lines=1 epspdf
-mogrify -format png *.eps
+#mogrify -format png *.eps
+convert -density 150  throughput.pdf throughput.png
 #rm *.eps
 
 #for f in *.eps; do

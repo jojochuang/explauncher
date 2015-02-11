@@ -42,7 +42,9 @@ if [[ ! -f "put-latency.eps" ]]; then
 fi
 
 ls *.eps | xargs --max-lines=1 epspdf
-mogrify -format png *.eps
+#mogrify -format png *.eps
+convert -density 150  get-latency.pdf get-latency.png
+convert -density 150  put-latency.pdf put-latency.png
 rm *.eps
 
 

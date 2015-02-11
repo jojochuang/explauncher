@@ -19,8 +19,8 @@ t_ngroups=$t_ncontexts # number of partitions at server
 
 logical_nodes_per_physical_nodes=4
 
-runtime=30 # duration of the experiment
-boottime=20   # total time to boot.
+runtime=100 # duration of the experiment
+boottime=40   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
@@ -28,7 +28,7 @@ memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 #nruns=5      # number of replicated runs
 
 t_payload=1000

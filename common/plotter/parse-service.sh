@@ -10,7 +10,7 @@ cd $logset
 echo "parse-service.sh: at $logset"
 # Which file do you want to plot?
 
-headfile=(`find . -name 'head-*.gz' | tail -1`)
+headfile=(`find . -name 'head-*-[0-9]*.gz' | tail -1`)
 echo "headfile = $headfile"
 
 # throughput

@@ -23,19 +23,19 @@ echo "log_set_dir=${log_set_dir}"
 echo "logdir=${logdir}"
 
 echo "copy stat_throughput.ts"
-cp log/data/stat_throughput.ts ${webdir}/${log_set_dir}/
+cp data/stat_throughput.ts ${webdir}/${log_set_dir}/
 echo "copy stat-throughput.png"
-cp log/result/stat-throughput.png ${webdir}/${log_set_dir}/
+cp result/stat-throughput.png ${webdir}/${log_set_dir}/
 echo "copy avg-throughput.ts"
-cp log/data/avg-throughput.ts ${webdir}/${log_set_dir}/
+cp data/avg-throughput.ts ${webdir}/${log_set_dir}/
 echo "copy avg-throughput.png"
-cp log/result/avg-throughput.png ${webdir}/${log_set_dir}/
+cp result/avg-throughput.png ${webdir}/${log_set_dir}/
 echo "copy avg-latency.png"
-cp log/result/avg-latency.png ${webdir}/${log_set_dir}/
+cp result/avg-latency.png ${webdir}/${log_set_dir}/
 echo "copy service_struct.png"
-cp log/result/service_struct.png ${webdir}/${log_set_dir}/
+cp result/service_struct.png ${webdir}/${log_set_dir}/
 echo "copy avg-utilization.png"
-cp log/result/avg-utilization.png ${webdir}/${log_set_dir}/
+cp result/avg-utilization.png ${webdir}/${log_set_dir}/
 
 # add an entry to the web page
 index_page="${webdir}/index.html"

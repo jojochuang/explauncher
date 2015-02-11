@@ -15,7 +15,7 @@ echo "parse-throughput.sh: at $logdir"
 # Which file do you want to plot?
 
 # find the latest log set in the dir
-headfile=(`find . -name 'head-*.gz' | tail -1`)
+headfile=(`find . -name 'head-*-[0-9]*.gz' | tail -1`)
 echo "headfile = $headfile"
 svfile=(`find . -name 'server-*.gz'`)
 echo "svfile = $svfile"
@@ -76,5 +76,5 @@ input_ts=(`find ${cwd}/data -regex '.*\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_avg="${cwd}/data/avg-throughput.ts"
 echo "out_avg "  $out_avg;
-${cwd}/aggregator.pl  $out_avg ${input_ts[@]}  $logdir
+$plotter/aggregator.pl  $out_avg ${input_ts[@]}  $logdir
 

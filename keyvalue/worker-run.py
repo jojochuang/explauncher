@@ -5,6 +5,8 @@ from multiprocessing import Process
 from time import sleep
 import logging
 
+import sys
+sys.path.append("../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Worker')
@@ -234,14 +236,6 @@ def main(options):
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
-
-    # Launching sar
-    #Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        #binary = param["BINARY"],
-        #logdir = param["SCRATCHDIR"],
-        #logname = "client-%s-sar.log",
-        #interval = "1",
-        #runtime = param["run_time"]))
 
 
     # Read boot file and launch the application.

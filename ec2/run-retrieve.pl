@@ -49,7 +49,6 @@ GetOptions(#"mace_rsync" => \$mace_rsync,
            "delete=s" => \$delete,
            "num_instances=i" => \$num_instances,
        );
-my $instance_type="m1.medium";
 
 my $ec2_key = get_ec2key();
 my $ec2_pass = get_ec2pass();
