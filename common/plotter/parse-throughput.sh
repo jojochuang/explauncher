@@ -40,11 +40,8 @@ fi
 for f in "${headfile[@]}"; do
   echo "head = $f"
 
-  #start_time_us=`zgrep -a -e "Starting" $f | head -1 | awk '{print $4}' | tr -d '\r\n'`
-  #start_time_us=`zgrep -a -e "mace::Init" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
   start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
   echo "start time=$start_time_us"
-  #start_time=$(($start_time_us / 1000000))
   start_time=$start_time_us
 
   if [ -z "$start_time" ]; then

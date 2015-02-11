@@ -5,18 +5,16 @@ source ../common.sh
 source ../init.sh
 
 mace_start_port=30000
-scale=2
 
 runtime=200 # duration of the experiment
 boottime=50   # total time to boot.
+worker_join_wait_time=40
+client_wait_time=20
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
 nruns=5      # number of replicated runs
-
-#flavor="context"
-flavor="nacho"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -39,8 +37,6 @@ else
     id=$1
 fi
 
-config_only=0 # don't run the experiment. just generate config files.
-
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
   conf_file=$1
@@ -56,11 +52,11 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"ContextService::createContextObjectWrapper ContextMapping::getParentContextID Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"HeadEventTP::constructor ContextService::createContextObjectWrapper ContextMapping::getParentContextID Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
-  echo "WORKER_JOIN_WAIT_TIME = 40" >>  ${conf_file}
-  echo "CLIENT_WAIT_TIME = 20" >> ${conf_file}
+  echo "WORKER_JOIN_WAIT_TIME = ${worker_join_wait_time}" >>  ${conf_file}
+  echo "CLIENT_WAIT_TIME = ${client_wait_time}" >> ${conf_file}
 
   echo "CONTEXT_ASSIGNMENT_POLICY = ${context_policy}" >> ${conf_file}
 
@@ -151,14 +147,13 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
 
     else
       # do not use monitor
-      #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
     fi
     sleep 10
   fi
@@ -171,7 +166,6 @@ function aggregate_output () {
   t_clients=$3
   t_primes=$4
   # create a new directory for the set of logs
-  #log_set_dir=`date --iso-8601="seconds"`
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
   mv ${logdir}/${application}-* ${logdir}/${log_set_dir}/
@@ -179,56 +173,40 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  cwd=`pwd`
-  cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_servers-$t_clients-$t_primes
-  cd $cwd
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_servers-$t_clients-$t_primes
+  $plotter/run-avg.sh
+  $plotter/avg-utilization.sh $flavor-$t_servers-$t_primes
+  $plotter/plot_service.sh
 }
 
-for t_server_machines in 4; do
 #for t_server_machines in 1; do
+for t_server_machines in 1 2 4; do
+  t_client_machines=$t_server_machines
+  t_clients=$(( $t_client_machines * 4 ))
+  for t_primes in 1 10 20 50 ; do  # Additional computation payload at the server.
+  #for t_primes in 1; do  # Additional computation payload at the server.
+    log_set_dir=`date --iso-8601="seconds"`
+    for (( run=1; run <= $nruns; run++ )); do
+      mace_start_port=$((mace_start_port+500))
+      runexp $t_server_machines $t_client_machines $t_clients $t_primes
 
-  #for t_client_machines in  2; do
-    t_client_machines=$t_server_machines
-    #for t_clients in 4; do
-    t_clients=$(( $t_client_machines * 2 ))
-      for t_primes in 1 10 20 50 ; do  # Additional computation payload at the server.
-      #for t_primes in 50 ; do  # Additional computation payload at the server.
-        log_set_dir=`date --iso-8601="seconds"`
-        for (( run=1; run <= $nruns; run++ )); do
-          mace_start_port=$((mace_start_port+500))
-          runexp $t_server_machines $t_client_machines $t_clients $t_primes
+      if [ $config_only -eq 0 ]; then
+        # generate plots
+        $plotter/plot_connection.sh ${t_server_machines}-${t_clients}-$run
+        $plotter/run-timeseries.sh
+        $plotter/run-net.sh
+        $plotter/parse-utilization.sh
+        # publish plots and parameters and logs to web page
+        $common/publish.sh $log_set_dir
+      fi
+    done # end of nruns
 
-          if [ $config_only -eq 0 ]; then
-            # generate plots
-            cwd=`pwd`
-            cd log
-            ./plot_connection.sh ${t_server_machines}-${t_clients}-$run
-            ./run-timeseries.sh
-            cd $cwd
-            # publish plots and parameters and logs to web page
-            #if [[ $ec2 -eq 0 ]]; then
-              ./publish.sh $log_set_dir
-            #fi
-          fi
-        done # end of nruns
+    # what to plot? the average throughput w/ error
+    if [ $config_only -eq 0 ]; then
+      aggregate_output $log_set_dir $t_server_machines $t_clients $t_primes 
 
-        #TODO: compute avg and stddev, and plot error bar.
-        # Find the last $nruns log, aggregate the compute/plot error bar
-
-        # what to plot? the average throughput w/ error
-        if [ $config_only -eq 0 ]; then
-          aggregate_output $log_set_dir $t_server_machines $t_clients $t_primes 
-          cwd=`pwd`
-          cd log
-          ./run-avg.sh
-          ./plot_service.sh
-          cd $cwd
-
-          ./publish_webindex.sh $log_set_dir
-        fi
-      done # end of total_events
-    #done
-  #done
+      $common/publish_webindex.sh $log_set_dir
+    fi
+  done # end of total_events
 done
 

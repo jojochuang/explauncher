@@ -28,9 +28,6 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     print cmd
     Utils.shell_exec(cmd)
 
-    # re-load parameters for the specific server
-    #cparam = Utils.param_reader(options.clientfile)
-
     # Sleep
     if cparam["flavor"] == "nacho":
         sleep_time = float(boot_wait_time)+int(cparam["WORKER_JOIN_WAIT_TIME"])
@@ -95,7 +92,6 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     logger.info("Process %s exited." % nid)
     logger.info("Total execution time : %f sec", end_time - start_time)
 
-import os
 def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
 
@@ -207,19 +203,12 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     # Run the application
 
     start_time = Utils.unixTime()
-
-    #sid = nid
-
-    # re-load parameters for the specific server
-    #param = Utils.param_reader(options.paramfile)
-
-    #pfn = paramfile + str( sid )
     pfn = paramfile
     app = "%s/%s" % (param["BIN"], param["BINARY"])
     r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port}'.format(
         application=app,
-        pfile=pfn,
         service=param["server_service"],
+        pfile=pfn,
         port=ipaddr.strip().split(":")[1]),
         log=logfile)
 

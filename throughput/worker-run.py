@@ -5,24 +5,103 @@ from multiprocessing import Process
 from time import sleep
 import logging
 
+import sys
+sys.path.append("../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Worker')
 
-def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,clientfile):
+def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,cparam,clientfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
 
-    assert app_type == "server" or app_type == "client"
+    assert app_type == "client"
+
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="client-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["COMMON"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
+
+    # Sleep
+    if cparam["flavor"] == "nacho":
+        sleep_time = float(boot_wait_time)+int(cparam["WORKER_JOIN_WAIT_TIME"])
+        sleep_time += int(cparam["CLIENT_WAIT_TIME"])
+    elif cparam["flavor"] == "context":
+        sleep_time = float(boot_wait_time)
+        sleep_time += int(cparam["CLIENT_WAIT_TIME"])+int(cparam["WORKER_JOIN_WAIT_TIME"])
+
+    logger.info("Sleeping %d...", sleep_time )
+
+    #sleep(float(boot_wait_time))
+    #sleep(int(cparam["WORKER_JOIN_WAIT_TIME"]))
+    sleep( sleep_time )
+  
+    # Log filename
+    logdir = cparam["SCRATCHDIR"]
+
+    # Create and move into subdir
+    subdir='{}/client-{}'.format(logdir,nid)
+    Utils.mkdirp(subdir)
+    Utils.chdir(subdir)
+
+    # Run the application
+    start_time = Utils.unixTime()
+
+    app = "%s/%s" % (cparam["BIN"], cparam["BINARY"])
+
+    sender_id = int(nid) - int(param["lib.MApplication.initial_size"])
+
+    logfile = '{}/client-{}-{}.log'.format(
+            logdir,
+            hostname,
+            nid)
+    logger.info('$ {application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
+        application=app,
+        pfile=clientfile,
+        service=cparam["client_service"],
+        sid=sender_id,
+        port=ipaddr.strip().split(":")[1]))
+    r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
+        application=app,
+        pfile=clientfile,
+        service=cparam["client_service"],
+        sid=sender_id,
+        port=ipaddr.strip().split(":")[1]),
+        log=logfile)
+
+    end_time = Utils.unixTime()
+
+    logger.info("Process %s exited." % nid)
+    logger.info("Total execution time : %f sec", end_time - start_time)
+
+def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
+    logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
+
+    assert app_type == "server"
+
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="server-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["COMMON"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
 
     # Sleep
     if param["flavor"] == "nacho":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
-        if app_type == "client": # add additional time before the client starts
-          sleep_time += int(param["CLIENT_WAIT_TIME"])
     elif param["flavor"] == "context":
         sleep_time = float(boot_wait_time)
-        if app_type == "client": # add additional time before the client starts
-          sleep_time += int(param["CLIENT_WAIT_TIME"])+int(param["WORKER_JOIN_WAIT_TIME"])
 
     logger.info("Sleeping %d...", sleep_time )
 
@@ -43,42 +122,21 @@ def execute_worker(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
 
     app = "%s/%s" % (param["BIN"], param["BINARY"])
 
-    if app_type == "server":
-        logfile = '{}/server-{}-{}.log'.format(
-                logdir,
-                hostname,
-                nid)
-        logger.info('$ {application} {pfile} -service {service} -lib.MApplication.services {service} -MACE_PORT {port}'.format(
-            application=app,
-            pfile=paramfile,
-            service=param["server_service"],
-            port=ipaddr.strip().split(":")[1]))
-        r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port}'.format(
-            application=app,
-            pfile=paramfile,
-            service=param["server_service"],
-            port=ipaddr.strip().split(":")[1]),
-            log=logfile)
-    else: # client
-        sender_id = int(nid) - int(param["lib.MApplication.initial_size"])
-
-        logfile = '{}/client-{}-{}.log'.format(
-                logdir,
-                hostname,
-                nid)
-        logger.info('$ {application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
-            application=app,
-            pfile=clientfile,
-            service=param["client_service"],
-            sid=sender_id,
-            port=ipaddr.strip().split(":")[1]))
-        r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.Throughput.SENDER_ID {sid} -MACE_PORT {port}'.format(
-            application=app,
-            pfile=clientfile,
-            service=param["client_service"],
-            sid=sender_id,
-            port=ipaddr.strip().split(":")[1]),
-            log=logfile)
+    logfile = '{}/server-{}-{}.log'.format(
+            logdir,
+            hostname,
+            nid)
+    logger.info('$ {application} {pfile} -service {service} -lib.MApplication.services {service} -MACE_PORT {port}'.format(
+        application=app,
+        pfile=paramfile,
+        service=param["server_service"],
+        port=ipaddr.strip().split(":")[1]))
+    r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port}'.format(
+        application=app,
+        pfile=paramfile,
+        service=param["server_service"],
+        port=ipaddr.strip().split(":")[1]),
+        log=logfile)
 
     end_time = Utils.unixTime()
 
@@ -90,6 +148,18 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s" % (nid, boot_wait_time, ipaddr, hostname))
 
     assert app_type == "head"
+
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="head-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["COMMON"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
 
     # Sleep
     logger.info("Sleeping %s...", boot_wait_time)
@@ -116,17 +186,12 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     # Run the application
 
     start_time = Utils.unixTime()
-
+    pfn = paramfile
     app = "%s/%s" % (param["BIN"], param["BINARY"])
-    #cmd = '{application} {pfile} -MACE_PORT {port}'.format(
-        #application=app,
-        #pfile=paramfile,
-        #port=ipaddr.strip().split(":")[1])
-    #logger.info("cmd = %s" % cmd)
-    r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}'.format(
+    r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port}'.format(
         application=app,
-        service=param["head_service"],
-        pfile=paramfile,
+        service=param["server_service"],
+        pfile=pfn,
         port=ipaddr.strip().split(":")[1]),
         log=logfile)
 
@@ -139,7 +204,6 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     logger.info("Head is trying to kill rest of the machines.")
 
-    #cmd = 'killall python2.7 worker-run.py {binary}'.format(
     cmd = 'killall python2.7 {binary}'.format(
             binary=param["BINARY"])
     Utils.shell_exec('{pssh_dir}/pssh -v -p {num_machines} -P -t 30 -h {hostfile} {command}'.format(
@@ -159,35 +223,22 @@ def main(options):
     logger.info("enter main")
     # Some initialization
     param = Utils.param_reader(options.paramfile)
+    cparam = Utils.param_reader(options.clientfile)
 
     if param["EC2"] == "1":
         myhost = Utils.shell_exec('hostname -f', verbose=False)
     else:
         myhost = Utils.shell_exec('hostname -s', verbose=False)
-    #myhost = Utils.shell_exec('hostname -s', verbose=False)
-    #ulimit = Utils.shell_exec('ulimit -n 10000; ulimit -a', verbose=False)
-    #ulimit = Utils.shell_exec('ulimit -a', verbose=False)
     myhost = myhost.strip()
     Utils.mkdirp(param["SCRATCHDIR"])
     Utils.chdir(param["SCRATCHDIR"])
     logdir=param["SCRATCHDIR"]
-
 
     # Configure log
     Utils.configureLogging('Benchmark', output_file='{}-console.log'.format(myhost),
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
-    #logger.info("ulimit\n%s\n" % ulimit)
-
-    # Launching sar
-    #Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        #binary = param["BINARY"],
-        #logdir = param["SCRATCHDIR"],
-        #logname = "client-%s-sar.log",
-        #interval = "1",
-        #runtime = param["run_time"]))
-
 
     # Read boot file and launch the application.
     # As defined in the boot file, you will run the process with Popen (in Utils.py)
@@ -197,15 +248,26 @@ def main(options):
             logger.info("processing boot = %s" % line)
             #node_id, time_to_boot, ip_addr, hostname
             nid, boot_wait_time, ipaddr, hostname, app_type = line.strip().split(" ")
-            if myhost == hostname:
-                if nid == "0":
-                    p = Process(target=execute_head, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
+            if myhost != hostname:
+              continue
+
+            if app_type == "head":
+                p = Process(target=execute_head, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
+                plist.append(p)
+            elif app_type == "server":
+                logger.info("launching worker nid = %s" % nid)
+                if int(nid) > 0:
+                    p = Process(target=execute_server, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile))
                     plist.append(p)
-                else:
-                    logger.info("launching worker nid = %s" % nid)
-                    if int(nid) > 0:
-                        p = Process(target=execute_worker, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, options.clientfile))
-                        plist.append(p)
+
+            elif app_type == "client":
+                logger.info("launching worker nid = %s" % nid)
+                if int(nid) > 0:
+                    #param = cparam
+                    p = Process(target=execute_client, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, cparam, options.clientfile))
+                    plist.append(p)
+            else:
+              raise Exception("unknown app type=" + app_type)
 
         # Now start process
         for p in plist:

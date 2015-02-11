@@ -5,10 +5,9 @@ import logging
 import random
 import math
 
-import Utils
 import sys
-
-
+sys.path.append("../common")
+import Utils
 
 logger = logging.getLogger('Benchmark.Configure')
 
