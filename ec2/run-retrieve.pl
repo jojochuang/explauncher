@@ -16,6 +16,7 @@ unless (@ARGV) {
     print "  -p (do parallel ssh for pwd)\n";
     #print "  -t (terminate all running instances) [ unimplemented ]\n";
     print "  -a [CREATE ADD START STOP TERMINATE] instances\n";
+    print "  -t application_name\n";
 
     #print "  -s (sync machine lists)\n";
     print "  -i (create new ami image)\n";
@@ -37,6 +38,7 @@ my $num_instances = 0;
 my $image_create = 0;
 my $delete = "";
 my $instance_type = "m1.medium";
+my $tag = "";
 
 GetOptions(#"mace_rsync" => \$mace_rsync,
     #"fullcontext_rsync" => \$fullcontext_rsync,
@@ -45,6 +47,7 @@ GetOptions(#"mace_rsync" => \$mace_rsync,
            "pssh" => \$pssh,
            "action=s" => \$action,
            #"sync" => \$sync,
+           "tag" => \$tag,
            "image_create" => \$image_create,
            "delete=s" => \$delete,
            "num_instances=i" => \$num_instances,
@@ -87,6 +90,17 @@ if( $action eq "STOP" ) {
     my $run = "cat conf/instance | paste -sd \" \" | xargs ec2-stop-instances -O ${ec2_key} -W ${ec2_pass}";
     print "\$ ${run}\n";
     print `$run`;
+
+    open(FILE, "conf/instance") or die("Unable to read conf/hosts\n");
+    my @hosts = <FILE>;
+    close FILE;
+    
+    my $oneline_hosts = join(" ", @hosts );
+    $oneline_hosts =~ tr{\n}{ };
+
+    my $run_delete_tag = "ec2-create-tags ${oneline_hosts} --tag Name=\"\"";
+    print "\$ ${run_delete_tag}\n";
+    print `$run_delete_tag`;
 }
 
 if( $action eq "START" ) {
@@ -186,6 +200,15 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || 
     print OUT join("\n", map { trim($_) } @hosts)."\n";
     print "Hosts : ".join(" ", map { trim($_) } @hosts)."\n";
     close(OUT);
+
+    if ( $tag ne "" ){
+        my $run = "ec2-create-tags ${instances_list} --tag Name=\"$tag\"";
+        print "\$ ${run}\n";
+        my @tag_output = `$run`;
+        foreach my $to (@tag_output){
+            print "$to\n";
+        }
+    }
 }
 
 open(FILE, "conf/hosts") or die("Unable to read conf/hosts\n");
