@@ -3,13 +3,14 @@
 # This is the script that runs multiple throughput benchmarks of the nacho runtime. 
 source conf/conf.sh
 source ../common.sh
+source ../init.sh
 
 mace_start_port=30000
 # number of server logical nodes does not change
 n_server_logicalnode=1
-server_scale=4
+server_scale=2
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=4
+t_client_machines=2
 #n_client_logicalnode=2
 t_ncontexts=4
 t_ngroups=$t_ncontexts # number of partitions at server
@@ -28,8 +29,8 @@ memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
-#nruns=5      # number of replicated runs
+#nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -52,7 +53,7 @@ else
     id=$1
 fi
 
-no_config=1 # whether to run configure.py for new configs
+no_config=0 # whether to run configure.py for new configs
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
   conf_file=$1
@@ -109,7 +110,6 @@ function runexp (){
   # TODO: include the head node
   t_machines=$(($t_server_machines + $t_client_machines ))
 
-
   #initial_server_size=$(($t_server_machines+1))
   initial_server_size=$(($t_server_machines))
 
@@ -118,18 +118,6 @@ function runexp (){
 
     GenerateCommonParameter ${conf_file}
     GenerateBenchmarkParameter ${conf_file}
-
-    # Generate parameters common to server and clients in this benchmark
-    #echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
-    #echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
-    #echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
-
-    # write ServiceConfig.WCPaxos.UPCALL_REGID = 
-    # write ServiceConfig.WCPaxos.ROLE = 
-    # write ServiceConfig.WCPaxos.ROUNDS1 = 
-    # write ServiceConfig.WCPaxos.WRITE = 
-    # write ServiceConfig.WCPaxos.ACCEPTORS = 
-    # write ServiceConfig.WCPaxos.PROPOSAL_NUM = 
 
     echo "num_machines = ${t_machines}" >> ${conf_file}
     echo "num_server_machines = ${t_server_machines}" >> ${conf_file}
@@ -187,14 +175,14 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
 
     else
       # do not use monitor
-      #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
+      #$common/master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ngroups}-p${t_primes}
     fi
     sleep 10
   fi
@@ -213,12 +201,11 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  cwd=`pwd`
-  cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
-  ./run-avg.sh
-  ./plot_service.sh
-  cd $cwd
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
+  $plotter/run-avg.sh
+  #$plotter/avg-latency.sh
+  $plotter/avg-utilization.sh $flavor-$t_clients-$t_primes
+  $plotter/plot_service.sh
 }
 
 function init() {
@@ -250,14 +237,13 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 
           if [ $config_only -eq 0 ]; then
             # generate plots for each run
-            cwd=`pwd`
-            cd log
-            ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
-            ./run-timeseries.sh
-            ./run-net.sh
-            cd $cwd
+            $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
+            $plotter/run-timeseries.sh
+            $plotter/run-net.sh
+            #$plotter/run-latency.sh
+            $plotter/parse-utilization.sh
             # publish plots and parameters and logs to web page
-            ./publish.sh $log_set_dir
+            $common/publish.sh $log_set_dir
           fi
         done # end of nruns
 
@@ -265,7 +251,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
           # plot the average throughput w/ error across all runs
           aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
 
-          ./publish_webindex.sh $log_set_dir
+          $common/publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
     #done

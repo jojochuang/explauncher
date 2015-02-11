@@ -28,7 +28,6 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     print cmd
     Utils.shell_exec(cmd)
 
-
     # re-load parameters for the specific server
     #cparam = Utils.param_reader(options.clientfile)
 
@@ -114,7 +113,6 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     print cmd
     Utils.shell_exec(cmd)
 
-
     # Sleep
     if param["flavor"] == "nacho":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
@@ -127,9 +125,6 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
   
     # Log filename
     logdir = param["SCRATCHDIR"]
-
-    # re-load parameters for the specific server
-    #param = Utils.param_reader(options.paramfile)
 
     # Create and move into subdir
     subdir='{}/client-{}'.format(logdir,nid)
@@ -186,7 +181,6 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
         runtime = param["run_time"])
     print cmd
     Utils.shell_exec(cmd)
-
 
     # Sleep
     logger.info("Sleeping %s...", boot_wait_time)
@@ -268,13 +262,11 @@ def main(options):
     Utils.chdir(param["SCRATCHDIR"])
     logdir=param["SCRATCHDIR"]
 
-
     # Configure log
     Utils.configureLogging('Benchmark', output_file='{}-console.log'.format(myhost),
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
-
 
     # Read boot file and launch the application.
     # As defined in the boot file, you will run the process with Popen (in Utils.py)

@@ -8,9 +8,9 @@ source ../init.sh
 mace_start_port=40000
 # number of server logical nodes does not change
 n_server_logicalnode=1
-server_scale=1
+server_scale=2
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=1
+t_client_machines=2
 t_ncontexts=$(( $server_scale* 6))
 t_ngroups=$t_ncontexts # number of partitions at server
 

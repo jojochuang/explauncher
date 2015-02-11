@@ -99,7 +99,7 @@ cat <<EOF > ${log_page}
   <img src="throughput.png"></img></a> </td> </tr>
 <tr> <td> <a href="${conn_graph}">
   <p>Network connection graph</p>
-  <img src="${conn_graph}" width=800></img> </a> </td> </tr>
+  <img src="${conn_graph}"></img> </a> </td> </tr>
 
 </table>
 </body>

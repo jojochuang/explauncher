@@ -163,7 +163,7 @@ if( $action eq "CREATE" || $action eq "ADD" || $action eq "START" || $delete || 
     open(FILE, "conf/instance") or die "cannot open conf/instance for read";
     my @instances = <FILE>;
     my @some_instances = ();
-    if( $num_instances == 0 ){
+    if( $num_instances == 0 or $action eq "ADD" ){
         @some_instances = @instances;
     }else{
         @some_instances = @instances[ 0 .. ($num_instances-1) ];

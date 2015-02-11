@@ -30,8 +30,11 @@ echo "copy avg-throughput.ts"
 cp data/avg-throughput.ts ${webdir}/${log_set_dir}/
 echo "copy avg-throughput.png"
 cp result/avg-throughput.png ${webdir}/${log_set_dir}/
-echo "copy avg-latency.png"
-cp result/avg-latency.png ${webdir}/${log_set_dir}/
+
+if [ -f "result/avg-latency.png" ]; then
+    echo "copy avg-latency.png"
+    cp result/avg-latency.png ${webdir}/${log_set_dir}/
+fi
 echo "copy service_struct.png"
 cp result/service_struct.png ${webdir}/${log_set_dir}/
 echo "copy avg-utilization.png"
@@ -47,9 +50,17 @@ cat <<EOF >> ${index_page}
 <tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.png">
   <p>Average Throughput </p>
   <img src="${url_prefix}${log_set_dir}/avg-throughput.png"></a> </td> </tr>
+
+EOF
+if [ -f "result/avg-latency.png" ]; then
+cat <<EOF >> ${index_page}
 <tr> <td> <a href="${url_prefix}${log_set_dir}/avg-latency.png">
   <p>Average Latency </p>
   <img src="${url_prefix}${log_set_dir}/avg-latency.png"></a> </td> </tr>
+EOF
+fi
+
+cat <<EOF >> ${index_page}
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat_throughput.ts">stat_throughput.ts</a> </td> </tr>
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-throughput.png">
   <p>Throughput histogram</p>
@@ -59,6 +70,7 @@ cat <<EOF >> ${index_page}
   <img src="${url_prefix}${log_set_dir}/avg-utilization.png"></a> </td> </tr>
 
 EOF
+
 
 for d in ${logdir}/${log_set_dir}/*; do
   dn=`echo $d | awk -F/ '{print $NF}'`

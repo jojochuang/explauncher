@@ -8,6 +8,7 @@ function init() {
     executable_file_name="${application}_${flavor}"
     if [[ $ec2 -eq 1 ]]; then
       echo "rsync scripts ..."
+      cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz ../common {}:~/benchmark
       cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz ../*.sh {}:~/benchmark
       cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz *.sh *.py {}:~/benchmark/$application
       echo "rsync executable $executable_file_name ..."
