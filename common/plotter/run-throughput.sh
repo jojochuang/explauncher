@@ -41,7 +41,8 @@ gnuplot < $plotter/stat-throughput.plot
 # generate pdf files using the eps file.
 cd result
 ls *.eps | xargs --max-lines=1 epspdf
-mogrify -format png *.eps
+#mogrify -format png *.eps
+convert -density 150  stat-throughput.pdf stat-throughput.png
 
 fs=`find . -name '*.eps'`
 if [ -z $fs ]; then

@@ -15,4 +15,4 @@ set style histogram errorbars gap 2 lw 2
 set style data histogram
 set style fill solid border -1 
 plot \
-  'data/utilization.ts' using 2:3:xtic(1) title "Mango" linecolor rgb "#FF0000"
+  'data/avg-utilization.ts' using 2:3:xtic(1) title "Mango" linecolor rgb "#FF0000"

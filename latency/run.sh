@@ -8,9 +8,9 @@ source ../init.sh
 mace_start_port=40000
 # number of server logical nodes does not change
 n_server_logicalnode=1
-server_scale=2
+server_scale=4
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=2
+t_client_machines=4
 t_ncontexts=$(( $server_scale* 6))
 t_ngroups=$t_ncontexts # number of partitions at server
 
@@ -100,6 +100,7 @@ function runexp (){
   t_clients=$3
   t_primes=$4
   t_payload=$5
+  t_mean=$6
 
   # For each server machine, run only one server process.
   # minus the bootstrapper node
@@ -145,8 +146,13 @@ function runexp (){
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
   echo "ServiceConfig.KeyValueClient.PAYLOAD = ${t_payload}" >>  ${conf_client_file}
-  echo "ServiceConfig.KeyValueClient.PER_TIMER_ROUND = 1000" >>  ${conf_client_file}
-  echo "ServiceConfig.KeyValueClient.AVG_ROUNDS = 1000" >>  ${conf_client_file}
+  echo "ServiceConfig.KeyValueClient.PER_TIMER_ROUND = 1" >>  ${conf_client_file}
+  echo "ServiceConfig.KeyValueClient.AVG_ROUNDS = 1" >>  ${conf_client_file}
+
+  put_mean=$(( $t_mean * 1000 ))
+  get_mean=$(( $t_mean * 1000 ))
+  echo "ServiceConfig.KeyValueClient.PUTMEAN = $put_mean" >>  ${conf_client_file}
+  echo "ServiceConfig.KeyValueClient.GETMEAN = $get_mean" >>  ${conf_client_file}
 
   # copy the param file for the server
   echo -e "\n# Specific parameters for server" >> ${conf_file}
@@ -190,6 +196,7 @@ function aggregate_output () {
   t_clients=$2
   t_primes=$3
   t_payload=$4
+  t_mean=$5
   # create a new directory for the set of logs
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
@@ -200,10 +207,10 @@ function aggregate_output () {
   # append to the output file
   #cwd=`pwd`
   #cd log
-  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes-$t_payload
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes-$t_payload-$t_mean
   $plotter/run-avg.sh
   $plotter/avg-latency.sh
-  $plotter/avg-utilization.sh $flavor-$t_clients-$t_primes-$t_payload
+  $plotter/avg-utilization.sh $flavor-$t_clients-$t_primes-$t_payload-$t_mean
   $plotter/plot_service.sh
   #cd $cwd
 }
@@ -220,12 +227,13 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
       echo "use machines: ${used_machines} > machine list: ${n_machines} "
       exit 1
     fi
-    #for n_client_logicalnode in 8; do
+    #for t_mean in 1 2 4 8 16 32 64 128; do
+    for t_mean in 1 4 16 64 256; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
-          runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes $t_payload
+          runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes $t_payload $t_mean
 
           if [ $config_only -eq 0 ]; then
             # generate plots for each run
@@ -244,11 +252,12 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 
         if [ $config_only -eq 0 ]; then
           # plot the average throughput w/ error across all runs
-          aggregate_output $log_set_dir $n_client_logicalnode $t_primes  $t_payload
+          aggregate_output $log_set_dir $n_client_logicalnode $t_primes  $t_payload $t_mean
 
           $common/publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
+    done
     #done
   #done
 

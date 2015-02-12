@@ -17,7 +17,7 @@ cd $logdir
 dir="."
 # find the latest log set in the dir
 #headfile=(`find $dir -name 'head-*.gz' | tail -1`)
-clifile=(`find $dir -name 'client-*.gz'`)
+clifile=(`find $dir -name 'client-*-[0-9]*.gz'`)
 #svfile=(`find $dir -name 'server-*.gz'`)
 
 # get the latency of both get and put requests at the client side

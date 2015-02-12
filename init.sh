@@ -15,11 +15,12 @@ function init() {
       cat ${host_orig_file} | xargs --max-lines=1 -I {} rsync -vauz $executable_file_name {}:~/benchmark/$application
     fi
     echo "remove statics data"
-    f1="log/data/utilization.ts"
-    f2="log/data/get-latency.ts"
-    f3="log/data/put-latency.ts"
-    f4="log/data/avg-throughput.ts"
-    f5="log/data/avg-latency"
+    f1="data/avg-utilization.ts"
+    f2="data/get-latency.ts"
+    f3="data/put-latency.ts"
+    f4="data/avg-throughput.ts"
+    f5="data/avg-latency.ts"
+    f6="data/all_raw_cpu.ts"
 
     if [ ! -d data ]; then
       mkdir -p data
@@ -28,7 +29,7 @@ function init() {
       mkdir -p result
     fi
 
-    for f in $f1 $f2 $f3 $f4; do
+    for f in $f1 $f2 $f3 $f4 $f5 $f6; do
       if [ -f $f ]; then
         rm -f $f
       fi

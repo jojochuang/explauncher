@@ -4,7 +4,9 @@ source ../common.sh
 
 gnuplot < $plotter/avg-throughput.plot
 #ls result/*.eps
-epspdf result/avg-throughput.eps
+cd result
+epspdf avg-throughput.eps
 #ls *.eps | xargs --max-lines=1 epspdf
-mogrify -format png result/avg-throughput.eps
-rm result/avg-throughput.eps
+#mogrify -format png avg-throughput.eps
+convert -density 150  avg-throughput.pdf avg-throughput.png
+rm avg-throughput.eps
