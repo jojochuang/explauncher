@@ -17,13 +17,13 @@ if [[ "$type" = "instant" ]]; then
   dir="."
   echo "dir=$dir"
   # find the latest log set in the dir
-  headfile=(`find $dir -name 'head-*-[0-9]*.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.gz'`)
-  svfile=(`find $dir -name 'server-*.gz'`)
+  headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
+  clifile=(`find $dir -name '*player*.log.gz'`)
+  svfile=(`find $dir -name 'server-*[^sar]\.log\.gz'`)
 else
   dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
-  headfile=(`find $dir -name 'head*-[0-9]*.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.gz'`)
+  headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
+  clifile=(`find $dir -name '*player*.log.gz'`)
   nsfile=(`find $dir -name '*.nserver.conf' | tail -1`)
   cutoff=220000000
 fi

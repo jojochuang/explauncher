@@ -2,6 +2,7 @@
 #set -e
 source conf/conf.sh
 source ../common.sh
+echo "start run-throughput.sh"
 
 logset=$1
 
@@ -50,3 +51,4 @@ if [ -z $fs ]; then
 else
   rm $fs
 fi
+echo "end run-throughput.sh"

@@ -38,6 +38,7 @@ my $num_instances = 0;
 my $image_create = 0;
 my $delete = "";
 my $instance_type = "m1.medium";
+my $azone = "us-east-1a";
 my $tag = "";
 
 GetOptions(#"mace_rsync" => \$mace_rsync,
@@ -119,7 +120,7 @@ if( $action eq "CREATE" ) {
     if ( $secgroup ne "" ){
         $param_security_group="-g $secgroup"
     }
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type --availability-zone us-east-1a $param_security_group| grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type --availability-zone $azone $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");
@@ -141,7 +142,7 @@ if( $action eq "ADD" ) {
     if ( $secgroup ne "" ){
         $param_security_group="-g $secgroup"
     }
-    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type $param_security_group| grep INSTANCE | awk '{print \$2}'";
+    my $run = "ec2-run-instances -O ${ec2_key} -W ${ec2_pass} ${ami_id} -n ${num_instances} -k $key_pair_name -t $instance_type --availability-zone $azone $param_security_group| grep INSTANCE | awk '{print \$2}'";
     print "\$ ${run}\n";
 
     open STDERR, ">&STDOUT" or die( "can't redirect STDERR");

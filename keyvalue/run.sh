@@ -196,12 +196,17 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  cwd=`pwd`
-  cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes-$t_payload
-  ./run-avg.sh
-  ./plot_service.sh
-  cd $cwd
+  #cwd=`pwd`
+  #cd log
+  label="$flavor-$t_clients-$t_primes-$t_payload"
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
+  $plotter/run-avg.sh
+  #$plotter/avg-latency.sh
+  #$plotter/stat-latency.sh $label
+  $plotter/avg-utilization.sh 
+  $plotter/stat-utilization.sh $label
+  $plotter/plot_service.sh
+  #cd $cwd
 }
 
 
@@ -227,20 +232,21 @@ for scale in 8; do
     #for n_client_logicalnode in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
+        cleanup # function to remove files that aggregates data from multiple runs of the same setting.
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes $t_payload
 
           if [ $config_only -eq 0 ]; then
             # generate plots for each run
-            cwd=`pwd`
-            cd log
-            ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
-            ./run-timeseries.sh
-            ./run-net.sh
-            cd $cwd
+            #cwd=`pwd`
+            #cd log
+            $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
+            $plotter/run-timeseries.sh
+            $plotter/run-net.sh
+            #cd $cwd
             # publish plots and parameters and logs to web page
-            ./publish.sh $log_set_dir
+            $plotter/publish.sh $log_set_dir
           fi
         done # end of nruns
 

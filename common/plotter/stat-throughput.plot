@@ -1,9 +1,5 @@
-
-#set bmargin 5
-
-
 set border 3
-set xtics nomirror
+set xtics nomirror rotate by -45
 set ytics nomirror
 #set y2tics tc lt 1
 set terminal postscript enhanced eps color "Helvetica" 22
@@ -49,7 +45,7 @@ set key left top
 
 #unset key
 
-set xlabel "Server scale" font "Helvetica,22"
+set xlabel "Configuration" font "Helvetica,22"
 set output "result/stat-throughput.eps"
 
 #set arrow 1 from 171,29000 to 165,31000 lt 1 lw 3

@@ -232,6 +232,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
     #for n_client_logicalnode in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
+        cleanup # function to remove files that aggregates data from multiple runs of the same setting.
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes

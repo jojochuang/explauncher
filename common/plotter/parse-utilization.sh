@@ -26,7 +26,7 @@ cd $logset
 # Which file do you want to plot?
 # find the latest log set in the dir
 # TODO: only server and head
-sarfile=(`find . -name '[head|server]*sar.log.gz'`)
+sarfile=(`find . -name '[head|server]*sar\.log\.gz'`)
 cwd2=`pwd`
 echo "cwd2=$cwd2"
 #echo $sarfile
@@ -50,6 +50,7 @@ for f in "${sarfile[@]}"; do
   #echo $b
   gunzip "${b}.gz"
   sadf -- -u $b | grep %idle | awk '{print $8}' > ${cwd}/data/cpu_uncropped.tmp
+  gzip ${b}
 
   # remove the beginning $sleep_time lines, aggregate them into one single file
 

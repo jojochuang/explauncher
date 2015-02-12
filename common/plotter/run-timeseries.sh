@@ -27,7 +27,7 @@ $plotter/parse-timeseries.sh $type $logset
 gnuplot < $plotter/timeseries-throughput-combined.plot
 
 fs=`find data/ -name 'server*.ts'`
-if [ -z $fs ]; then
+if [ -z "$fs" ]; then
   echo "no server*.ts found in data/"
 else
   rm $fs
@@ -36,7 +36,7 @@ fi
 #  rm $f
 #done
 fs=`find data/ -name 'data*.ts'`
-if [ -z $fs ]; then
+if [ -z "$fs" ]; then
   echo "no server*.ts found in data/"
 else
   rm $fs

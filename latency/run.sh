@@ -8,9 +8,9 @@ source ../init.sh
 mace_start_port=40000
 # number of server logical nodes does not change
 n_server_logicalnode=1
-server_scale=4
+server_scale=2
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=4
+t_client_machines=2
 t_ncontexts=$(( $server_scale* 6))
 t_ngroups=$t_ncontexts # number of partitions at server
 
@@ -28,7 +28,7 @@ memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=5      # number of replicated runs
+nruns=1      # number of replicated runs
 #nruns=5      # number of replicated runs
 
 t_payload=1000
@@ -207,10 +207,13 @@ function aggregate_output () {
   # append to the output file
   #cwd=`pwd`
   #cd log
-  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes-$t_payload-$t_mean
+  label="$flavor-$t_clients-$t_primes-$t_payload-$t_mean"
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
   $plotter/run-avg.sh
   $plotter/avg-latency.sh
-  $plotter/avg-utilization.sh $flavor-$t_clients-$t_primes-$t_payload-$t_mean
+  $plotter/stat-latency.sh $label
+  $plotter/avg-utilization.sh 
+  $plotter/stat-utilization.sh $label
   $plotter/plot_service.sh
   #cd $cwd
 }
@@ -228,8 +231,9 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
       exit 1
     fi
     #for t_mean in 1 2 4 8 16 32 64 128; do
-    for t_mean in 1 4 16 64 256; do
+    for t_mean in 1 4; do
       for t_primes in 1; do  # Additional computation payload at the server.
+        cleanup # function to remove files that aggregates data from multiple runs of the same setting.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
@@ -249,6 +253,8 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
             $common/publish.sh $log_set_dir
           fi
         done # end of nruns
+
+        echo "====end of running===="
 
         if [ $config_only -eq 0 ]; then
           # plot the average throughput w/ error across all runs

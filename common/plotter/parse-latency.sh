@@ -17,7 +17,7 @@ cd $logdir
 dir="."
 # find the latest log set in the dir
 #headfile=(`find $dir -name 'head-*.gz' | tail -1`)
-clifile=(`find $dir -name 'client-*-[0-9]*.gz'`)
+clifile=(`find $dir -name 'client*[^sar]\.log\.gz'`)
 #svfile=(`find $dir -name 'server-*.gz'`)
 
 # get the latency of both get and put requests at the client side
@@ -37,6 +37,12 @@ for f in "${clifile[@]}"; do
   zgrep -a -e "GET" $f |  awk '{if($3 == "[BS_KeyValueClient]" ){print $8} }'  >> $get_out
   zgrep -a -e "PUT" $f |  awk '{if($3 == "[BS_KeyValueClient]" ){print $8} }'  >> $put_out
 done
+
+# aggregate all latency data in multiple runs
+allraw="${cwd}/data/all_raw_latency.ts"
+touch $allraw
+cat $get_out >> $allraw
+cat $put_out >> $allraw
 
 avglat="${cwd}/data/avg-latency.ts"
 ln=0

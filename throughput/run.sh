@@ -173,9 +173,13 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_servers-$t_clients-$t_primes
+  label="$flavor-$t_servers-$t_clients-$t_primes"
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
   $plotter/run-avg.sh
-  $plotter/avg-utilization.sh $flavor-$t_servers-$t_primes
+  #$plotter/avg-latency.sh
+  #$plotter/stat-latency.sh $label
+  $plotter/avg-utilization.sh 
+  $plotter/stat-utilization.sh $label
   $plotter/plot_service.sh
 }
 
@@ -186,6 +190,7 @@ for t_server_machines in 1 2 4; do
   for t_primes in 1 10 20 50 ; do  # Additional computation payload at the server.
   #for t_primes in 1; do  # Additional computation payload at the server.
     log_set_dir=`date --iso-8601="seconds"`
+    cleanup # function to remove files that aggregates data from multiple runs of the same setting.
     for (( run=1; run <= $nruns; run++ )); do
       mace_start_port=$((mace_start_port+500))
       runexp $t_server_machines $t_client_machines $t_clients $t_primes

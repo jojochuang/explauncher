@@ -21,7 +21,7 @@ echo "log_set_dir=${log_set_dir}"
 
 # find the latest log set
 echo "logdir=${logdir}"
-
+#throughput
 echo "copy stat_throughput.ts"
 cp data/stat_throughput.ts ${webdir}/${log_set_dir}/
 echo "copy stat-throughput.png"
@@ -31,18 +31,32 @@ cp data/avg-throughput.ts ${webdir}/${log_set_dir}/
 echo "copy avg-throughput.png"
 cp result/avg-throughput.png ${webdir}/${log_set_dir}/
 
+#latency
 if [ -f "result/avg-latency.png" ]; then
     echo "copy avg-latency.png"
     cp result/avg-latency.png ${webdir}/${log_set_dir}/
     echo "copy avg-latency.ts"
     cp data/avg-latency.ts ${webdir}/${log_set_dir}/
 fi
+
+if [ -f "result/stat-latency.png" ]; then
+    echo "copy stat-latency.png"
+    cp result/stat-latency.png ${webdir}/${log_set_dir}/
+    echo "copy stat-latency.ts"
+    cp data/stat-latency.ts ${webdir}/${log_set_dir}/
+fi
+
 echo "copy service_struct.png"
 cp result/service_struct.png ${webdir}/${log_set_dir}/
 
+#utilization
 echo "copy stat-utilization.ts"
 cp data/stat-utilization.ts ${webdir}/${log_set_dir}/
-echo "copy utilization.ts"
+
+echo "copy stat-utilization.png"
+cp result/stat-utilization.png ${webdir}/${log_set_dir}/
+
+echo "copy avg-utilization.ts"
 cp data/avg-utilization.ts ${webdir}/${log_set_dir}/
 
 echo "copy avg-utilization.png"
@@ -82,6 +96,15 @@ cat <<EOF >> ${index_page}
   <p>Throughput histogram</p>
   <img src="${url_prefix}${log_set_dir}/stat-throughput.png" width=360></a> </td> </tr>
 
+<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.ts">stat-utilization.ts</a> </td> </tr>
+<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.png">
+  <p>Utilization statistics</p>
+  <img src="${url_prefix}${log_set_dir}/stat-utilization.png" width=360></a> </td> </tr>
+
+<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-latency.ts">stat-latency.ts</a> </td> </tr>
+<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-latency.png">
+  <p>Latency statistics</p>
+  <img src="${url_prefix}${log_set_dir}/stat-latency.png" width=360></a> </td> </tr>
 EOF
 
 

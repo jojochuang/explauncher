@@ -19,13 +19,11 @@ if [[ "$type" = "instant" ]]; then
   dir="."
   echo "dir=$dir"
   # find the latest log set in the dir
-  headfile=(`find $dir -name 'head-*-[0-9]*.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.gz'`)
-  svfile=(`find $dir -name 'server-*[0-9]*.gz'`)
+  headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
+  svfile=(`find $dir -name 'server-*[^sar]\.log\.gz'`)
 else
   dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
-  headfile=(`find $dir -name 'head*-[0-9]*.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.gz'`)
+  headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
   nsfile=(`find $dir -name '*.nserver.conf' | tail -1`)
   cutoff=220000000
 fi
@@ -67,7 +65,7 @@ for f in "${svfile[@]}"; do
   zgrep -a -e "Accumulator::EVENT_COMMIT" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
 done
-  echo "start time at $start_time"
+echo "start time at $start_time"
 input_ts=(`find ${cwd}/data -regex '.*\(server\|head\).*ts'`)
 echo "input_ts="  ${input_ts[@]};
 out_column="${cwd}/data/column-throughput.ts"

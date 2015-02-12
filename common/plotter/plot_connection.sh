@@ -7,7 +7,7 @@ source ../common.sh
 echo $logdir
 last_log_set=`ls -trd ${logdir}/${application}-* | tail -n1`
 echo "plot_connection.sh: last_log_set=$last_log_set"
-logfiles=(`find ${last_log_set} -regex '.*\(server\|client\|head\)-[0-9]*.*gz'`)
+logfiles=(`find ${last_log_set} -name '[head|server|client]*[^sar]\.log\.gz'`)
 
 echo "plot_connection.sh: logfiles= $logfiles"
 
