@@ -34,6 +34,9 @@ set style line 5 lt 2 lc rgb "purple" lw 3 pt 7 ps 2
 #  newhistogram "GET", 'data/avg-latency.ts' every 2::0 using 2:3:xtic(1) title "Latency" with linespoints linecolor rgb "#0000FF", \
 #  newhistogram "PUT", 'data/avg-latency.ts' every 2::1 using 2:3:xtic(1) title "Latency" with linespoints linewidth 2 pointtype 7 point size 2linecolor rgb "#FF0000"
 #
+
+set grid ytics
+
 plot \
   'data/avg-latency.ts' every 2::0 using 2:3:xtic(1) with histogram title "Mean", \
   '' every 2::0 using 4:xtic(1) ls 1 with linespoints title "Median" , \

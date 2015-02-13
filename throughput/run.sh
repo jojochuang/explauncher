@@ -184,10 +184,20 @@ function aggregate_output () {
 }
 
 #for t_server_machines in 1; do
-for t_server_machines in 1 2 4; do
+#for t_server_machines in 1 2 4; do
+for t_server_machines in 8; do
+  #cwd=`pwd`
+  #cd ../ec2
+  #total_physical_nodes=$(( $t_server_machines * 2 ))
+  #./run-retrieve.pl -a START -n $total_physical_nodes -t throughput
+  #sleep 60
+  #pssh pwd
+
+  #cd $cwd
   t_client_machines=$t_server_machines
   t_clients=$(( $t_client_machines * 4 ))
-  for t_primes in 1 10 20 50 ; do  # Additional computation payload at the server.
+  for t_primes in 1 10 20 50 100; do  # Additional computation payload at the server.
+  #for t_primes in 100; do  # Additional computation payload at the server.
   #for t_primes in 1; do  # Additional computation payload at the server.
     log_set_dir=`date --iso-8601="seconds"`
     cleanup # function to remove files that aggregates data from multiple runs of the same setting.
@@ -215,3 +225,4 @@ for t_server_machines in 1 2 4; do
   done # end of total_events
 done
 
+ssh chuangw@galba.cs.purdue.edu "echo \"done ${application}\" | mail -s subject chuangw@purdue.edu"

@@ -30,7 +30,9 @@ set style line 3 lt 2 lc rgb "yellow" lw 3 pt 7 ps 2
 set style line 4 lt 2 lc rgb "blue" lw 3 pt 7 ps 2
 set style line 5 lt 2 lc rgb "purple" lw 3 pt 7 ps 2
 
+set grid ytics
+
 plot \
-  'data/stat-latency.ts' every 2::0 using 2:3:xtic(1) with histogram title "Mean", \
-  '' every 2::0 using 4:xtic(1) ls 1 with linespoints title "Median" , \
-  '' every 2::0 using 5:xtic(1) ls 2 with linespoints title "90%th percentile"
+  'data/stat-latency.ts' using 2:3:xtic(1) with histogram title "Mean", \
+  '' using 4:xtic(1) ls 1 with linespoints title "Median" , \
+  '' using 5:xtic(1) ls 2 with linespoints title "90%th percentile"

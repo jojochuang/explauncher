@@ -19,5 +19,8 @@ set output "result/avg-throughput.eps"
 set style histogram gap 2
 set style data histogram
 set style fill solid border -1 
+
+set grid ytics
+
 plot \
   'data/avg-throughput.ts' using 6 title "Average" linecolor rgb "#FF0000"

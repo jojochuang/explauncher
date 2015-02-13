@@ -100,12 +100,17 @@ cat <<EOF >> ${index_page}
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.png">
   <p>Utilization statistics</p>
   <img src="${url_prefix}${log_set_dir}/stat-utilization.png" width=360></a> </td> </tr>
+EOF
 
+if [ -f "result/stat-latency.png" ]; then
+cat <<EOF >> ${index_page}
+  
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-latency.ts">stat-latency.ts</a> </td> </tr>
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-latency.png">
   <p>Latency statistics</p>
   <img src="${url_prefix}${log_set_dir}/stat-latency.png" width=360></a> </td> </tr>
 EOF
+fi
 
 
 for d in ${logdir}/${log_set_dir}/*; do

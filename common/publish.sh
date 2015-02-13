@@ -56,8 +56,12 @@ cp result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
 cp result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
-cp result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
-cp result/put-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+if [ -f result/get-latency.png ]; then 
+  cp result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+fi
+if [ -f result/put-latency.png ]; then 
+  cp result/put-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+fi
 
 # add an entry to the web page
 
@@ -82,12 +86,27 @@ cat <<EOF > ${log_page}
 <tr> <td> <a href="conn.dot">conn.dot</a> </td> </tr>
 
 <tr> <td> client logs, server logs... </td> </tr>
+EOF
+
+if [ -f result/get-latency.png ]; then 
+cat <<EOF > ${log_page}
 <tr> <td> <a href="get-latency.png">
   <p>Round-trip latency of Get request</p>
   <img src="get-latency.png"></img></a> </td> </tr>
+EOF
+fi
+
+
+if [ -f result/put-latency.png ]; then 
+cat <<EOF > ${log_page}
 <tr> <td> <a href="put-latency.png">
   <p>Round-trip latency of Put request</p>
   <img src="put-latency.png"></img></a> </td> </tr>
+EOF
+fi
+
+
+cat <<EOF > ${log_page}
 <tr> <td> <a href="net-write.png">
   <p>Network Write time series</p>
   <img src="net-write.png"></img></a> </td> </tr>

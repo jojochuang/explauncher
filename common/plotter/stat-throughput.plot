@@ -47,6 +47,7 @@ set key left top
 
 set xlabel "Configuration" font "Helvetica,22"
 set output "result/stat-throughput.eps"
+set grid ytics
 
 #set arrow 1 from 171,29000 to 165,31000 lt 1 lw 3
 #set label 1 "Migration for all context" at 151,28500 tc rgb "#ff0000"
@@ -68,10 +69,11 @@ set output "result/stat-throughput.eps"
 #'data/nocpu_migration_varying_context_size-l3200000.ts'    using 1:($2) title "S=3.2MB"   lt 6 pt 0 lw 1, \
 #'data/nocpu_migration_varying_context_size-l6400000.ts'    using 1:($2) title "S=6.4MB"   lt 7 pt 0 lw 1, \
 
-set style histogram errorbars gap 2 lw 2
+set style histogram errorbars gap 1 lw 2
 set style data histogram
 set style fill solid border -1 
 plot \
-  'data/stat_throughput.ts' using 2:3:xtic(1) title "Shifted" linecolor rgb "#FF0000", \
-  'data/stat_throughput.ts' using 5:6:xtic(4) title "Random" linecolor rgb "#00FF00", \
-  'data/stat_throughput.ts' using 8:9:xtic(7) title "Local" linecolor rgb "#0000FF"
+  'data/stat_throughput.ts' using 2:3:xtic(1) title "Random" linecolor rgb "#FF0000"
+  #'data/stat_throughput.ts' using 2:3:xtic(1) title "Shifted" linecolor rgb "#FF0000", \
+  #'data/stat_throughput.ts' using 5:6:xtic(4) title "Random" linecolor rgb "#00FF00", \
+  #'data/stat_throughput.ts' using 8:9:xtic(7) title "Local" linecolor rgb "#0000FF"
