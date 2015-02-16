@@ -18,7 +18,7 @@ set key left top
 set xlabel "Round-trip latency (usec)" font "Helvetica,22"
 set output "result/get-latency.eps"
 
-set style histogram gap 2
+set style histogram gap 1
 set style data histogram
 set style fill solid border -1 
 

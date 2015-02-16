@@ -255,7 +255,7 @@ class Configuration:
           day_floor = ( (day_join + day_leave) / 2.0 + 1 - 0.1 ) % 1   # Do it more eagerly
           day_peak = (day_floor + 0.5) % 1
 
-          time_offset = (2 + d + day_floor) * day_period
+          time_offset = (0 + d + day_floor) * day_period
           num_stages = int(math.ceil(math.log(num_servers, 2)))
           #print("num_stages = %d" % num_stages)
           num_migrations_ctx = num_stages * math.ceil(self.num_contexts / 2.0)

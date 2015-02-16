@@ -20,12 +20,14 @@ t_ngroups=$t_ncontexts # number of partitions at server
 
 logical_nodes_per_physical_nodes=1
 
-runtime=100 # duration of the experiment
+runtime=200 # duration of the experiment
 boottime=40   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
 memory_rounds=1000 # frequency of memory usage log printing
+t_payload=1000
+#t_mean=16 # utilization around 40%, moderate load
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
@@ -37,9 +39,9 @@ nruns=5      # number of replicated runs
 context_policy="RANDOM"
 
 # migration pattern parameters
-t_days=20
-day_period=10000000
-day_join=0.2
+t_days=15
+day_period=30000000
+day_join=0.5
 day_leave=0.5
 day_error=0.2
 
@@ -71,7 +73,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"ContextService::requestContextMigrationCommon ContextService::handle__event_MigrateContext Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"ContextBaseClass::updateVisitedEvents ContextService::requestContextMigrationCommon ContextService::handle__event_MigrateContext Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor BS_KeyValueClient\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -97,6 +99,7 @@ function runexp (){
   t_client_machines=$2
   t_clients=$3
   t_primes=$4
+  t_mean=$5
 
   # For each server machine, run only one server process.
   # minus the bootstrapper node
@@ -136,14 +139,17 @@ function runexp (){
 
     echo -e "\n# Specific parameters for client" >> ${conf_client_file}
 
-    #echo "ServiceConfig.Throughput.message_length = 1" >> ${conf_client_file}
     echo "role = client" >>  ${conf_client_file}
-    #echo "lib.MApplication.services = KeyValueClient" >> ${conf_client_file}
     echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
     echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
+    echo "ServiceConfig.KeyValueClient.PAYLOAD = ${t_payload}" >>  ${conf_client_file}
+    echo "ServiceConfig.KeyValueClient.PER_TIMER_ROUND = 1" >>  ${conf_client_file}
+    echo "ServiceConfig.KeyValueClient.AVG_ROUNDS = 1" >>  ${conf_client_file}
 
-    #echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
-    #echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
+    put_mean=$(( $t_mean * 1000 ))
+    get_mean=$(( $t_mean * 1000 ))
+    echo "ServiceConfig.KeyValueClient.PUTMEAN = $put_mean" >>  ${conf_client_file}
+    echo "ServiceConfig.KeyValueClient.GETMEAN = $get_mean" >>  ${conf_client_file}
 
     # copy the param file for the server
     echo -e "\n# Specific parameters for server" >> ${conf_file}
@@ -154,13 +160,6 @@ function runexp (){
     echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
     echo "ServiceConfig.KeyValueServer.NUM_GROUPS = ${t_ngroups}" >>  ${conf_file}
     echo "ServiceConfig.KeyValueServer.MEMORY_ROUNDS = ${memory_rounds}" >>  ${conf_file}
-
-    # copy the server parameter file template 
-    #for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
-    #do
-    #  #echo $i
-    #  cp ${conf_file} ${conf_file}${i}
-    #done
 
     # print out bootfile & param for servers
     echo -e "\e[00;31m\$ ./configure.py -a ${application} -f ${flavor} -p ${mace_start_port} -o ${conf_file} -c ${conf_client_file} -i ${host_orig_file} -j ${host_run_file} -k ${host_nohead_file} -s ${boottime} -b ${boot_file}\e[00m"
@@ -193,6 +192,7 @@ function aggregate_output () {
   log_set_dir=$1
   t_clients=$2
   t_primes=$3
+  t_mean=$4
   # create a new directory for the set of logs
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
@@ -201,11 +201,11 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  label="$flavor-$t_clients-$t_primes"
+  label="$flavor-$t_clients-$t_primes-$t_mean"
   $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
   $plotter/run-avg.sh
-  #$plotter/avg-latency.sh
-  #$plotter/stat-latency.sh $label
+  $plotter/avg-latency.sh
+  $plotter/stat-latency.sh $label
   $plotter/avg-utilization.sh 
   $plotter/stat-utilization.sh $label
   $plotter/plot_service.sh
@@ -231,21 +231,27 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
       echo "use machines: ${used_machines} > machine list: ${n_machines} "
       exit 1
     fi
+    #for t_mean in 4; do
+    #for t_mean in 2 8 32 128; do
+    for t_mean in 1; do
+    #for t_mean in 2; do
+    #for t_mean in 32 64; do
     #for n_client_logicalnode in 8; do
       for t_primes in 1; do  # Additional computation payload at the server.
         cleanup # function to remove files that aggregates data from multiple runs of the same setting.
         log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
-          runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes
+          runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes $t_mean
 
           if [ $config_only -eq 0 ]; then
             # generate plots for each run
             $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
             $plotter/run-timeseries.sh
             $plotter/run-net.sh
-            #$plotter/run-latency.sh
+            $plotter/run-latency.sh
             $plotter/parse-utilization.sh
+            $plotter/run-utilization.sh
             # publish plots and parameters and logs to web page
             $common/publish.sh $log_set_dir
           fi
@@ -253,11 +259,11 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 
         if [ $config_only -eq 0 ]; then
           # plot the average throughput w/ error across all runs
-          aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
+          aggregate_output $log_set_dir $n_client_logicalnode $t_primes $t_mean
 
           $common/publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
-    #done
+    done
   #done
 

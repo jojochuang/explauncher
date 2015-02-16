@@ -76,18 +76,16 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+    logger.info('$ {application} {pfile} -service {service} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
         application=app,
         pfile=clientfile,
         service=cparam["client_service"],
-        sid=sender_id,
         port=ipaddr.strip().split(":")[1],
         raddr=raddr))
-    r = Utils.process_exec('{application} {pfile} -service {service} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+    r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
         application=app,
         pfile=clientfile,
         service=cparam["client_service"],
-        sid=sender_id,
         port=ipaddr.strip().split(":")[1],
         raddr=raddr),
         log=logfile)
@@ -152,18 +150,16 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -service {service}  -MACE_PORT {port} -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
+    logger.info('$ {application} {pfile} -service {service}  -MACE_PORT {port} '.format(
         application=app,
         pfile=pfn,
         service=param["server_service"],
-        port=ipaddr.strip().split(":")[1],
-        sid=sid))
-    r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}  -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
+        port=ipaddr.strip().split(":")[1]))
+    r = Utils.process_exec('{application} {pfile} -service {service}  -MACE_PORT {port}  '.format(
         application=app,
         pfile=pfn,
         service=param["server_service"],
-        port=ipaddr.strip().split(":")[1],
-        sid=sid),
+        port=ipaddr.strip().split(":")[1]),
         log=logfile)
 
     end_time = Utils.unixTime()

@@ -16,7 +16,7 @@ set key left top
 set xlabel "Run" font "Helvetica,22"
 set output "result/avg-throughput.eps"
 
-set style histogram gap 2
+set style histogram gap 1
 set style data histogram
 set style fill solid border -1 
 

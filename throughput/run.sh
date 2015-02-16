@@ -225,4 +225,4 @@ for t_server_machines in 8; do
   done # end of total_events
 done
 
-ssh chuangw@galba.cs.purdue.edu "echo \"done ${application}\" | mail -s subject chuangw@purdue.edu"
+ssh chuangw@galba.cs.purdue.edu "echo \"done ${application}\" | mail -s Benchmark chuangw@purdue.edu"

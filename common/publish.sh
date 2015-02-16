@@ -10,9 +10,9 @@ source ../common.sh
 #   log/result/throughput.pdf, log/result/stat-throughput.pdf/png
 #   log/result/conn*.pdf
 
-echo "\$application = $application, \$logdir = $logdir, \$log_set_dir = $log_set_dir, \$webdir = $webdir"
 
 log_set_dir=$1
+echo "\$application = $application, \$logdir = $logdir, \$log_set_dir = $log_set_dir, \$webdir = $webdir"
 
 if [[ $# -lt 1 ]]; then
   echo "need the log set dir as the parameter"
@@ -56,6 +56,7 @@ cp result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
 cp result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
+cp result/utilization-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
 if [ -f result/get-latency.png ]; then 
   cp result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
 fi
@@ -89,7 +90,7 @@ cat <<EOF > ${log_page}
 EOF
 
 if [ -f result/get-latency.png ]; then 
-cat <<EOF > ${log_page}
+cat <<EOF >> ${log_page}
 <tr> <td> <a href="get-latency.png">
   <p>Round-trip latency of Get request</p>
   <img src="get-latency.png"></img></a> </td> </tr>
@@ -98,7 +99,7 @@ fi
 
 
 if [ -f result/put-latency.png ]; then 
-cat <<EOF > ${log_page}
+cat <<EOF >> ${log_page}
 <tr> <td> <a href="put-latency.png">
   <p>Round-trip latency of Put request</p>
   <img src="put-latency.png"></img></a> </td> </tr>
@@ -106,7 +107,7 @@ EOF
 fi
 
 
-cat <<EOF > ${log_page}
+cat <<EOF >> ${log_page}
 <tr> <td> <a href="net-write.png">
   <p>Network Write time series</p>
   <img src="net-write.png"></img></a> </td> </tr>
@@ -116,6 +117,9 @@ cat <<EOF > ${log_page}
 <tr> <td> <a href="throughput.png">
   <p>Throughput time series</p>
   <img src="throughput.png"></img></a> </td> </tr>
+<tr> <td> <a href="utilization-timeseries.png">
+  <p>Utilization time series</p>
+  <img src="utilization-timeseries.png"></img></a> </td> </tr>
 <tr> <td> <a href="${conn_graph}">
   <p>Network connection graph</p>
   <img src="${conn_graph}"></img> </a> </td> </tr>

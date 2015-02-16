@@ -28,7 +28,7 @@ memory_rounds=1000 # frequency of memory usage log printing
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 #nruns=5      # number of replicated runs
 
 t_payload=1000
@@ -230,8 +230,8 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
       echo "use machines: ${used_machines} > machine list: ${n_machines} "
       exit 1
     fi
-    #for t_mean in 1 2 4 8 16 32 64 128; do
-    for t_mean in 1 4; do
+    for t_mean in 1 2 4 8 16 32 64 128; do
+    #for t_mean in 1 4; do
       for t_primes in 1; do  # Additional computation payload at the server.
         cleanup # function to remove files that aggregates data from multiple runs of the same setting.
         log_set_dir=`date --iso-8601="seconds"`

@@ -11,7 +11,7 @@ set key left top
 
 set xlabel "Configuration" font "Helvetica,22"
 set output "result/stat-utilization.eps"
-set style histogram errorbars gap 2 lw 2
+set style histogram errorbars gap 1 lw 2
 set style data histogram
 set style fill solid border -1 
 
