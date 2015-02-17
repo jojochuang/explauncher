@@ -8,17 +8,17 @@ source ../init.sh
 mace_start_port=30000
 # number of server logical nodes does not change
 n_server_logicalnode=1
-server_scale=2
+server_scale=8
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=2
+t_client_machines=4
 #n_client_logicalnode=2
-t_ncontexts=4
+t_ncontexts=$(( 4* $server_scale ))
 t_ngroups=$t_ncontexts # number of partitions at server
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
 
-logical_nodes_per_physical_nodes=1
+logical_nodes_per_physical_nodes=4
 
 runtime=200 # duration of the experiment
 boottime=40   # total time to boot.
@@ -32,7 +32,7 @@ t_payload=1000
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
 #nruns=1      # number of replicated runs
-nruns=5      # number of replicated runs
+nruns=1      # number of replicated runs
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -40,7 +40,7 @@ context_policy="RANDOM"
 
 # migration pattern parameters
 t_days=15
-day_period=30000000
+day_period=200000000
 day_join=0.5
 day_leave=0.5
 day_error=0.2
@@ -73,7 +73,8 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"ContextBaseClass::updateVisitedEvents ContextService::requestContextMigrationCommon ContextService::handle__event_MigrateContext Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor BS_KeyValueClient\"" >> ${conf_file}
+  #echo "MACE_LOG_AUTO_SELECTORS = \"ContextBaseClass::updateVisitedEvents ContextService::requestContextMigrationCommon ContextService::handle__event_MigrateContext Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor BS_KeyValueClient\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"ContextService::requestContextMigrationCommon ContextService::handle__event_MigrateContext Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor BS_KeyValueClient\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -150,6 +151,7 @@ function runexp (){
     get_mean=$(( $t_mean * 1000 ))
     echo "ServiceConfig.KeyValueClient.PUTMEAN = $put_mean" >>  ${conf_client_file}
     echo "ServiceConfig.KeyValueClient.GETMEAN = $get_mean" >>  ${conf_client_file}
+    echo "ServiceConfig.KeyValueClient.PUT_STOP_AT = 1" >>  ${conf_client_file}
 
     # copy the param file for the server
     echo -e "\n# Specific parameters for server" >> ${conf_file}
@@ -233,7 +235,10 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
     fi
     #for t_mean in 4; do
     #for t_mean in 2 8 32 128; do
-    for t_mean in 1; do
+    #for t_mean in 1 2 4 8 16 32; do
+    #for t_mean in 1 4 16; do
+    #for t_mean in 4 16; do
+    for t_mean in 4; do
     #for t_mean in 2; do
     #for t_mean in 32 64; do
     #for n_client_logicalnode in 8; do

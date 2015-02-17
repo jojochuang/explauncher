@@ -47,4 +47,38 @@ convert -density 150  get-latency.pdf get-latency.png
 convert -density 150  put-latency.pdf put-latency.png
 rm *.eps
 
+cd ..
 
+function gen_timeseries_plot () {
+    gnuplot < $plotter/latency-timeseries-combined.plot
+
+    # generate pdf files using the eps file.
+    cd result
+    if [[ ! -f "latency-timeseries.eps" ]]; then
+      echo "latency-timeseries.eps not found!"
+      exit 1
+    fi
+
+    ls *.eps | xargs --max-lines=1 epspdf
+    #mogrify -format png *.eps
+    convert -density 150  latency-timeseries.pdf latency-timeseries.png
+    rm *.eps
+    
+    cd ..
+
+    gnuplot < $plotter/all-latency-timeseries.plot
+
+    # generate pdf files using the eps file.
+    cd result
+    if [[ ! -f "combined-latency.eps" ]]; then
+      echo "combined-latency.eps not found!"
+      exit 1
+    fi
+
+    ls *.eps | xargs --max-lines=1 epspdf
+    #mogrify -format png *.eps
+    convert -density 150  combined-latency.pdf combined-latency.png
+    rm *.eps
+}
+
+gen_timeseries_plot

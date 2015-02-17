@@ -1,6 +1,6 @@
 #!/usr/bin/awk -f
 BEGIN {
-  P=20
+  P=5
 }
 
 {

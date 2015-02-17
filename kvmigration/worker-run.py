@@ -6,7 +6,10 @@ from time import sleep
 import logging
 
 import sys
-sys.path.append("../common")
+import os
+#sys.path.append("../common")
+script_path=os.path.dirname(os.path.abspath(__file__))
+sys.path.append( script_path + "/../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Worker')
@@ -68,27 +71,33 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     # TODO: translate client id to corresponding address
     raddr = ""
     if cparam["flavor"] == "nacho":
-      raddr = receivers[ int(nid) - len(receivers) ]
+      raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
     elif cparam["flavor"] == "context":
       raddr = receivers
+
+    # compute wait_time
+    day_period = int(param["day_period"])
+    cid = int(nid) - (server_scale*nservers)
+    shift_time = 0#79999999
+    wait_time = day_period / 2 / int(param["num_clients"]) * cid + shift_time
+    #stop_time = day_period - wait_time
+    stop_time = 200*1000*1000
 
     logfile = '{}/client-{}-{}.log'.format(
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -service {service} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
+    launch_cmd = '{application} {pfile} -service {service} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr} -ServiceConfig.KeyValueClient.PUT_WAIT_TIME {wait_time} -ServiceConfig.KeyValueClient.GET_WAIT_TIME {wait_time} -ServiceConfig.KeyValueClient.STOP_TIME {stop_time}'.format(
         application=app,
         pfile=clientfile,
         service=cparam["client_service"],
         port=ipaddr.strip().split(":")[1],
-        raddr=raddr))
-    r = Utils.process_exec('{application} {pfile} -service {service} -MACE_PORT {port} -ServiceConfig.KeyValueClient.DHT_NODES {raddr}'.format(
-        application=app,
-        pfile=clientfile,
-        service=cparam["client_service"],
-        port=ipaddr.strip().split(":")[1],
-        raddr=raddr),
-        log=logfile)
+        raddr=raddr,
+        wait_time=wait_time,
+        stop_time=stop_time)
+
+    logger.info( '$ ' + launch_cmd )
+    r = Utils.process_exec(launch_cmd, log=logfile)
 
     end_time = Utils.unixTime()
 

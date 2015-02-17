@@ -6,7 +6,9 @@ import random
 import math
 
 import sys
-sys.path.append("../common")
+import os
+script_path=os.path.dirname(os.path.abspath(__file__))
+sys.path.append( script_path + "/../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Configure')
@@ -111,7 +113,10 @@ class Configuration:
           else:
             print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
             sys.exit()
-
+            
+          sid = 0
+          #f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
+          #    service_name, sid, i))
           f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
               service_name, sid, i))
 
@@ -509,8 +514,8 @@ class Configuration:
               #sid = (1 + j % self.num_server_machines) % self.num_machines
               #sid = (j % self.num_server_machines) % self.num_machines
               self.boot(i, boot_time, self.ipaddr[j], options.port+j* self.port_shift, hostname[j], "server", f) 
-              #i += 1
-              i = j
+              i += 1
+              #i = j
               boot_time += boot_period
 
           boot_time = boot_period * self.num_servers
@@ -521,7 +526,8 @@ class Configuration:
               i = j + self.num_servers
               #sid = ( self.num_server_machines + j % self.num_client_machines) % self.num_machines
               #self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "client", f) 
-              self.boot(i, boot_time, self.ipaddr[i], options.port+i* self.port_shift, hostname[i], "client", f) 
+              machine_id = (j % self.num_client_machines) + self.num_servers
+              self.boot(i, boot_time, self.ipaddr[machine_id], options.port+i* self.port_shift, hostname[machine_id], "client", f) 
               #i += 1
               boot_time += boot_period
       return

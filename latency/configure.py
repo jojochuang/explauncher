@@ -6,7 +6,9 @@ import random
 import math
 
 import sys
-sys.path.append("../common")
+import os
+script_path=os.path.dirname(os.path.abspath(__file__))
+sys.path.append( script_path + "/../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Configure')

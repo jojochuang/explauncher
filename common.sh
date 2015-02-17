@@ -42,7 +42,7 @@ boot_file="conf/boot"
 
 #flavor="nacho"
 flavor="nacho"
-config_only=0 # don't run the experiment. just generate config files.
+config_only=1 # don't run the experiment. just generate config files.
 
 
 function GenerateCommonParameter () {
