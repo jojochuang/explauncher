@@ -110,11 +110,12 @@ class Configuration:
           elif param["CONTEXT_ASSIGNMENT_POLICY"] == "RANDOM":
             #sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines) ) % self.num_machines
             sid = random.randint(0, (server_scale-1) )
+          elif param["CONTEXT_ASSIGNMENT_POLICY"] == "HEAD_ONLY":
+            sid = 0
           else:
-            print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
+            print "Unrecognized parameter " + param["CONTEXT_ASSIGNMENT_POLICY"]
             sys.exit()
             
-          sid = 0
           #f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
           #    service_name, sid, i))
           f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
@@ -141,19 +142,10 @@ class Configuration:
           #    1, i))
           f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
               service_name, 0, i))
-
-      # Kids
-      #for i in range(num_clients):
-      #    f.write( 'mapping = {}:Kid[{}]\n'.format(
-      #        1, i))
-      #    f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
-      #        service_name, 1, i))
-
-      # Also, add migration code
       return
 
   #def write_combined_migration(self,  f, serveraddr ):
-  def write_combined_migration(self,  f ):
+  def write_combined_migration(self,  f, svf ):
       param = self.param
       service_name = param["server_service"]
       num_servers = self.num_servers # number of all server physical nodes.
@@ -186,25 +178,12 @@ class Configuration:
       assert self.num_days > 0
       assert migration_days >= 0
 
-      #assert join_time < leave_time
-
-      
       # 1. All contexts are located on the first non-head physical node.
 
       # Building
       for i in range(self.num_contexts):
-          #f.write( 'mapping = {}:Building[{}]\n'.format(
-          #    1, i))
           f.write( 'lib.MApplication.{}.mapping = {}:Bucket[{}]\n'.format(
               service_name, 0, i))
-
-      # Kids
-      #for i in range(num_clients):
-      #    f.write( 'mapping = {}:Kid[{}]\n'.format(
-      #        1, i))
-      #    f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
-      #        service_name, 1, i))
-
 
       # 2. Plan out migration for migration_days
       #    If you set migration starts from day 2,
@@ -242,6 +221,9 @@ class Configuration:
 
       f.write("# num_servers 0 %s\n" % ncurserver)
 
+      print "time %d scale %d" % ( 0, 1 )
+      svf.write("time %d scale %d\n" % ( 0, 1 ))
+      last_sv_scale = 1
       #print "initial_no_migration_days=%d, initial_no_migration_days=%d ,migration_days=%d\n" % (initial_no_migration_days, initial_no_migration_days , migration_days)
       for d in range(initial_no_migration_days, initial_no_migration_days + migration_days):
           #print "d=%d\n" %d
@@ -318,64 +300,74 @@ class Configuration:
           for i in range(self.num_clients):
               cli_in_server[ i % num_servers ].append(i)
 
+          #print "cli_in_server"
+          #print cli_in_server
+          #print "ctx_in_server"
+          #print ctx_in_server
+
           # initiallly, server[0] has all
           # servers[0] = [0 1 2 3 4 5 6 7]
           for i in range(num_servers):
               servers[0].append(i)
 
           for s in range(num_stages):
-              for i in range(pow(2,s)):
+              #for i in range(pow(2,s+1)):
+              for r in range( pow(2,s) ):
+                  #i = r * (s+1)
+                  i = num_servers/(s+1) * r
                   assert i < num_servers
 
+                  #print "s=%d, i=%d"% (s, i)
+
                   # Get half of it to migrate to other node.
-                  moving_servers = servers[i][1::2]
+                  #moving_servers = servers[i][1::2]
+                  moving_servers = servers[i][len(servers[i])/2:]
                   # Rest of half will remain.
-                  servers[i] = servers[i][::2]
+                  #servers[i] = servers[i][::2]
+                  servers[i] = servers[i][:len(servers[i])/2]
+
+                  #print servers[i],moving_servers
 
                   if len(moving_servers) > 0:
                       target_sid = moving_servers[0]
                       servers[target_sid] = moving_servers
+
+
+                      print "time %d scale %d" % ( t2-1, last_sv_scale )
+                      svf.write("time %d scale %d\n" % ( t2-1, last_sv_scale ))
+                      sv_scale = 0
+                      for sv in servers:
+                        if len(sv) > 0:
+                            sv_scale = sv_scale+1
+                      print "time %d scale %d" % ( t2, sv_scale )
+                      svf.write("time %d scale %d\n" % ( t2, sv_scale ))
+                      last_sv_scale = sv_scale
+
+                      #print servers
                       #print "target_sid=%d %s" %(target_sid, serveraddr[target_sid])
                       #for s in serveraddr:
                       #  print "%s" %s
 
-                      # Migrate all contexts within the server
-                      # Also, migrate clients as well
+                      # Migrate all contexts currently located on the server
 
                       # Once for all
                       contexts = []
-                      clis = []
+                      #clis = []
                       for ctxs in moving_servers:
                           contexts.extend(ctx_in_server[ctxs])
-                          clis.extend(cli_in_server[ctxs])
+                          #clis.extend(cli_in_server[ctxs])
+
+                      #print contexts
 
 
                       f.write("# num_servers %d %s\n" % (t1-1, ncurserver))
                       ncurserver += 1
                       f.write("# num_servers %d %s\n" % (t1, ncurserver))
 
-                      #migrate_multi( mid, t1, 0, "Building", contexts, serveraddr[target_sid], i, target_sid,  f)
-                      #mid += 1
-                      ##t1 += time_diff_ctx * len(contexts)
-                      #t1 += time_diff_ctx * len(contexts) * 0.4  # adjusted
-
-                      self.migrate_multi( mid, t2, 0, "Bucket", clis, serveraddr[target_sid], i, target_sid, f)
+                      self.migrate_multi( mid, t2, 0, "Bucket", contexts, serveraddr[target_sid], i, target_sid, f)
                       mid += 1
                       #t2 += time_diff_cli * len(clis)
-                      t2 += time_diff_cli * len(clis) * 0.4  # adjusted
-
-                      # One at a time
-                      #for ctxs in moving_servers:
-                          #for c in ctx_in_server[ctxs]:
-                              #migrate( mid, t1, 0, "Building", c, serveraddr[target_sid], i, target_sid, f)
-                              #mid += 1
-                              #t1 += time_diff_ctx
-
-                          #for c in cli_in_server[ctxs]:
-                              #migrate( mid, t2, 0, "Kid", c, serveraddr[target_sid], i, target_sid, f)
-                              #mid += 1
-                              #t2 += time_diff_cli
-
+                      t2 += time_diff_ctx * len(contexts) * 0.4  # adjusted
           # B. Gradual scale in
           """
               Each migration will have "stages".
@@ -403,6 +395,8 @@ class Configuration:
 
           f.write("\n# Starting gradual scale in\n")
 
+          #print "=================scale in=============="
+
           # Gradual scale in
           t1 = time_offset + 0.5 * day_period + 0.15 * day_period
           t2 = time_offset + 0.5 * day_period + 0.15 * day_period
@@ -414,53 +408,62 @@ class Configuration:
           for i in range(num_servers):
               servers[i].append(i)
 
-          for s in range(num_stages,0,-1):
-              numservers_at_stage = pow(2,s-1)
-              for i in range(numservers_at_stage,2*numservers_at_stage):
+          for s in range(num_stages-1,0-1,-1):
+          #for s in range(num_stages):
+              #numservers_at_stage = pow(2,s-1)
+              for r in range( pow(2,s) ):
+                  #i = r * (s+1)
+                  #i = num_servers/(s+1) * r
+              #for i in range(numservers_at_stage,2*numservers_at_stage):
                   assert i < num_servers
+                  #print "s=%d, r=%d"% (s, r)
 
                   # move all servers to (server_id % numservers_at_stage)
-                  moving_servers = servers[i]
+                  target_sid = pow(2,num_stages-s) * r
+                  source_sid = target_sid + pow(2, num_stages-s-1)
+
+                  moving_servers = servers[source_sid]
+                  #moving_servers = servers[i][len(servers[i])/2:]
+                  ## Rest of half will remain.
+                  ##servers[i] = servers[i][::2]
+                  #servers[i] = servers[i][:len(servers[i])/2]
 
                   if len(moving_servers) > 0:
-                      target_sid = i % numservers_at_stage
+                      #target_sid = i % numservers_at_stage
                       servers[target_sid].extend( moving_servers )
+                      servers[ source_sid ] = []
+
+
+                      print "time %d scale %d" % ( t2-1, last_sv_scale )
+                      svf.write("time %d scale %d\n" % ( t2-1, last_sv_scale ))
+                      sv_scale = 0
+                      for sv in servers:
+                        if len(sv) > 0:
+                            sv_scale = sv_scale+1
+                      print "time %d scale %d" % ( t2, sv_scale )
+                      svf.write("time %d scale %d\n" % ( t2, sv_scale ))
+                      last_sv_scale = sv_scale
+
+                      #print servers
 
                       # Migrate all contexts within the server
                       # Also, migrate clients as well
 
                       # Once for all
                       contexts = []
-                      clis = []
+                      #clis = []
                       for ctxs in moving_servers:
                           contexts.extend(ctx_in_server[ctxs])
-                          clis.extend(cli_in_server[ctxs])
+                          #clis.extend(cli_in_server[ctxs])
 
                       f.write("# num_servers %d %s\n" % (t1-1, ncurserver))
                       ncurserver -= 1
                       f.write("# num_servers %d %s\n" % (t1, ncurserver))
 
-                      #migrate_multi( mid, t1, 0, "Building", contexts, serveraddr[target_sid], i, target_sid,  f)
-                      #mid += 1
-                      ##t1 += time_diff_ctx + len(contexts)
-                      #t1 += time_diff_ctx * len(contexts) * 0.4  # adjusted
-
-                      self.migrate_multi( mid, t2, 0, "Bucket", clis, serveraddr[target_sid], i, target_sid, f)
+                      self.migrate_multi( mid, t2, 0, "Bucket", contexts, serveraddr[target_sid], source_sid, target_sid, f)
                       mid += 1
                       #t2 += time_diff_cli + len(clis)
-                      t2 += time_diff_cli * len(clis) * 0.4  # adjusted
-
-                      # One at a time
-                      #for ctxs in moving_servers:
-                          #for c in ctx_in_server[ctxs]:
-                              #migrate( mid, t1, 0, "Building", c, serveraddr[target_sid], i, target_sid, f)
-                              #mid += 1
-                              #t1 += time_diff_ctx
-
-                          #for c in cli_in_server[ctxs]:
-                              #migrate( mid, t2, 0, "Kid", c, serveraddr[target_sid], i, target_sid, f)
-                              #mid += 1
-                              #t2 += time_diff_cli
+                      t2 += time_diff_ctx * len(contexts) * 0.4  # adjusted
 
 
           f.write("# num_servers %d %s\n" % (t1-1, ncurserver))
@@ -588,7 +591,8 @@ class Configuration:
 
           elif param["EXPERIMENT_TYPE"] == "COMBINED":
               #self.write_combined_migration( f, serveraddr )
-              self.write_combined_migration( f )
+              with open(param["server_scale_file"], "w") as svf:
+                  self.write_combined_migration( f,svf )
 
           else:
               assert 0, "Please specify EXPERIMENT_TYPE!"

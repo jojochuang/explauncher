@@ -71,7 +71,10 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     # TODO: translate client id to corresponding address
     raddr = ""
     if cparam["flavor"] == "nacho":
-      raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
+      if( server_scale == 1 ):
+          raddr = receivers
+      else:
+          raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
     elif cparam["flavor"] == "context":
       raddr = receivers
 
@@ -81,7 +84,8 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     shift_time = 0#79999999
     wait_time = day_period / 2 / int(param["num_clients"]) * cid + shift_time
     #stop_time = day_period - wait_time
-    stop_time = 200*1000*1000
+    #stop_time = 200*1000*1000
+    stop_time = 800*1000*1000
 
     logfile = '{}/client-{}-{}.log'.format(
             logdir,

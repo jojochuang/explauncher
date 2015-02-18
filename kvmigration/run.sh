@@ -18,7 +18,7 @@ t_ngroups=$t_ncontexts # number of partitions at server
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
 
-logical_nodes_per_physical_nodes=4
+logical_nodes_per_physical_nodes=7
 
 runtime=200 # duration of the experiment
 boottime=40   # total time to boot.
@@ -37,6 +37,7 @@ nruns=1      # number of replicated runs
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
 context_policy="RANDOM"
+#context_policy="HEAD_ONLY"
 
 # migration pattern parameters
 t_days=15
@@ -48,6 +49,7 @@ day_error=0.2
 conf_client_file="conf/params-run-client.conf"
 conf_file="conf/params-run-server.conf"
 host_nohead_file="conf/hosts-run-nohead"
+server_scale_file="data/scale_server.ts"
 
 if [ $# -eq 0 ]; then
     id="default"
@@ -59,6 +61,8 @@ no_config=0 # whether to run configure.py for new configs
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
   conf_file=$1
+
+  echo "server_scale_file = ${server_scale_file}" >> ${conf_file}
 
   echo "application = ${application}" >> ${conf_file}
   echo "port_shift = ${port_shift}" >> ${conf_file}
@@ -238,7 +242,8 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
     #for t_mean in 1 2 4 8 16 32; do
     #for t_mean in 1 4 16; do
     #for t_mean in 4 16; do
-    for t_mean in 4; do
+    #for t_mean in 4; do
+    for t_mean in 8; do
     #for t_mean in 2; do
     #for t_mean in 32 64; do
     #for n_client_logicalnode in 8; do
