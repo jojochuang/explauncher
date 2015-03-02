@@ -2,6 +2,7 @@
 # This is the script that runs multiple throughput benchmarks of the nacho runtime. 
 source conf/conf.sh
 source ../common.sh
+source ../init.sh
 
 mace_start_port=30000
 # number of server logical nodes does not change
@@ -18,7 +19,7 @@ t_ncontexts=4
 logical_nodes_per_physical_nodes=2
 
 runtime=100 # duration of the experiment
-boottime=10   # total time to boot.
+boottime=20   # total time to boot.
 server_join_wait_time=0
 client_wait_time=0
 port_shift=10  # spacing of ports between different nodes
@@ -27,10 +28,6 @@ tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will prov
 
 #nruns=1      # number of replicated runs
 nruns=1      # number of replicated runs
-
-flavor="nacho"
-#flavor="mango"
-#flavor="context"
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -70,7 +67,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadTransportTP::constructor\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -164,6 +161,20 @@ function runexp (){
   echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
 
+  #    with open(options.paramfile, "a") as f:
+  #        # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
+  #        if param["EC2"] == "1":
+  #            f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -f | awk '{print $1}'", verbose=False)))
+  #        else:
+  #            f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))
+
+  if [[ $ec2 -eq 0 ]]; then
+    hostname0=`hostname -s | awk '{print $1}'`
+  else
+    hostname0=`hostname -f | awk '{print $1}'`
+  fi
+  echo "hostname0 = ${hostname0}" >> ${conf_file}
+
   # copy the server parameter file template 
   for i in $(seq 0 1 $(($n_server_logicalnode-1)) )
   do
@@ -183,14 +194,14 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
 
     else
       # do not use monitor
       #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-      echo -e "\e[00;31m\$ ./master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-      ./master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
     fi
     sleep 10
   fi
@@ -209,13 +220,24 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  cwd=`pwd`
-  cd log
-  ./run-throughput.sh ${logdir}/${log_set_dir} $flavor-$t_clients-$t_primes
-  ./run-avg.sh
-  ./plot_service.sh
-  cd $cwd
+  label="$flavor-$t_clients-$t_primes"
+  $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
+  $plotter/run-avg.sh
+  #$plotter/avg-latency.sh
+  #$plotter/stat-latency.sh $label
+  $plotter/avg-utilization.sh 
+  $plotter/stat-utilization.sh $label
+  $plotter/plot_service.sh
 }
+
+function init() {
+  if [ $config_only -eq 0 ]; then
+    # create log directories on all nodes
+    ${psshdir}/pssh -h $host_orig_file -t 30 mkdir -p $scratchdir
+  fi
+}
+
+init
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 #for t_server_machines in 3; do
@@ -233,19 +255,21 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
       for t_primes in 1; do  # Additional computation payload at the server.
         log_set_dir=`date --iso-8601="seconds"`
         cleanup # function to remove files that aggregates data from multiple runs of the same setting.
+        log_set_dir=`date --iso-8601="seconds"`
         for (( run=1; run <= $nruns; run++ )); do
           mace_start_port=$((mace_start_port+500))
           runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes
 
           if [ $config_only -eq 0 ]; then
             # generate plots for each run
-            cwd=`pwd`
-            cd log
-            ./plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
-            ./run-timeseries.sh
-            cd $cwd
+            $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
+            $plotter/run-timeseries.sh
+            $plotter/run-net.sh
+            #$plotter/run-latency.sh
+            $plotter/parse-utilization.sh
+            $plotter/run-utilization.sh
             # publish plots and parameters and logs to web page
-            ./publish.sh $log_set_dir
+            $common/publish.sh $log_set_dir
           fi
         done # end of nruns
 
@@ -253,7 +277,7 @@ n_machines=`wc ${host_orig_file} | awk '{print $1}' `
           # plot the average throughput w/ error across all runs
           aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
 
-          ./publish_webindex.sh $log_set_dir
+          $common/publish_webindex.sh $log_set_dir
         fi
       done # end of total_events
     #done

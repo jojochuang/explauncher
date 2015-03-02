@@ -5,26 +5,41 @@ from multiprocessing import Process
 from time import sleep
 import logging
 
+import sys
+import os
+script_path=os.path.dirname(os.path.abspath(__file__))
+sys.path.append( script_path + "/../common")
 import Utils
 
 logger = logging.getLogger('Benchmark.Worker')
 
-def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,clientfile):
+def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile,cparam,clientfile):
     logger.info("ID = %s SleepTime = %s ipaddr = %s hostname = %s app_type = %s" % (nid, boot_wait_time, ipaddr, hostname, app_type))
 
     assert app_type == "client"
 
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="client-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["COMMON"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
 
     # re-load parameters for the specific server
-    param = Utils.param_reader(options.clientfile)
+    #param = Utils.param_reader(options.clientfile)
 
     # Sleep
-    if param["flavor"] == "nacho":
-        sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
-        sleep_time += int(param["CLIENT_WAIT_TIME"])
-    elif param["flavor"] == "context":
+    if cparam["flavor"] == "nacho" or cparam["flavor"] == "mango":
+        sleep_time = float(boot_wait_time)+int(cparam["WORKER_JOIN_WAIT_TIME"])
+        sleep_time += int(cparam["CLIENT_WAIT_TIME"])
+    elif cparam["flavor"] == "context":
         sleep_time = float(boot_wait_time)
-        sleep_time += int(param["CLIENT_WAIT_TIME"])+int(param["WORKER_JOIN_WAIT_TIME"])
+        sleep_time += int(cparam["CLIENT_WAIT_TIME"])+int(cparam["WORKER_JOIN_WAIT_TIME"])
 
     logger.info("Sleeping %d...", sleep_time )
 
@@ -32,7 +47,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     sleep( sleep_time )
   
     # Log filename
-    logdir = param["SCRATCHDIR"]
+    logdir = cparam["SCRATCHDIR"]
 
     # Create and move into subdir
     subdir='{}/client-{}'.format(logdir,nid)
@@ -42,35 +57,45 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     # Run the application
     start_time = Utils.unixTime()
 
-    app = "%s/%s" % (param["BIN"], param["BINARY"])
+    app = "%s/%s" % (cparam["BIN"], cparam["BINARY"])
 
     server_scale = int( param["lib.MApplication.initial_size"] )
-    nservers = int( param["SERVER_LOGICAL_NODES"] )
+    nservers = int( cparam["SERVER_LOGICAL_NODES"] )
     sender_id = int(nid) - server_scale * nservers
-    receivers = param["LAUNCHER.receiver_addr"]
+    receivers = cparam["LAUNCHER.receiver_addr"]
 
     # TODO: translate client id to corresponding address
-    raddr = receivers[ int(nid) - nservers*server_scale]
+    raddr = ""
+    if cparam["flavor"] == "nacho" or cparam["flavor"] == "mango":
+      #if( server_scale == 1 ):
+      #    raddr = receivers
+      #else:
+          raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
+    elif cparam["flavor"] == "context":
+      raddr = receivers
+    #raddr = receivers[ int(nid) - nservers*server_scale]
 
     logfile = '{}/client-{}-{}.log'.format(
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
+    launch_cmd = '{application} {pfile} -role client -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.server {raddr}'.format(
         application=app,
         pfile=clientfile,
-        service=param["client_service"],
         sid=sender_id,
         port=ipaddr.strip().split(":")[1],
-        raddr=raddr))
-    r = Utils.process_exec('{application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
-        application=app,
-        pfile=clientfile,
-        service=param["client_service"],
-        sid=sender_id,
-        port=ipaddr.strip().split(":")[1],
-        raddr=raddr),
-        log=logfile)
+        raddr=raddr)
+    logger.info( '$ ' + launch_cmd )
+    r = Utils.process_exec(launch_cmd, log=logfile)
+
+    #r = Utils.process_exec('{application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
+    #    application=app,
+    #    pfile=clientfile,
+    #    service=cparam["client_service"],
+    #    sid=sender_id,
+    #    port=ipaddr.strip().split(":")[1],
+    #    raddr=raddr),
+    #    log=logfile)
 
     end_time = Utils.unixTime()
 
@@ -82,8 +107,20 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
 
     assert app_type == "server"
 
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="server-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["COMMON"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
+
     # Sleep
-    if param["flavor"] == "nacho":
+    if param["flavor"] == "nacho" or cparam["flavor"] == "mango":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
     elif param["flavor"] == "context":
         sleep_time = float(boot_wait_time)
@@ -109,7 +146,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     server_scale = int( param["lib.MApplication.initial_size"] )
     nservers = int( param["SERVER_LOGICAL_NODES"] )
     assert server_scale > 1
-    sid = (nid - nservers) / ( server_scale-1)
+    sid = (int( nid ) - nservers) / ( server_scale-1)
 
     # re-load parameters for the specific server
     #param = Utils.param_reader(options.paramfile)
@@ -119,12 +156,12 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -MACE_PORT {port} -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
+    logger.info('$ {application} {pfile} -role server -MACE_PORT {port} -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
         application=app,
         pfile=pfn,
         port=ipaddr.strip().split(":")[1]),
         sid)
-    r = Utils.process_exec('{application} {pfile} -MACE_PORT {port}  -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
+    r = Utils.process_exec('{application} {pfile} -role server -MACE_PORT {port}  -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
         application=app,
         pfile=pfn,
         port=ipaddr.strip().split(":")[1],
@@ -142,10 +179,22 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     assert app_type == "head"
 
+    #if param["EC2"] == 1:
+    # Launching sar
+    logname="head-{nid}-sar.log".format( nid=nid )
+    cmd='{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
+        bin = param["COMMON"],
+        logdir = param["SCRATCHDIR"],
+        logname = logname,
+        interval = "1",
+        runtime = param["run_time"])
+    print cmd
+    Utils.shell_exec(cmd)
+
     # Sleep
     logger.info("Sleeping %s...", boot_wait_time)
     sleep_time = float(boot_wait_time)
-    if param["flavor"] == "nacho":
+    if param["flavor"] == "nacho" or param["flavor"] == "mango":
         sleep_time += 0
     elif param["flavor"] == "context":
         # the fullcontext runtime assumes all peer nodes are ready when the head starts
@@ -175,7 +224,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
 
     pfn = paramfile + str( sid )
     app = "%s/%s" % (param["BIN"], param["BINARY"])
-    r = Utils.process_exec('{application} {pfile} -MACE_PORT {port}'.format(
+    r = Utils.process_exec('{application} {pfile} -role server -MACE_PORT {port}'.format(
         application=app,
         pfile=pfn,
         port=ipaddr.strip().split(":")[1]),
@@ -209,6 +258,7 @@ def main(options):
     logger.info("enter main")
     # Some initialization
     param = Utils.param_reader(options.paramfile)
+    cparam = Utils.param_reader(options.clientfile)
 
     if param["EC2"] == "1":
         myhost = Utils.shell_exec('hostname -f', verbose=False)
@@ -219,21 +269,11 @@ def main(options):
     Utils.chdir(param["SCRATCHDIR"])
     logdir=param["SCRATCHDIR"]
 
-
     # Configure log
     Utils.configureLogging('Benchmark', output_file='{}-console.log'.format(myhost),
             log_stdout=False,
             decorate_header=False)
     logger.info("myhost = %s" % myhost)
-
-    # Launching sar
-    #Utils.shell_exec('{bin}/worker-sar.sh {logdir} {logname} {interval} {runtime}'.format(
-        #binary = param["BINARY"],
-        #logdir = param["SCRATCHDIR"],
-        #logname = "client-%s-sar.log",
-        #interval = "1",
-        #runtime = param["run_time"]))
-
 
     # Read boot file and launch the application.
     # As defined in the boot file, you will run the process with Popen (in Utils.py)
@@ -258,7 +298,7 @@ def main(options):
             elif app_type == "client":
                 logger.info("launching worker nid = %s" % nid)
                 if int(nid) > 0:
-                    p = Process(target=execute_client, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, options.clientfile))
+                    p = Process(target=execute_client, args=(nid, boot_wait_time, ipaddr, hostname, app_type, param, options.paramfile, cparam, options.clientfile))
                     plist.append(p)
             else:
               raise Exception("unknown app type=" + app_type)

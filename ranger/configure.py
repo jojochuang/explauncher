@@ -5,8 +5,11 @@ import logging
 import random
 import math
 
-import Utils
 import sys
+import os
+script_path=os.path.dirname(os.path.abspath(__file__))
+sys.path.append( script_path + "/../common")
+import Utils
 
 logger = logging.getLogger('Benchmark.Configure')
 
@@ -527,19 +530,13 @@ class Configuration:
       param_file_name = options.paramfile + str(index)
       with open(param_file_name, "a") as f:
           # TODO: write lib.MApplication.nodeset
-          if param["flavor"] == "nacho":
+          if param["flavor"] == "nacho" or param["flavor"] == "mango" :
             f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( self.hostname[index], options.port+ index* self.port_shift ) );
           #elif param["flavor"] == "context":
           #  for j in range(self.num_servers):
           #    f.write( "lib.MApplication.nodeset = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
 
           f.write( '' );
-
-          # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
-          if param["EC2"] == "1":
-              f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -f | awk '{print $1}'", verbose=False)))
-          else:
-              f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))
 
           # WC: don't know the use of these two parameters
           # write down HEAD_IPADDR, which is the first node in the hosts file
@@ -568,7 +565,7 @@ class Configuration:
       day_period = self.day_period
       # Write to output client conf file
       with open(options.clientfile, "a") as f:
-          if param["flavor"] == "nacho":
+          if param["flavor"] == "nacho" or param["flavor"] == "mango" :
               for j in range(self.num_servers):
                 f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
           elif param["flavor"] == "context":

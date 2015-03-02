@@ -40,8 +40,9 @@ host_orig_file="../ec2/conf/hosts"
 host_run_file="conf/hosts-run"
 boot_file="conf/boot"
 
+flavor="mango"
+#flavor="context"
 #flavor="nacho"
-flavor="nacho"
 config_only=0 # don't run the experiment. just generate config files.
 
 

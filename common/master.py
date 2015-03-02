@@ -132,8 +132,9 @@ def main(options):
         num_machines=param["num_machines"], 
         run_time=param["run_time"],
         hostfile=param["HOSTRUNFILE"],
-        command=cmd),
-        verbose=False)
+        command=cmd)
+        )
+        #,verbose=False)
 
     # Adjust log directory permission
     Utils.shell_exec("chmod -R a+rwx %s" % log_dir)
