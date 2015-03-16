@@ -11,7 +11,7 @@ server_scale=1
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
 t_client_machines=1
 #n_client_logicalnode=2
-t_ncontexts=4
+t_ncontexts=1
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
@@ -26,7 +26,6 @@ port_shift=10  # spacing of ports between different nodes
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-#nruns=1      # number of replicated runs
 nruns=1      # number of replicated runs
 
 #context_policy="NO_SHIFT"
@@ -150,25 +149,33 @@ function runexp (){
   echo "lib.MApplication.initial_size = 1" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_client_file}
 
-  echo "ServiceConfig.PRTrafficGenerator.NKEYS = 100" >> ${conf_client_file}
-  echo "ServiceConfig.PRTrafficGenerator.READ_RATIO = 0.0" >> ${conf_client_file}
+############################
+#role = client
+
+  echo "ServiceConfig.ZKClient.NKEYS = 100" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.VALUELEN = 1024" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.SET_GET_RATIO = 0.1" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.NREQUEST_BATCH = 1" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.MEAN_TIME = 10000" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.GET_WAIT_TIME = 1000000" >> ${conf_client_file}
+############################
 
   # copy the param file for the server
   #echo -e "\n# Specific parameters for server" >> ${conf_file}
 
   echo "role = server" >>  ${conf_file}
-  echo "lib.MApplication.services = ParkRanger" >> ${conf_file}
+  echo "lib.MApplication.services = ZKReplica SimpleZab" >> ${conf_file}
   echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
-  #echo "ServiceConfig.ParkRanger.c = WCPaxos" >> ${conf_client_file}
-  echo "ServiceConfig.ParkRanger.c = DummyPaxos" >> ${conf_client_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
 
-  #    with open(options.paramfile, "a") as f:
-  #        # write down hostname0, which is the experiment initiator. (it may not be in hosts file)
-  #        if param["EC2"] == "1":
-  #            f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -f | awk '{print $1}'", verbose=False)))
-  #        else:
-  #            f.write( "hostname0 = %s\n" % (Utils.shell_exec("hostname -s | awk '{print $1}'", verbose=False)))
+############################
+#  role = server
+
+  echo "ServiceConfig.ZKReplica.NKEYSPACE = 1" >>  ${conf_file}
+
+  echo "ServiceConfig.SimpleZab.UPCALL_REGID = 2" >>  ${conf_file}
+  echo "ServiceConfig.SimpleZab.NUM_GROUPS = $t_ncontexts" >>  ${conf_file}
+############################
 
   if [[ $ec2 -eq 0 ]]; then
     hostname0=`hostname -s | awk '{print $1}'`
@@ -242,47 +249,41 @@ function init() {
 init
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
-#for t_server_machines in 3; do
-  #for t_client_machines in  4; do
-    n_client_logicalnode=$(( $t_client_machines * $logical_nodes_per_physical_nodes ))
+n_client_logicalnode=$(( $t_client_machines * $logical_nodes_per_physical_nodes ))
 
-    used_machines=$(( $t_client_machines +  $t_server_machines ))
+used_machines=$(( $t_client_machines +  $t_server_machines ))
 
-    # make sure client physical nodes + server physical nodes <= all physical nodes
-    if [ $used_machines -gt $n_machines ]; then
-      echo "use machines: ${used_machines} > machine list: ${n_machines} "
-      exit 1
+# make sure client physical nodes + server physical nodes <= all physical nodes
+if [ $used_machines -gt $n_machines ]; then
+  echo "use machines: ${used_machines} > machine list: ${n_machines} "
+  exit 1
+fi
+for t_primes in 1; do  # Additional computation payload at the server.
+  log_set_dir=`date --iso-8601="seconds"`
+  cleanup # function to remove files that aggregates data from multiple runs of the same setting.
+  log_set_dir=`date --iso-8601="seconds"`
+  for (( run=1; run <= $nruns; run++ )); do
+    mace_start_port=$((mace_start_port+500))
+    runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes
+
+    if [ $config_only -eq 0 ]; then
+      # generate plots for each run
+      $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
+      $plotter/run-timeseries.sh
+      $plotter/run-net.sh
+      #$plotter/run-latency.sh
+      $plotter/parse-utilization.sh
+      $plotter/run-utilization.sh
+      # publish plots and parameters and logs to web page
+      $common/publish.sh $log_set_dir
     fi
-    #for n_client_logicalnode in 8; do
-      for t_primes in 1; do  # Additional computation payload at the server.
-        log_set_dir=`date --iso-8601="seconds"`
-        cleanup # function to remove files that aggregates data from multiple runs of the same setting.
-        log_set_dir=`date --iso-8601="seconds"`
-        for (( run=1; run <= $nruns; run++ )); do
-          mace_start_port=$((mace_start_port+500))
-          runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes
+  done # end of nruns
 
-          if [ $config_only -eq 0 ]; then
-            # generate plots for each run
-            $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
-            $plotter/run-timeseries.sh
-            $plotter/run-net.sh
-            #$plotter/run-latency.sh
-            $plotter/parse-utilization.sh
-            $plotter/run-utilization.sh
-            # publish plots and parameters and logs to web page
-            $common/publish.sh $log_set_dir
-          fi
-        done # end of nruns
+  if [ $config_only -eq 0 ]; then
+    # plot the average throughput w/ error across all runs
+    aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
 
-        if [ $config_only -eq 0 ]; then
-          # plot the average throughput w/ error across all runs
-          aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
-
-          $common/publish_webindex.sh $log_set_dir
-        fi
-      done # end of total_events
-    #done
-  #done
-#done
+    $common/publish_webindex.sh $log_set_dir
+  fi
+done # end of total_events
 

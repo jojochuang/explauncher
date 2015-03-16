@@ -67,30 +67,34 @@ def main(options):
     # Sync the conf/* if needed
     # Affected files are : boot hosts-run hosts-run-nohead params-run.conf
     if param["SYNC_CONF_FILES"] == "1":
-        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {bootfile} {confdir}'.format(
+        Utils.shell_exec('{pssh_dir}/pssh -v -h {hostfile} mkdir {confdir}/'.format(
+            pssh_dir=param["PSSHDIR"],
+            hostfile=param["HOSTRUNFILE"],
+            confdir=param["CONFDIR"]))
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {bootfile} {confdir}/'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
             bootfile=param["BOOTFILE"],
             confdir=param["CONFDIR"]))
 
-        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostfile} {confdir}'.format(
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostfile} {confdir}/'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
             confdir=param["CONFDIR"]))
 
-        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostnoheadfile} {confdir}'.format(
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {hostnoheadfile} {confdir}/'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
             hostnoheadfile=param["HOSTNOHEADFILE"],
             confdir=param["CONFDIR"]))
 
-        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile}* {confdir}'.format(
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile}* {confdir}/'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
             conffile=param["SERVER_CONFFILE"],
             confdir=param["CONFDIR"]))
 
-        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}'.format(
+        Utils.shell_exec('{pssh_dir}/pscp -v -h {hostfile} {conffile} {confdir}/'.format(
             pssh_dir=param["PSSHDIR"],
             hostfile=param["HOSTRUNFILE"],
             conffile=param["CLIENT_CONFFILE"],

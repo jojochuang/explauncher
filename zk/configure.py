@@ -94,12 +94,12 @@ class Configuration:
   def write_scale_out_in(self, f ):
 
       param = self.param
-      service_name = param["server_service"]
+      #service_name = param["server_service"]
       num_server_machines = self.num_server_machines
       # Put all the contexts in different node
 
       server_scale = int ( param["lib.MApplication.initial_size"] )
-      # Building
+      # Upper service
       for i in range(self.num_contexts):
           if param["CONTEXT_ASSIGNMENT_POLICY"] == "NO_SHIFT":
             #sid = (0 + i % (num_server_machines) ) % self.num_machines
@@ -114,48 +114,43 @@ class Configuration:
             print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
             sys.exit()
 
-          f.write( 'lib.MApplication.{}.mapping = {}:Path[{}]\n'.format(
-              service_name, sid, i))
-          f.write( 'lib.MApplication.WCPaxos.mapping = {}:Proposal[{}]\n'.format(
-              sid, i))
-          f.write( 'lib.MApplication.WCPaxos.mapping = {}:Acceptor[{}]\n'.format(
-              sid, i))
-          f.write( 'lib.MApplication.WCPaxos.mapping = {}:Client[{}]\n'.format(
+          f.write( 'lib.MApplication.ZKReplica.mapping = {}:KeySpace[{}]\n'.format(
               sid, i))
 
-      # Kids
-      #for i in range(num_clients):
-      #    sid = (1 + i % num_server_machines) % self.num_machines
-      #    f.write( 'mapping = {}:Kid[{}]\n'.format(
-      #        sid, i))
-      #    f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
-      #        service_name, sid, i))
+      # Lower service
+      for i in range(self.num_contexts):
+          if param["CONTEXT_ASSIGNMENT_POLICY"] == "NO_SHIFT":
+            #sid = (0 + i % (num_server_machines) ) % self.num_machines
+            sid = i % server_scale
+          elif param["CONTEXT_ASSIGNMENT_POLICY"] == "SHIFT_BY_ONE":
+            #sid = (0 + (i+1) % (num_server_machines) ) % self.num_machines
+            sid = (i+1) % server_scale
+          elif param["CONTEXT_ASSIGNMENT_POLICY"] == "RANDOM":
+            #sid = (0 + random.randint(0, (num_server_machines) ) % (num_server_machines) ) % self.num_machines
+            sid = random.randint(0, (server_scale-1) )
+          else:
+            print "Unrecognized parameter " . param["CONTEXT_ASSIGNMENT_POLICY"]
+            sys.exit()
 
-      # Also, add migration code
+          # put Leader<x> and Follower<x> at the same physical node.
+          
+          f.write( 'lib.MApplication.SimpleZab.mapping = {}:Leader[{}]\n'.format(
+              sid, i))
+          f.write( 'lib.MApplication.SimpleZab.mapping = {}:Follower[{}]\n'.format(
+              sid, i))
+
+
+      # Do not support migration
       return
 
   def write_scale_in_out(self,  f ):
-      service_name = self.param["server_service"]
-      # Put all the contexts in 1's node
-
-      # Building
-      for i in range(self.num_contexts):
-          #f.write( 'mapping = {}:Building[{}]\n'.format(
-          #    1, i))
-          f.write( 'lib.MApplication.{}.mapping = {}:Path[{}]\n'.format(
-              service_name, 1, i))
-
-      # Kids
-      #for i in range(num_clients):
-      #    f.write( 'mapping = {}:Kid[{}]\n'.format(
-      #        1, i))
-      #    f.write( 'lib.MApplication.{}.mapping = {}:Kid[{}]\n'.format(
-      #        service_name, 1, i))
-
-      # Also, add migration code
+      print "DO not support SCALE_IN_OUT"
+      sys.exit()
       return
 
   def write_combined_migration(self,  f, serveraddr ):
+      print "DO not support COMBINED_MIGRATION"
+      sys.exit()
       param = self.param
       service_name = param["server_service"]
       num_servers = self.num_servers
@@ -530,6 +525,13 @@ class Configuration:
       param_file_name = options.paramfile + str(index)
       with open(param_file_name, "a") as f:
           # TODO: write lib.MApplication.nodeset
+          server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+          for j in range( server_nodes ):
+              f.write("ServiceConfig.SimpleZab.FOLLOWERS = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+
+          # set leader as the first follower
+          f.write("ServiceConfig.SimpleZab.LEADER = IPV4/{}:{}\n".format( self.hostname[0], options.port ) );
+
           if param["flavor"] == "nacho" or param["flavor"] == "mango" :
             f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( self.hostname[index], options.port+ index* self.port_shift ) );
           #elif param["flavor"] == "context":
@@ -784,7 +786,3 @@ if __name__ == "__main__":
     main_end_time = Utils.unixTime()
 
     #logger.info("Total time : %f sec", main_end_time - main_start_time)
-
-
-    
-

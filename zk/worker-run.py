@@ -27,7 +27,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
         logname = logname,
         interval = "1",
         runtime = param["run_time"])
-    print cmd
+    #print cmd
     Utils.shell_exec(cmd)
 
     # re-load parameters for the specific server
@@ -70,7 +70,8 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
       #if( server_scale == 1 ):
       #    raddr = receivers
       #else:
-          raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
+          #raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
+          raddr = receivers[ 0  ]
     elif cparam["flavor"] == "context":
       raddr = receivers
     #raddr = receivers[ int(nid) - nservers*server_scale]
@@ -79,7 +80,7 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             logdir,
             hostname,
             nid)
-    launch_cmd = '{application} {pfile} -role client -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.server {raddr}'.format(
+    launch_cmd = '{application} {pfile} -role client -ServiceConfig.ZKClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ZKClient.server {raddr}'.format(
         application=app,
         pfile=clientfile,
         sid=sender_id,
@@ -87,15 +88,6 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
         raddr=raddr)
     logger.info( '$ ' + launch_cmd )
     r = Utils.process_exec(launch_cmd, log=logfile)
-
-    #r = Utils.process_exec('{application} {pfile} -ServiceConfig.ParkRangerClient.SENDER_ID {sid} -MACE_PORT {port} -ServiceConfig.ParkRangerClient.receiver_addr {raddr}'.format(
-    #    application=app,
-    #    pfile=clientfile,
-    #    service=cparam["client_service"],
-    #    sid=sender_id,
-    #    port=ipaddr.strip().split(":")[1],
-    #    raddr=raddr),
-    #    log=logfile)
 
     end_time = Utils.unixTime()
 
@@ -116,7 +108,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
         logname = logname,
         interval = "1",
         runtime = param["run_time"])
-    print cmd
+    #print cmd
     Utils.shell_exec(cmd)
 
     # Sleep
@@ -156,16 +148,15 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
             logdir,
             hostname,
             nid)
-    logger.info('$ {application} {pfile} -role server -MACE_PORT {port} -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
+    logger.info('$ {application} {pfile} -role server -MACE_PORT {port}'.format(
+        application=app,
+        pfile=pfn,
+        port=ipaddr.strip().split(":")[1])
+        )
+    r = Utils.process_exec('{application} {pfile} -role server -MACE_PORT {port}'.format(
         application=app,
         pfile=pfn,
         port=ipaddr.strip().split(":")[1]),
-        sid)
-    r = Utils.process_exec('{application} {pfile} -role server -MACE_PORT {port}  -ServiceConfig.ParkRanger.SERVER_ID {sid}'.format(
-        application=app,
-        pfile=pfn,
-        port=ipaddr.strip().split(":")[1],
-        sid=sid),
         log=logfile)
 
     end_time = Utils.unixTime()
@@ -188,7 +179,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
         logname = logname,
         interval = "1",
         runtime = param["run_time"])
-    print cmd
+    #print cmd
     Utils.shell_exec(cmd)
 
     # Sleep
