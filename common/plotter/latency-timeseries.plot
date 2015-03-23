@@ -13,7 +13,7 @@ set terminal postscript enhanced eps color "Helvetica" 22
 #plot "data/client-latency.ts" u 1:2
 #set yrange [0:GPVAL_Y_MAX]
 #set ytics 0,1000,GPVAL_Y_MAX
-set yrange [0:10000]
+set yrange [0:30000]
 #set ytics 0,5000,50000
 
 #plot "data/head-nplayers" u 1:2

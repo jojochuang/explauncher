@@ -4,29 +4,21 @@ source conf/conf.sh
 source ../common.sh
 cwd=`pwd`
 
-if [[ $# -ge 2 ]]; then
-  type=$1
-  logdir=$2
+if [[ $# -ge 1 ]]; then
+  logdir=$1
 fi
 
 cd $logdir
 
 # Which file do you want to plot?
-if [[ "$type" = "instant" ]]; then
-  # find the latest log dir
-  dir="."
-  echo "dir=$dir"
-  # find the latest log set in the dir
-  headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.log.gz'`)
-  svfile=(`find $dir -name 'server-*[^sar]\.log\.gz'`)
-else
-  dir=`ls -t | sed /^total/d | head -1 | tr -d '\r\n'`
-  headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
-  clifile=(`find $dir -name '*player*.log.gz'`)
-  nsfile=(`find $dir -name '*.nserver.conf' | tail -1`)
-  cutoff=220000000
-fi
+# find the latest log dir
+dir="."
+echo "dir=$dir"
+# find the latest log set in the dir
+#headfile=(`find $dir -name 'head-*[^sar]\.log\.gz' | tail -1`)
+headfile=(`find $dir -name 'head-*[^sar]\.log\.gz'`)
+clifile=(`find $dir -name '*player*.log.gz'`)
+svfile=(`find $dir -name 'server-*[^sar]\.log\.gz'`)
 
 start_time=0
 echo "headfile = $headfile"
@@ -35,29 +27,50 @@ for f in "${headfile[@]}"; do
   echo "head = $f"
 
   start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
-  start_time=$start_time_us
+  head_start_time=$start_time_us
 
-  if [ -z "$start_time" ]; then
+  if [ -z "$head_start_time" ]; then
     echo "start time not found in the log"
     exit 1
   else
-  echo "start time at $start_time"
+    echo "start at $head_start_time"
+  fi
+  
+  if [ $start_time -eq 0 ]; then
+      start_time=$head_start_time
+  elif [ $start_time > $head_start_time ]; then
+      start_time=$head_start_time
+  fi
+done
+for f in "${headfile[@]}"; do
+  echo "head = $f"
+
+  #start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
+  #start_time=$start_time_us
+
+  #if [ -z "$start_time" ]; then
+  #  echo "start time not found in the log"
+  #  exit 1
+  #else
+  #  echo "start time at $start_time"
 
     # throughput
-    out="${cwd}/data/net-write-head.ts"
+    #out="${cwd}/data/net-write-head.ts"
+    out="${cwd}/data/net-write-"`echo $f|sed 's/^.*\///'| sed 's/\.log\.gz//'`".ts" #remove the file name suffix
     if [ -f $out ]; then
       rm $out
     fi
     echo "producing $out"
     zgrep -a -e "Accumulator::NETWORK_WRITE" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
 
-    out="${cwd}/data/net-read-head.ts"
+    #out="${cwd}/data/net-read-head.ts"
+    out="${cwd}/data/net-read-"`echo $f|sed 's/^.*\///'| sed 's/\.log\.gz//'`".ts" #remove the file name suffix
     if [ -f $out ]; then
       rm $out
     fi
     echo "producing $out"
     zgrep -a -e "Accumulator::NETWORK_READ" $f | awk "{ T=int(\$1 - $start_time); print T\"\t\"\$5}" | sort -k +1n > $out
-  fi
+  #fi
 
 done
 

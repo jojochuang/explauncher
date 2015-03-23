@@ -132,7 +132,7 @@ cat <<EOF >> ${log_page}
   <p>Round-trip latency of Get request</p>
   <img src="latency-timeseries.png"></img></a> </td> </tr>
 <tr> <td> <a href="combined-latency.png">
-  <p>Combined Round-trip latency of Get request</p>
+  <p>Round-trip latency of Get request versus server scale </p>
   <img src="combined-latency.png"></img></a> </td> </tr>
 EOF
 fi

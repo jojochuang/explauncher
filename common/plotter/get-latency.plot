@@ -7,7 +7,8 @@ set terminal postscript enhanced eps color "Helvetica" 22
 set yrange [0:100]
 set autoscale ymax
 
-set xrange [0:10000]
+#set xrange [0:10000]
+set xrange [0:20000]
 #set autoscale xmax
 
 set ylabel "C.D.F." font "Helvetica,22" tc lt 1

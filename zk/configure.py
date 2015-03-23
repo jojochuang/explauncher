@@ -487,7 +487,8 @@ class Configuration:
           for j in range(self.num_servers - server_nodes):
               #sid = (1 + j % self.num_server_machines) % self.num_machines
               sid = (j % self.num_server_machines) % self.num_machines
-              self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
+              #self.boot(i, boot_time, self.ipaddr[sid], options.port+i* self.port_shift, hostname[sid], "server", f) 
+              self.boot(i, boot_time, self.ipaddr[i], options.port+i* self.port_shift, hostname[i], "server", f) 
               i += 1
               boot_time += boot_period
 
@@ -524,13 +525,26 @@ class Configuration:
       # do I write to multiple param files?
       param_file_name = options.paramfile + str(index)
       with open(param_file_name, "a") as f:
-          # TODO: write lib.MApplication.nodeset
           server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+          server_machines = int( self.param["num_server_machines"] )
+          for j in range( 0, server_machines, 3):
+              f.write("v1.nodes = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+
+          for j in range( 1, server_machines, 3):
+              f.write("v2.nodes = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+
+          for j in range( 2, server_machines, 3):
+              f.write("v3.nodes = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+
+
+          # TODO: write lib.MApplication.nodeset
           for j in range( server_nodes ):
-              f.write("ServiceConfig.SimpleZab.FOLLOWERS = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+              #f.write("ServiceConfig.SimpleZab.FOLLOWERS = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+              f.write("ServiceConfig.SimpleZab.FOLLOWERS = VNODE/{}\n".format( j+1 ) );
 
           # set leader as the first follower
-          f.write("ServiceConfig.SimpleZab.LEADER = IPV4/{}:{}\n".format( self.hostname[0], options.port ) );
+          #f.write("ServiceConfig.SimpleZab.LEADER = IPV4/{}:{}\n".format( self.hostname[0], options.port ) );
+          f.write("ServiceConfig.SimpleZab.LEADER = VNODE/1\n" );
 
           if param["flavor"] == "nacho" or param["flavor"] == "mango" :
             f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( self.hostname[index], options.port+ index* self.port_shift ) );
@@ -568,8 +582,11 @@ class Configuration:
       # Write to output client conf file
       with open(options.clientfile, "a") as f:
           if param["flavor"] == "nacho" or param["flavor"] == "mango" :
-              for j in range(self.num_servers):
-                f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
+            server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+            #server_scale = int ( param["lib.MApplication.initial_size"] )
+            #for j in range(0,self.num_servers, server_scale):
+            for j in range(server_nodes):
+              f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
           elif param["flavor"] == "context":
             server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
             for j in range(server_nodes):

@@ -22,18 +22,18 @@ if [[ $? -ne 0 ]]; then
   #exit 0
 fi
 
-# generate data points from the log
-$plotter/parse-network-timeseries.sh $type $logset
-# generate eps plot using the data points
-gnuplot < $plotter/net-write-timeseries-combined.plot
-gnuplot < $plotter/net-read-timeseries-combined.plot
-
 fs=`find data/ -name 'net-*.ts'`
 if [ -z "$fs" ]; then
   echo "no net-*.ts found in data/"
 else
   rm $fs
 fi
+
+# generate data points from the log
+$plotter/parse-network-timeseries.sh $logset
+# generate eps plot using the data points
+gnuplot < $plotter/net-write-timeseries-combined.plot
+gnuplot < $plotter/net-read-timeseries-combined.plot
 
 # generate pdf files using the eps file.
 cd result

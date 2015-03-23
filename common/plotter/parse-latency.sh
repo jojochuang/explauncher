@@ -67,10 +67,10 @@ for f in "${clifile[@]}"; do
   fi
   touch $out
   
-  zgrep -a -e "GET" $f |  awk 'BEGIN{start_time=0}{if($3 == "[BS_KeyValueClient]" ){lat[ int($1) ] += $8; count[ int($1) ]++;}if(start_time==0){start_time=int($1)} } END{for(x in lat){print (x) "\t" (lat[x]/count[x]) } }' | sort -n  > $out
-  zgrep -a -e "GET" $f |  awk '{if($3 == "[BS_KeyValueClient]" ){print $8} }'  >> $get_out
+  zgrep -a -e "GET" $f |  awk 'BEGIN{start_time=0}{if($3 == "[ZKClient]" ){lat[ int($1) ] += $8; count[ int($1) ]++;}if(start_time==0){start_time=int($1)} } END{for(x in lat){print (x) "\t" (lat[x]/count[x]) } }' | sort -n  > $out
+  zgrep -a -e "GET" $f |  awk '{if($3 == "[ZKClient]" ){print $8} }'  >> $get_out
 
-  zgrep -a -e "PUT" $f |  awk '{if($3 == "[BS_KeyValueClient]" ){print $8} }'  >> $put_out
+  zgrep -a -e "PUT" $f |  awk '{if($3 == "[ZKClient]" ){print $8} }'  >> $put_out
 done
 
 # aggregate time series

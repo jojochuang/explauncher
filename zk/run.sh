@@ -7,11 +7,11 @@ source ../init.sh
 mace_start_port=30000
 # number of server logical nodes does not change
 n_server_logicalnode=3
-server_scale=1
+server_scale=2
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=1
+t_client_machines=2
 #n_client_logicalnode=2
-t_ncontexts=1
+t_ncontexts=8
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
@@ -66,7 +66,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClient\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -156,7 +156,8 @@ function runexp (){
   echo "ServiceConfig.ZKClient.VALUELEN = 1024" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.SET_GET_RATIO = 0.1" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.NREQUEST_BATCH = 1" >> ${conf_client_file}
-  echo "ServiceConfig.ZKClient.MEAN_TIME = 10000" >> ${conf_client_file}
+  #echo "ServiceConfig.ZKClient.MEAN_TIME = 10000" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.MEAN_TIME = 2000" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.GET_WAIT_TIME = 1000000" >> ${conf_client_file}
 ############################
 
@@ -167,7 +168,11 @@ function runexp (){
   echo "lib.MApplication.services = ZKReplica SimpleZab" >> ${conf_file}
   echo "lib.MApplication.initial_size = ${server_scale}" >> ${conf_file}
   echo "MACE_LOG_AUTO_ALL = 0" >> ${conf_file}
-
+  echo "LOGICAL_NAME_SERVER = param" >> ${conf_file}
+  echo "LOGICAL_NAMES = v1 v2 v3" >> ${conf_file}
+  echo "v1.addr = VNODE/1" >> ${conf_file}
+  echo "v2.addr = VNODE/2" >> ${conf_file}
+  echo "v3.addr = VNODE/3" >> ${conf_file}
 ############################
 #  role = server
 
@@ -232,8 +237,8 @@ function aggregate_output () {
   label="$flavor-$t_clients-$t_primes"
   $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
   $plotter/run-avg.sh
-  #$plotter/avg-latency.sh
-  #$plotter/stat-latency.sh $label
+  $plotter/avg-latency.sh
+  $plotter/stat-latency.sh $label
   $plotter/avg-utilization.sh 
   $plotter/stat-utilization.sh $label
   $plotter/plot_service.sh
@@ -271,7 +276,7 @@ for t_primes in 1; do  # Additional computation payload at the server.
       $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
       $plotter/run-timeseries.sh
       $plotter/run-net.sh
-      #$plotter/run-latency.sh
+      $plotter/run-latency.sh
       $plotter/parse-utilization.sh
       $plotter/run-utilization.sh
       # publish plots and parameters and logs to web page

@@ -70,8 +70,8 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
       #if( server_scale == 1 ):
       #    raddr = receivers
       #else:
-          #raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
-          raddr = receivers[ 0  ]
+          raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
+          #raddr = receivers[ 0  ]
     elif cparam["flavor"] == "context":
       raddr = receivers
     #raddr = receivers[ int(nid) - nservers*server_scale]
@@ -112,7 +112,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     Utils.shell_exec(cmd)
 
     # Sleep
-    if param["flavor"] == "nacho" or cparam["flavor"] == "mango":
+    if param["flavor"] == "nacho" or param["flavor"] == "mango":
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
     elif param["flavor"] == "context":
         sleep_time = float(boot_wait_time)
