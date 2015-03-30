@@ -26,7 +26,7 @@ echo "headfile = $headfile"
 for f in "${headfile[@]}"; do
   echo "head = $f"
 
-  start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print $1}' | tr -d '\r\n'`
+  start_time_us=`zgrep -a -e "HeadEventTP::constructor" $f | head -1 | awk '{print int($1)}' | tr -d '\r\n'`
   head_start_time=$start_time_us
 
   if [ -z "$head_start_time" ]; then
@@ -38,7 +38,7 @@ for f in "${headfile[@]}"; do
   
   if [ $start_time -eq 0 ]; then
       start_time=$head_start_time
-  elif [ $start_time > $head_start_time ]; then
+  elif [ $start_time -gt $head_start_time ]; then
       start_time=$head_start_time
   fi
 done

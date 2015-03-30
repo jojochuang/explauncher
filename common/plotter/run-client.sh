@@ -21,25 +21,25 @@ if [[ $? -ne 0 ]]; then
   echo "There is assertion failure."
   #exit 0
 fi
-fs=`find data/ -name 'throughput-server*.ts'  -o -name 'throughput-head*.ts'`
+fs=`find data/ -name 'throughput-client*.ts'`
 if [ -z "$fs" ]; then
-  echo "no throughput-{head,server}*.ts found in data/"
+  echo "no throughput-client*.ts found in data/"
 else
   rm $fs
 fi
 # generate data points from the log
-$plotter/parse-timeseries.sh $type $logset
+$plotter/parse-client.sh $type $logset
 # generate eps plot using the data points
-gnuplot < $plotter/timeseries-throughput-combined.plot
+gnuplot < $plotter/timeseries-client-combined.plot
 
 # generate pdf files using the eps file.
 cd result
-if [[ ! -f "throughput.eps" ]]; then
-  echo "throughput.eps not found!"
+if [[ ! -f "client-throughput.eps" ]]; then
+  echo "client-throughput.eps not found!"
   exit 1
 fi
 ls *.eps | xargs --max-lines=1 epspdf
-convert -density 150  throughput.pdf throughput.png
+convert -density 150  client-throughput.pdf client-throughput.png
 
 fs=`find . -name '*.eps'`
 if [ -z $fs ]; then
@@ -47,3 +47,4 @@ if [ -z $fs ]; then
 else
   rm $fs
 fi
+

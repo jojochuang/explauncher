@@ -9,19 +9,20 @@ mace_start_port=30000
 n_server_logicalnode=3
 server_scale=2
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=2
+t_client_machines=4
 #n_client_logicalnode=2
-t_ncontexts=8
+t_ncontexts=128
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
 
-logical_nodes_per_physical_nodes=2
+logical_nodes_per_physical_nodes=3
 
 runtime=100 # duration of the experiment
+server_boot_time=40
 boottime=20   # total time to boot.
 server_join_wait_time=0
-client_wait_time=0
+client_wait_time=10
 port_shift=10  # spacing of ports between different nodes
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
@@ -57,6 +58,7 @@ function GenerateBenchmarkParameter (){
   echo "port_shift = ${port_shift}" >> ${conf_file}
   echo "SERVER_LOGICAL_NODES = ${n_server_logicalnode}" >> ${conf_file}
   echo "TOTAL_BOOT_TIME = ${boottime}" >> ${conf_file}
+  echo "SERVER_BOOT_TIME = ${server_boot_time}" >> ${conf_file}
 
   echo "HOSTNOHEADFILE = ${conf_dir}/hosts-run-nohead" >> $conf_file
   echo "BINARY = ${application}_${flavor}" >> ${conf_file}
@@ -66,7 +68,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClient\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -91,7 +93,7 @@ function runexp (){
   t_server_machines=$1
   t_client_machines=$2
   t_clients=$3
-  t_primes=$4
+  t_mean=$4
 
   # For each server machine, run only one server process.
   # minus the bootstrapper node
@@ -115,17 +117,6 @@ function runexp (){
   GenerateBenchmarkParameter ${conf_file}
 
   # Generate parameters common to server and clients in this benchmark
-  #echo "ServiceConfig.Throughput.NSENDERS = ${initial_server_size}" >>  ${conf_file}
-  #echo "ServiceConfig.Throughput.NUM_PRIMES = ${t_primes}" >> ${conf_file}
-  #echo "ServiceConfig.Throughput.NCONTEXTS = ${t_ncontexts}" >>  ${conf_file}
-
-  # write ServiceConfig.WCPaxos.UPCALL_REGID = 
-  # write ServiceConfig.WCPaxos.ROLE = 
-  # write ServiceConfig.WCPaxos.ROUNDS1 = 
-  # write ServiceConfig.WCPaxos.WRITE = 
-  # write ServiceConfig.WCPaxos.ACCEPTORS = 
-  # write ServiceConfig.WCPaxos.PROPOSAL_NUM = 
-
   echo "num_machines = ${t_machines}" >> ${conf_file}
   echo "num_server_machines = ${t_server_machines}" >> ${conf_file}
   echo "num_client_machines = ${t_client_machines}" >> ${conf_file}
@@ -156,8 +147,7 @@ function runexp (){
   echo "ServiceConfig.ZKClient.VALUELEN = 1024" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.SET_GET_RATIO = 0.1" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.NREQUEST_BATCH = 1" >> ${conf_client_file}
-  #echo "ServiceConfig.ZKClient.MEAN_TIME = 10000" >> ${conf_client_file}
-  echo "ServiceConfig.ZKClient.MEAN_TIME = 2000" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.MEAN_TIME = ${t_mean}" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.GET_WAIT_TIME = 1000000" >> ${conf_client_file}
 ############################
 
@@ -208,14 +198,14 @@ function runexp (){
   if [ $config_only -eq 0 ]; then
     if [[ $ec2 -eq 0 ]]; then
       # do not use monitor
-      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}\e[00m"
-      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_mean}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_mean}
 
     else
       # do not use monitor
       #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_primes}-e${total_events}-l${t_payload}\e[00m"
-      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_primes}
+      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_mean}-e${total_events}-l${t_payload}\e[00m"
+      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_mean}
     fi
     sleep 10
   fi
@@ -224,8 +214,9 @@ function runexp (){
 
 function aggregate_output () {
   log_set_dir=$1
-  t_clients=$2
-  t_primes=$3
+  t_server_scale=$2
+  t_clients=$3
+  t_mean=$4
   # create a new directory for the set of logs
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
@@ -234,13 +225,15 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  label="$flavor-$t_clients-$t_primes"
+  label="$flavor-$t_server_scale-$t_clients-$t_mean"
   $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
   $plotter/run-avg.sh
   $plotter/avg-latency.sh
   $plotter/stat-latency.sh $label
   $plotter/avg-utilization.sh 
   $plotter/stat-utilization.sh $label
+  $plotter/avg-client.sh
+  $plotter/stat-client.sh $label
   $plotter/plot_service.sh
 }
 
@@ -263,13 +256,14 @@ if [ $used_machines -gt $n_machines ]; then
   echo "use machines: ${used_machines} > machine list: ${n_machines} "
   exit 1
 fi
-for t_primes in 1; do  # Additional computation payload at the server.
+#for t_mean in 100000 50000 25000; do  # Additional computation payload at the server.
+for t_mean in 100000 50000 25000 10000 5000 2500 1000; do  # Additional computation payload at the server.
   log_set_dir=`date --iso-8601="seconds"`
   cleanup # function to remove files that aggregates data from multiple runs of the same setting.
   log_set_dir=`date --iso-8601="seconds"`
   for (( run=1; run <= $nruns; run++ )); do
     mace_start_port=$((mace_start_port+500))
-    runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_primes
+    runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_mean
 
     if [ $config_only -eq 0 ]; then
       # generate plots for each run
@@ -279,6 +273,7 @@ for t_primes in 1; do  # Additional computation payload at the server.
       $plotter/run-latency.sh
       $plotter/parse-utilization.sh
       $plotter/run-utilization.sh
+      $plotter/run-client.sh
       # publish plots and parameters and logs to web page
       $common/publish.sh $log_set_dir
     fi
@@ -286,7 +281,7 @@ for t_primes in 1; do  # Additional computation payload at the server.
 
   if [ $config_only -eq 0 ]; then
     # plot the average throughput w/ error across all runs
-    aggregate_output $log_set_dir $n_client_logicalnode $t_primes 
+    aggregate_output $log_set_dir $server_scale $n_client_logicalnode $t_mean 
 
     $common/publish_webindex.sh $log_set_dir
   fi

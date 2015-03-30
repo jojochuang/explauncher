@@ -40,6 +40,9 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     elif cparam["flavor"] == "context":
         sleep_time = float(boot_wait_time)
         sleep_time += int(cparam["CLIENT_WAIT_TIME"])+int(cparam["WORKER_JOIN_WAIT_TIME"])
+    elif cparam["flavor"] == "mace":
+        sleep_time = float(boot_wait_time)
+        sleep_time += int(cparam["CLIENT_WAIT_TIME"])+int(cparam["WORKER_JOIN_WAIT_TIME"])
 
     logger.info("Sleeping %d...", sleep_time )
 
@@ -73,6 +76,8 @@ def execute_client(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
           raddr = receivers[ (int(nid) - len(receivers))% len(receivers)  ]
           #raddr = receivers[ 0  ]
     elif cparam["flavor"] == "context":
+      raddr = receivers
+    elif cparam["flavor"] == "mace":
       raddr = receivers
     #raddr = receivers[ int(nid) - nservers*server_scale]
 
@@ -116,6 +121,8 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
         sleep_time = float(boot_wait_time)+int(param["WORKER_JOIN_WAIT_TIME"])
     elif param["flavor"] == "context":
         sleep_time = float(boot_wait_time)
+    elif param["flavor"] == "mace":
+        sleep_time = float(boot_wait_time)
 
     logger.info("Sleeping %d...", sleep_time )
 
@@ -125,7 +132,7 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     logdir = param["SCRATCHDIR"]
 
     # Create and move into subdir
-    subdir='{}/client-{}'.format(logdir,nid)
+    subdir='{}/server-{}'.format(logdir,nid)
     Utils.mkdirp(subdir)
     Utils.chdir(subdir)
 
@@ -138,7 +145,8 @@ def execute_server(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile
     server_scale = int( param["lib.MApplication.initial_size"] )
     nservers = int( param["SERVER_LOGICAL_NODES"] )
     assert server_scale > 1
-    sid = (int( nid ) - nservers) / ( server_scale-1)
+    #sid = (int( nid ) - nservers) / ( server_scale-1)
+    sid = int( nid ) % nservers
 
     # re-load parameters for the specific server
     #param = Utils.param_reader(options.paramfile)
@@ -190,6 +198,9 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
     elif param["flavor"] == "context":
         # the fullcontext runtime assumes all peer nodes are ready when the head starts
         sleep_time += int(param["WORKER_JOIN_WAIT_TIME"])
+    elif param["flavor"] == "context":
+        sleep_time += 0
+
     sleep( sleep_time )
 
     # Log filename
@@ -200,7 +211,7 @@ def execute_head(nid,boot_wait_time,ipaddr,hostname,app_type, param, paramfile):
             nid)
 
     # Create and move into subdir
-    subdir='{}/client-{}'.format(logdir,nid)
+    subdir='{}/head-{}'.format(logdir,nid)
     Utils.mkdirp(subdir)
     Utils.chdir(subdir)
 

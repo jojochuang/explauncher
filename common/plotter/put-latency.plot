@@ -23,7 +23,7 @@ set style histogram gap 1
 set style data histogram
 set style fill solid border -1 
 
-bw = 100
+bw = 1000
 bin(x,width)=width*floor(x/width)
 x=system("wc data/put-latency.ts|awk '{print $1}'")
 

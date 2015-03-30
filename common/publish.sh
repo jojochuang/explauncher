@@ -54,12 +54,17 @@ cp data/conn.dot ${webdir}/${log_set_dir}/$last_log_dir
 conn_graph=`ls -tr result/conn*.png | tail -n1 | awk -F/ '{print $NF}' `
 cp result/${conn_graph} ${webdir}/${log_set_dir}/$last_log_dir
 cp result/throughput.png ${webdir}/${log_set_dir}/$last_log_dir
+cp result/client-throughput.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/net-write.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/utilization-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
-if [ -f result/latency-timeseries.png ]; then 
-    cp result/latency-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
+if [ -f result/get-latency-timeseries.png ]; then 
+    cp result/get-latency-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
     cp result/combined-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+fi
+if [ -f result/put-latency-timeseries.png ]; then 
+    cp result/put-latency-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
+    #cp result/combined-latency.png ${webdir}/${log_set_dir}/$last_log_dir
 fi
 if [ -f result/get-latency.png ]; then 
   cp result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
@@ -91,54 +96,74 @@ cat <<EOF > ${log_page}
 <tr> <td> <a href="conn.dot">conn.dot</a> </td> </tr>
 
 <tr> <td> client logs, server logs... </td> </tr>
+<tr> 
 EOF
 
 if [ -f result/get-latency.png ]; then 
 cat <<EOF >> ${log_page}
-<tr> <td> <a href="get-latency.png">
+<td> <a href="get-latency.png">
   <p>Round-trip latency of Get request</p>
-  <img src="get-latency.png"></img></a> </td> </tr>
+  <img src="get-latency.png"></img></a> </td>
 EOF
 fi
 
 
 if [ -f result/put-latency.png ]; then 
 cat <<EOF >> ${log_page}
-<tr> <td> <a href="put-latency.png">
+<td> <a href="put-latency.png">
   <p>Round-trip latency of Put request</p>
-  <img src="put-latency.png"></img></a> </td> </tr>
+  <img src="put-latency.png"></img></a> </td>
 EOF
 fi
 
 
 cat <<EOF >> ${log_page}
+ </tr>
 <tr> <td> <a href="net-write.png">
   <p>Network Write time series</p>
-  <img src="net-write.png"></img></a> </td> </tr>
-<tr> <td> <a href="net-read.png">
+  <img src="net-write.png"></img></a> </td>
+     <td> <a href="net-read.png">
   <p>Network Read time series</p>
   <img src="net-read.png"></img></a> </td> </tr>
+
 <tr> <td> <a href="throughput.png">
   <p>Throughput time series</p>
-  <img src="throughput.png"></img></a> </td> </tr>
-<tr> <td> <a href="utilization-timeseries.png">
+  <img src="throughput.png"></img></a> </td>
+     <td> <a href="client-throughput.png">
+  <p>Client throughput time series</p>
+  <img src="client-throughput.png"></img></a> </td> </tr>
+<tr> <td colspan=2> <a href="utilization-timeseries.png">
   <p>Utilization time series</p>
   <img src="utilization-timeseries.png"></img></a> </td> </tr>
 
 EOF
-if [ -f result/latency-timeseries.png ]; then 
+if [ -f result/get-latency-timeseries.png ]; then 
 cat <<EOF >> ${log_page}
-<tr> <td> <a href="latency-timeseries.png">
+<tr>
+  <td> <a href="get-latency-timeseries.png">
   <p>Round-trip latency of Get request</p>
-  <img src="latency-timeseries.png"></img></a> </td> </tr>
-<tr> <td> <a href="combined-latency.png">
+  <img src="get-latency-timeseries.png"></img></a> </td>
+<td> <a href="combined-latency.png">
   <p>Round-trip latency of Get request versus server scale </p>
-  <img src="combined-latency.png"></img></a> </td> </tr>
+  <img src="combined-latency.png"></img></a> </td>
+</tr>
+EOF
+fi
+if [ -f result/put-latency-timeseries.png ]; then 
+cat <<EOF >> ${log_page}
+<tr>
+<td> <a href="put-latency-timeseries.png">
+  <p>Round-trip latency of Get request</p>
+  <img src="put-latency-timeseries.png"></img></a> </td>
+<!--<tr> <td> <a href="combined-latency.png">
+  <p>Round-trip latency of Get request versus server scale </p>
+  <img src="combined-latency.png"></img></a> </td> </tr>//-->
+</tr>
 EOF
 fi
 
 cat <<EOF >> ${log_page}
-<tr> <td> <a href="${conn_graph}">
+<tr> <td colspan=2> <a href="${conn_graph}">
   <p>Network connection graph</p>
   <img src="${conn_graph}"></img> </a> </td> </tr>
 

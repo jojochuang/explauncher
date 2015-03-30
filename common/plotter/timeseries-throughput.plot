@@ -6,7 +6,7 @@ set border 3
 set xtics nomirror
 set ytics nomirror
 #set y2tics tc lt 1
-set terminal postscript enhanced eps color "Helvetica" 22
+set terminal postscript enhanced eps color "Helvetica" 12
 #set size ratio -3
 
 # Get latency's range
@@ -31,7 +31,8 @@ set ylabel "Head node throughput (evt/sec)" font "Helvetica,22" tc lt 1
 #set xrange [0:200]
 #set mytics 5
 set style data linesp
-set key right top 
+#set key right top 
+set key left top 
 
 # MaceKen:    circle, black
 # Plain Mace: triangle, red

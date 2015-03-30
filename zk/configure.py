@@ -471,7 +471,8 @@ class Configuration:
       with open(options.boot, "w") as f:
           # Write (id, time_to_boot, ip_addr, host_name)
 
-          boot_period = 1.0 * options.setuptime / num_processes
+          server_boot_time = int( self.param["SERVER_BOOT_TIME"] )
+          boot_period = 1.0 * server_boot_time / int(self.param["num_server_machines"])
           i=0  # id
           boot_time = 0
 
@@ -492,6 +493,8 @@ class Configuration:
               i += 1
               boot_time += boot_period
 
+          #boot_time += server_boot_time
+          boot_period = 1.0 * options.setuptime / int(self.param["num_clients"])
           # Write for clients
           for j in range(self.num_clients):
               sid = ( self.num_server_machines + j % self.num_client_machines) % self.num_machines
@@ -582,7 +585,9 @@ class Configuration:
       # Write to output client conf file
       with open(options.clientfile, "a") as f:
           if param["flavor"] == "nacho" or param["flavor"] == "mango" :
-            server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+            #server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+            server_nodes = self.num_server_machines
+
             #server_scale = int ( param["lib.MApplication.initial_size"] )
             #for j in range(0,self.num_servers, server_scale):
             for j in range(server_nodes):
@@ -592,7 +597,10 @@ class Configuration:
             for j in range(server_nodes):
               f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
           elif param["flavor"] == "mace":
-              raise Exception( "mace flavor not supported" )
+            server_nodes = int( self.param["SERVER_LOGICAL_NODES"] )
+            for j in range(server_nodes):
+              f.write( "LAUNCHER.receiver_addr = IPV4/{host}:{port}\n".format( host= self.hostname[j ], port=options.port+j*self.port_shift ));
+              #raise Exception( "mace flavor not supported" )
 
 
           # write down hostname0, which is the experiment initiator. (it may not be in hosts file)

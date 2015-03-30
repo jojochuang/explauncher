@@ -13,7 +13,7 @@ set terminal postscript enhanced eps color "Helvetica" 12
 #plot "data/client-latency.ts" u 1:2
 #set yrange [0:GPVAL_Y_MAX]
 #set ytics 0,1000,GPVAL_Y_MAX
-set yrange [0:50000]
+#set yrange [0:50000]
 #set ytics 0,5000,50000
 
 #plot "data/head-nplayers" u 1:2
@@ -25,14 +25,14 @@ set yrange [0:50000]
 set autoscale
 
 #set ylabel "Number of players" font "Helvetica,22"
-set ylabel "Utilization(%)" font "Helvetica,22" tc lt 1
+set ylabel "Head node throughput (evt/sec)" font "Helvetica,22" tc lt 1
 
 #set ytics 0,.25,1
 #set xrange [0:200]
 #set mytics 5
 set style data linesp
-#set key right  bottom
-set key left top
+#set key right top 
+set key left top 
 
 # MaceKen:    circle, black
 # Plain Mace: triangle, red
@@ -51,6 +51,6 @@ set key left top
 #unset key
 
 set xlabel "Time (sec)" font "Helvetica,22"
-set output "result/utilization-timeseries.eps"
+set output "result/client-throughput.eps"
 
 plot \

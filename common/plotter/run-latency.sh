@@ -66,6 +66,7 @@ function gen_timeseries_plot () {
     
     cd ..
 
+    # plot both number of servers and latency timeseries in one figure
     gnuplot < $plotter/all-latency-timeseries.plot
 
     # generate pdf files using the eps file.

@@ -38,12 +38,25 @@ if [ -f "result/avg-latency.png" ]; then
     echo "copy avg-latency.ts"
     cp data/avg-latency.ts ${webdir}/${log_set_dir}/
 fi
+if [ -f "result/avg-client.png" ]; then
+    echo "copy avg-client.png"
+    cp result/avg-client.png ${webdir}/${log_set_dir}/
+    echo "copy avg-client.ts"
+    cp data/avg-client.ts ${webdir}/${log_set_dir}/
+fi
 
 if [ -f "result/stat-latency.png" ]; then
     echo "copy stat-latency.png"
     cp result/stat-latency.png ${webdir}/${log_set_dir}/
     echo "copy stat-latency.ts"
     cp data/stat-latency.ts ${webdir}/${log_set_dir}/
+fi
+
+if [ -f "result/stat-client.png" ]; then
+    echo "copy stat-client.png"
+    cp result/stat-client.png ${webdir}/${log_set_dir}/
+    echo "copy stat-client.ts"
+    cp data/stat-client.ts ${webdir}/${log_set_dir}/
 fi
 
 echo "copy service_struct.png"
@@ -70,54 +83,78 @@ cat <<EOF >> ${index_page}
 <tr> <td> <p>Service structure </p><a href="${url_prefix}${log_set_dir}/service_struct.png">
   <img src="${url_prefix}${log_set_dir}/service_struct.png"></a> </td> </tr>
 
-<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.ts">avg-throughput.ts</a> </td> </tr>
+<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.ts">avg-throughput.ts</a> </td>
+     <td> <a href="${url_prefix}${log_set_dir}/avg-utilization.ts">avg-utilization.ts</a> </td>
+     <td> <a href="${url_prefix}${log_set_dir}/avg-latency.ts">avg-latency.ts</a> </td>
+     <td> <a href="${url_prefix}${log_set_dir}/avg-client.ts">avg-client.ts</a> </td> </tr>
+
 <tr> <td> <a href="${url_prefix}${log_set_dir}/avg-throughput.png">
   <p>Average Throughput </p>
-  <img src="${url_prefix}${log_set_dir}/avg-throughput.png" width=360></a> </td> </tr>
+  <img src="${url_prefix}${log_set_dir}/avg-throughput.png" width=360></a> </td> 
 
-<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-utilization.ts">avg-utilization.ts</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-utilization.png">
+     <td> <a href="${url_prefix}${log_set_dir}/avg-utilization.png">
   <p>Average Utilization</p>
-  <img src="${url_prefix}${log_set_dir}/avg-utilization.png" width=360></a> </td> </tr>
+  <img src="${url_prefix}${log_set_dir}/avg-utilization.png" width=360></a> </td>
 
 EOF
 if [ -f "result/avg-latency.png" ]; then
 cat <<EOF >> ${index_page}
-<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-latency.ts">avg-latency.ts</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}${log_set_dir}/avg-latency.png">
+     <td> <a href="${url_prefix}${log_set_dir}/avg-latency.png">
   <p>Average Latency </p>
-  <img src="${url_prefix}${log_set_dir}/avg-latency.png" width=360></a> </td> </tr>
+  <img src="${url_prefix}${log_set_dir}/avg-latency.png" width=360></a> </td>
+EOF
+fi
+
+if [ -f "result/avg-client.png" ]; then
+cat <<EOF >> ${index_page}
+     <td> <a href="${url_prefix}${log_set_dir}/avg-client.png">
+  <p>Client Average Throughput </p>
+  <img src="${url_prefix}${log_set_dir}/avg-client.png" width=360></a> </td>
 EOF
 fi
 
 cat <<EOF >> ${index_page}
-<tr> <td> <a href="${url_prefix}${log_set_dir}/stat_throughput.ts">stat_throughput.ts</a> </td> </tr>
+ </tr>
+<tr> <td> <a href="${url_prefix}${log_set_dir}/stat_throughput.ts">stat_throughput.ts</a> </td>
+     <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.ts">stat-utilization.ts</a> </td>
+     <td> <a href="${url_prefix}${log_set_dir}/stat-latency.ts">stat-latency.ts</a> </td>
+     <td> <a href="${url_prefix}${log_set_dir}/stat-client.ts">stat-client.ts</a> </td> </tr>
+
 <tr> <td> <a href="${url_prefix}${log_set_dir}/stat-throughput.png">
   <p>Throughput histogram</p>
-  <img src="${url_prefix}${log_set_dir}/stat-throughput.png" width=360></a> </td> </tr>
+  <img src="${url_prefix}${log_set_dir}/stat-throughput.png" width=360></a> </td>
 
-<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.ts">stat-utilization.ts</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.png">
+     <td> <a href="${url_prefix}${log_set_dir}/stat-utilization.png">
   <p>Utilization statistics</p>
-  <img src="${url_prefix}${log_set_dir}/stat-utilization.png" width=360></a> </td> </tr>
+  <img src="${url_prefix}${log_set_dir}/stat-utilization.png" width=360></a> </td>
 EOF
 
 if [ -f "result/stat-latency.png" ]; then
 cat <<EOF >> ${index_page}
   
-<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-latency.ts">stat-latency.ts</a> </td> </tr>
-<tr> <td> <a href="${url_prefix}${log_set_dir}/stat-latency.png">
+     <td> <a href="${url_prefix}${log_set_dir}/stat-latency.png">
   <p>Latency statistics</p>
-  <img src="${url_prefix}${log_set_dir}/stat-latency.png" width=360></a> </td> </tr>
+  <img src="${url_prefix}${log_set_dir}/stat-latency.png" width=360></a> </td>
 EOF
 fi
 
+if [ -f "result/stat-client.png" ]; then
+cat <<EOF >> ${index_page}
+  
+     <td> <a href="${url_prefix}${log_set_dir}/stat-client.png">
+  <p>Client Throughput Statistics</p>
+  <img src="${url_prefix}${log_set_dir}/stat-client.png" width=360></a> </td>
+EOF
+fi
+cat <<EOF >> ${index_page}
+     </tr>
+EOF
 
 for d in ${logdir}/${log_set_dir}/*; do
   dn=`echo $d | awk -F/ '{print $NF}'`
   echo $dn
   cat <<EOF >> ${index_page}
-<tr> <td> <a href="${url_prefix}${log_set_dir}/${dn}/index.html">${dn}</a> </td> </tr>
+<tr> <td colspan=4> <a href="${url_prefix}${log_set_dir}/${dn}/index.html">${dn}</a> </td> </tr>
 EOF
 
 done

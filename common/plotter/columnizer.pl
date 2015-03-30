@@ -25,7 +25,7 @@ for ($n = 1; $n < $nargs; $n++ ){
     my $data_time = $lines[0];
     my $data_throughput = $lines[1];
 
-    #print "$data_time\t $data_throughput\n";
+    #print "|$data_time|\t |$data_throughput|\n";
     $tmp{ $data_time }= $data_throughput;
 
     if( not defined $max_time or $max_time < $data_time ){
