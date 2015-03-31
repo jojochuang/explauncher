@@ -60,11 +60,11 @@ cp result/net-read.png ${webdir}/${log_set_dir}/$last_log_dir
 cp result/utilization-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
 if [ -f result/get-latency-timeseries.png ]; then 
     cp result/get-latency-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
-    cp result/combined-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+    cp result/combined-get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
 fi
 if [ -f result/put-latency-timeseries.png ]; then 
     cp result/put-latency-timeseries.png ${webdir}/${log_set_dir}/$last_log_dir
-    #cp result/combined-latency.png ${webdir}/${log_set_dir}/$last_log_dir
+    cp result/combined-put-latency.png ${webdir}/${log_set_dir}/$last_log_dir
 fi
 if [ -f result/get-latency.png ]; then 
   cp result/get-latency.png ${webdir}/${log_set_dir}/$last_log_dir
@@ -143,9 +143,9 @@ cat <<EOF >> ${log_page}
   <td> <a href="get-latency-timeseries.png">
   <p>Round-trip latency of Get request</p>
   <img src="get-latency-timeseries.png"></img></a> </td>
-<td> <a href="combined-latency.png">
+<td> <a href="combined-get-latency.png">
   <p>Round-trip latency of Get request versus server scale </p>
-  <img src="combined-latency.png"></img></a> </td>
+  <img src="combined-get-latency.png"></img></a> </td>
 </tr>
 EOF
 fi
@@ -155,9 +155,9 @@ cat <<EOF >> ${log_page}
 <td> <a href="put-latency-timeseries.png">
   <p>Round-trip latency of Get request</p>
   <img src="put-latency-timeseries.png"></img></a> </td>
-<!--<tr> <td> <a href="combined-latency.png">
-  <p>Round-trip latency of Get request versus server scale </p>
-  <img src="combined-latency.png"></img></a> </td> </tr>//-->
+<td> <a href="combined-put-latency.png">
+  <p>Round-trip latency of Put request versus server scale </p>
+  <img src="combined-put-latency.png"></img></a> </td>
 </tr>
 EOF
 fi

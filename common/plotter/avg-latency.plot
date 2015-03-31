@@ -37,10 +37,24 @@ set style line 5 lt 2 lc rgb "purple" lw 3 pt 7 ps 2
 
 set grid ytics
 
+set multiplot
+
+set lmargin at screen 0.10
+set rmargin at screen 0.50
+set tmargin at screen 0.05
+set bmargin at screen 0.95
+
 plot \
   'data/avg-latency.ts' every 2::0 using 2:3:xtic(1) with histogram title "Mean", \
   '' every 2::0 using 4:xtic(1) ls 1 with linespoints title "Median" , \
-  '' every 2::0 using 5:xtic(1) ls 2 with linespoints title "90%th percentile", \
-  '' every 2::1 using 2:3:xtic(1) with histogram title "Mean", \
+  '' every 2::0 using 5:xtic(1) ls 2 with linespoints title "90%th percentile"
+
+set lmargin at screen 0.50
+set rmargin at screen 0.95
+set tmargin at screen 0.05
+set bmargin at screen 0.95
+plot \
+  'data/avg-latency.ts' every 2::1 using 2:3:xtic(1) with histogram title "Mean", \
   '' every 2::1 using 4:xtic(1) ls 3 with linespoints title "Median" , \
   '' every 2::1 using 5:xtic(1) ls 4 with linespoints title "90%th percentile"
+unset multiplot

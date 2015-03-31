@@ -7,9 +7,9 @@ source ../init.sh
 mace_start_port=30000
 # number of server logical nodes does not change
 n_server_logicalnode=3
-server_scale=2
+server_scale=8
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=4
+t_client_machines=16
 #n_client_logicalnode=2
 t_ncontexts=128
 
@@ -18,7 +18,7 @@ t_ncontexts=128
 
 logical_nodes_per_physical_nodes=3
 
-runtime=100 # duration of the experiment
+runtime=200 # duration of the experiment
 server_boot_time=40
 boottime=20   # total time to boot.
 server_join_wait_time=0
@@ -94,6 +94,8 @@ function runexp (){
   t_client_machines=$2
   t_clients=$3
   t_mean=$4
+  t_batch=$5
+  t_ratio=$6
 
   # For each server machine, run only one server process.
   # minus the bootstrapper node
@@ -145,8 +147,8 @@ function runexp (){
 
   echo "ServiceConfig.ZKClient.NKEYS = 100" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.VALUELEN = 1024" >> ${conf_client_file}
-  echo "ServiceConfig.ZKClient.SET_GET_RATIO = 0.1" >> ${conf_client_file}
-  echo "ServiceConfig.ZKClient.NREQUEST_BATCH = 1" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.SET_GET_RATIO = ${t_ratio}" >> ${conf_client_file}
+  echo "ServiceConfig.ZKClient.NREQUEST_BATCH = ${t_batch}" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.MEAN_TIME = ${t_mean}" >> ${conf_client_file}
   echo "ServiceConfig.ZKClient.GET_WAIT_TIME = 1000000" >> ${conf_client_file}
 ############################
@@ -217,6 +219,9 @@ function aggregate_output () {
   t_server_scale=$2
   t_clients=$3
   t_mean=$4
+  t_batch=$5
+  t_ratio=$6
+
   # create a new directory for the set of logs
   mkdir ${logdir}/${log_set_dir}
   # move the log directories into the new dir
@@ -225,7 +230,7 @@ function aggregate_output () {
   # measure throughput from 10% to 90% (assuming the throughput is stable in the period)
   # compute average and standard deviation
   # append to the output file
-  label="$flavor-$t_server_scale-$t_clients-$t_mean"
+  label="$flavor-$t_server_scale-$t_clients-$t_mean-$t_batch-$t_ratio"
   $plotter/run-throughput.sh ${logdir}/${log_set_dir} $label
   $plotter/run-avg.sh
   $plotter/avg-latency.sh
@@ -256,14 +261,19 @@ if [ $used_machines -gt $n_machines ]; then
   echo "use machines: ${used_machines} > machine list: ${n_machines} "
   exit 1
 fi
-#for t_mean in 100000 50000 25000; do  # Additional computation payload at the server.
-for t_mean in 100000 50000 25000 10000 5000 2500 1000; do  # Additional computation payload at the server.
+#for t_mean in 100000 50000 25000 10000 5000 2500 1000; do  # Additional computation payload at the server.
+#for t_mean in 100000 50000 25000 10000 5000 2500; do  # Additional computation payload at the server.
+for t_mean in 100000; do  # Additional computation payload at the server.
+for t_batch in 1 2 4 8 16; do  # Additional computation payload at the server.
+#for t_ratio in 0.0 0.01 0.1 0.5 1.0; do
+#for t_ratio in 0.0; do
+for t_ratio in 0.0; do
   log_set_dir=`date --iso-8601="seconds"`
   cleanup # function to remove files that aggregates data from multiple runs of the same setting.
   log_set_dir=`date --iso-8601="seconds"`
   for (( run=1; run <= $nruns; run++ )); do
     mace_start_port=$((mace_start_port+500))
-    runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_mean
+    runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_mean $t_batch $t_ratio
 
     if [ $config_only -eq 0 ]; then
       # generate plots for each run
@@ -281,9 +291,10 @@ for t_mean in 100000 50000 25000 10000 5000 2500 1000; do  # Additional computat
 
   if [ $config_only -eq 0 ]; then
     # plot the average throughput w/ error across all runs
-    aggregate_output $log_set_dir $server_scale $n_client_logicalnode $t_mean 
+    aggregate_output $log_set_dir $server_scale $n_client_logicalnode $t_mean  $t_batch $t_ratio
 
     $common/publish_webindex.sh $log_set_dir
   fi
+done
 done # end of total_events
-
+done

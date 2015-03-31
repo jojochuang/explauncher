@@ -52,9 +52,9 @@ set key right  bottom
 
 set xlabel "Time (sec)" font "Helvetica,22"
 #set output "result/combined-latency-timeseries.eps"
-set output "result/combined-latency.eps"
+set output "result/combined-put-latency.eps"
 
-start_time=system("head -n1 data/combined-latency.ts|awk '{print $1}'")
+start_time=system("head -n1 data/combined-put-latency.ts|awk '{print $1}'")
 
 set multiplot
 
@@ -65,11 +65,11 @@ set rmargin at screen 0.9
 set tmargin at screen 0.05
 set bmargin at screen 0.45
 plot \
-'/home/ubuntu/benchmark/kvmigration/data/combined-latency.ts'    using ($1-start_time):($2) title "combined latency"   lt 1 pt 0 lw 3 axes x1y1
+'data/combined-put-latency.ts'    using ($1-start_time):($2) title "combined put latency"   lt 1 pt 0 lw 3 axes x1y1
 
 #set y2tics tc lt 1
 #set y2range [0:8]
-set yrange [0:8]
+#set yrange [0:8]
 #set autoscale ymax
 #  set horizontal margins for second column
 set lmargin at screen 0.1
@@ -79,6 +79,6 @@ set tmargin at screen 0.55
 set bmargin at screen 0.95
 set ylabel "# server physical nodes" font "Helvetica,22" tc lt 1
 plot \
-'/home/ubuntu/benchmark/kvmigration/data/scale_server.ts'    using ($2/1000000):($4) title "server scale"   lt 2 pt 0 lw 3 axes x1y1
+'data/scale_server.ts'    using ($2/1000000):($4) title "server scale"   lt 2 pt 0 lw 3 axes x1y1
 
 unset multiplot

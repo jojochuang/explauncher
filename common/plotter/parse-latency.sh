@@ -10,7 +10,9 @@ cwd=`pwd`
 function aggregate_time_series () {
     request=$1
 
-    input_ts=(`find ${cwd}/data -name '${request}_latency-client*.ts'`)
+    echo "find ${cwd}/data -name '${request}-latency-timeseries-*.ts'"
+
+    input_ts=(`find ${cwd}/data -name "${request}-latency-timeseries-*.ts"`)
     echo "input_ts="  ${input_ts[@]};
     out_column="${cwd}/data/column-${request}-latency.ts"
     out_combined="${cwd}/data/combined-${request}-latency.ts"
@@ -44,22 +46,24 @@ cd $logdir
 # find the latest log dir
 dir="."
 # find the latest log set in the dir
-#headfile=(`find $dir -name 'head-*.gz' | tail -1`)
-clifile=(`find $dir -name 'client*[^sar]\.log\.gz'`)
-#svfile=(`find $dir -name 'server-*.gz'`)
+#clifile=(`find $dir -name 'client*[^sar]\.log\.gz'`)
+clifile=(`find $dir -name "client-*.log.gz"  '!' -name "*sar.log.gz"`)
 
 # get the latency of both get and put requests at the client side
 
 get_out="${cwd}/data/get-latency.ts" #remove the file name suffix
 if [ -f $get_out ]; then
   rm $get_out
+  touch $get_out
 fi
 put_out="${cwd}/data/put-latency.ts" #remove the file name suffix
 if [ -f $put_out ]; then
   rm $put_out
+  touch $put_out
 fi
 
-rm ${cwd}/data/latency-client*.ts
+rm ${cwd}/data/get-latency-timeseries*.ts
+rm ${cwd}/data/put-latency-timeseries*.ts
 
 for f in "${clifile[@]}"; do
   echo "client file = $f"
@@ -69,7 +73,9 @@ for f in "${clifile[@]}"; do
   fi
   touch $timeseries_get_out
   
-  zgrep -a -e "GET" $f |  awk 'BEGIN{start_time=0}{if($3 == "[ZKClientGet]" ){lat[ int($1) ] += $8; count[ int($1) ]++;}if(start_time==0){start_time=int($1)} } END{for(x in lat){print (x) "\t" (lat[x]/count[x]) } }' | sort -n  > $timeseries_put_out
+  tmp="${cwd}/data/all-latency-timeseries.ts"
+  zgrep -a -e "\[ZKClient[SG]et\]" $f > $tmp
+  awk 'BEGIN{start_time=0}{if($3 == "[ZKClientGet]" ){lat[ int($1) ] += $8; count[ int($1) ]++;}if(start_time==0){start_time=int($1)} } END{for(x in lat){print (x) "\t" (lat[x]/count[x]) } }' $tmp | sort -n  > $timeseries_get_out
 
   timeseries_put_out="${cwd}/data/put-latency-timeseries-"`echo $f|sed 's/^.*\///'| sed 's/\.log\.gz//'`".ts" #remove the file name suffix
   if [ -f "$timeseries_put_out" ]; then
@@ -77,18 +83,18 @@ for f in "${clifile[@]}"; do
   fi
   touch $timeseries_put_out
   
-  zgrep -a -e "PUT" $f |  awk 'BEGIN{start_time=0}{if($3 == "[ZKClientPut]" ){lat[ int($1) ] += $8; count[ int($1) ]++;}if(start_time==0){start_time=int($1)} } END{for(x in lat){print (x) "\t" (lat[x]/count[x]) } }' | sort -n  > $timeseries_put_out
+  awk 'BEGIN{start_time=0}{if($3 == "[ZKClientSet]" ){lat[ int($1) ] += $8; count[ int($1) ]++;}if(start_time==0){start_time=int($1)} } END{for(x in lat){print (x) "\t" (lat[x]/count[x]) } }' $tmp | sort -n  > $timeseries_put_out
 
 
   # generate request latency distribution
   zgrep -a -e "GET" $f |  awk '{if($3 == "[ZKClientGet]" ){print $8} }'  >> $get_out
 
-  zgrep -a -e "PUT" $f |  awk '{if($3 == "[ZKClientPut]" ){print $8} }'  >> $put_out
+  zgrep -a -e "PUT" $f |  awk '{if($3 == "[ZKClientSet]" ){print $8} }'  >> $put_out
 done
 
 # aggregate time series
-aggregate_time_series get
-aggregate_time_series put
+aggregate_time_series "get"
+aggregate_time_series "put"
 
 # aggregate all latency data in multiple runs
 allraw="${cwd}/data/all_raw_latency.ts"
@@ -97,6 +103,7 @@ cat $get_out >> $allraw
 cat $put_out >> $allraw
 
 avglat="${cwd}/data/avg-latency.ts"
+touch $avglat
 ln=0
 if [ -f $avglat ];  then
   ln=`wc $avglat | awk '{print $1}' `
@@ -114,7 +121,24 @@ median_element=$(( $num_lines/2 ))
 
 # get 90th percentile
 ninetyth=$(( $num_lines*9/10 ))
+echo "$num_lines $median_element $ninetyth"
 
-awk -v vln="$ln" -v me="$median_element" -v ne="$ninetyth" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-GET " sum/NR " " sqrt(sumsq/NR) " " array[me] " " array[ne] }' $get_out >> $avglat 
-awk -v vln="$ln" -v me="$median_element" -v ne="$ninetyth" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-PUT " sum/NR " " sqrt(sumsq/NR) " " array[me] " " array[ne] }' $put_out >> $avglat
+if [ "$num_lines" -eq 0 ]; then
+  echo "$ln-GET 0 0 0 0" >> $avglat
+else
+  awk -v vln="$ln" -v me="$median_element" -v ne="$ninetyth" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-GET " sum/NR " " sqrt(sumsq/NR) " " array[me] " " array[ne] }' $get_out >> $avglat 
+fi
+
+# number of lines in 
+num_lines=`wc -l $put_out | cut -d" " -f1`
+# get the median number
+median_element=$(( $num_lines/2 ))
+ninetyth=$(( $num_lines*9/10 ))
+echo "$num_lines $median_element $ninetyth"
+
+if [ "$num_lines" -eq 0 ]; then
+  echo "$ln-PUT 0 0 0 0" >> $avglat
+else
+  awk -v vln="$ln" -v me="$median_element" -v ne="$ninetyth" '{sum+=$1; array[NR]=$1} END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(sum/NR))**2);}print vln "-PUT " sum/NR " " sqrt(sumsq/NR) " " array[me] " " array[ne] }' $put_out >> $avglat
+fi
 

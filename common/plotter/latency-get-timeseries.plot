@@ -52,8 +52,8 @@ set key left top
 #unset key
 
 set xlabel "Time (sec)" font "Helvetica,22"
-set output "result/latency-timeseries.eps"
+set output "result/get-latency-timeseries.eps"
 
-start_time=system("head -n1 data/column-latency.ts|awk '{print $1}'")
+start_time=system("head -n1 data/column-get-latency.ts|awk '{print $1}'")
 
 plot \
