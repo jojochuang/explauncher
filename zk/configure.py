@@ -543,11 +543,17 @@ class Configuration:
           # TODO: write lib.MApplication.nodeset
           for j in range( server_nodes ):
               #f.write("ServiceConfig.SimpleZab.FOLLOWERS = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
-              f.write("ServiceConfig.SimpleZab.FOLLOWERS = VNODE/{}\n".format( j+1 ) );
+              if param["flavor"] == "mace":
+                  f.write("ServiceConfig.SimpleZab.FOLLOWERS = IPV4/{}:{}\n".format( self.hostname[j], options.port+ j* self.port_shift ) );
+              else:
+                  f.write("ServiceConfig.SimpleZab.FOLLOWERS = VNODE/{}\n".format( j+1 ) );
 
           # set leader as the first follower
           #f.write("ServiceConfig.SimpleZab.LEADER = IPV4/{}:{}\n".format( self.hostname[0], options.port ) );
-          f.write("ServiceConfig.SimpleZab.LEADER = VNODE/1\n" );
+          if param["flavor"] == "mace":
+              f.write("ServiceConfig.SimpleZab.LEADER = IPV4/{}:{}\n".format( self.hostname[0], options.port+ 0* self.port_shift ) );
+          else:
+              f.write("ServiceConfig.SimpleZab.LEADER = VNODE/1\n" );
 
           if param["flavor"] == "nacho" or param["flavor"] == "mango" :
             f.write("lib.MApplication.bootstrapper = IPV4/{}:{}\n".format( self.hostname[index], options.port+ index* self.port_shift ) );

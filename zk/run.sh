@@ -7,9 +7,9 @@ source ../init.sh
 mace_start_port=30000
 # number of server logical nodes does not change
 n_server_logicalnode=3
-server_scale=8
+server_scale=4
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=16
+t_client_machines=8
 #n_client_logicalnode=2
 t_ncontexts=128
 
@@ -44,11 +44,11 @@ conf_client_file="conf/params-run-client.conf"
 conf_file="conf/params-run-server.conf"
 host_nohead_file="conf/hosts-run-nohead"
 
-if [ $# -eq 0 ]; then
-    id="default"
-else
-    id=$1
-fi
+#if [ $# -eq 0 ]; then
+#    id="default"
+#else
+#    id=$1
+#fi
 
 # generate parameters for the benchmark. Parameters do not change in each of the benchmarks
 function GenerateBenchmarkParameter (){
@@ -68,6 +68,7 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
+  #echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error follower leader SimpleZab ZKReplica\"" >> ${conf_file}
   echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
@@ -168,10 +169,11 @@ function runexp (){
 ############################
 #  role = server
 
-  echo "ServiceConfig.ZKReplica.NKEYSPACE = 1" >>  ${conf_file}
+  echo "ServiceConfig.ZKReplica.NKEYSPACE = $t_ncontexts" >>  ${conf_file}
 
   echo "ServiceConfig.SimpleZab.UPCALL_REGID = 2" >>  ${conf_file}
-  echo "ServiceConfig.SimpleZab.NUM_GROUPS = $t_ncontexts" >>  ${conf_file}
+  #echo "ServiceConfig.SimpleZab.NUM_GROUPS = $t_ncontexts" >>  ${conf_file}
+  echo "ServiceConfig.SimpleZab.NUM_CONTEXTS = $t_ncontexts" >>  ${conf_file}
 ############################
 
   if [[ $ec2 -eq 0 ]]; then
@@ -198,17 +200,10 @@ function runexp (){
   fi
 
   if [ $config_only -eq 0 ]; then
-    if [[ $ec2 -eq 0 ]]; then
-      # do not use monitor
-      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_mean}\e[00m"
-      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_mean}
-
-    else
-      # do not use monitor
-      #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
-      echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i n${t_nodes}-c${t_contexts}-p${t_mean}-e${total_events}-l${t_payload}\e[00m"
-      $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-${id}-n${t_server_machines}-m${t_client_machines}-s${t_servers}-c${t_clients}-b${t_ncontexts}-p${t_mean}
-    fi
+    # do not use monitor
+    #./master.py -a throughput -f context -p conf/params-run-server.conf -i n-c-p1-e-l
+    echo -e "\e[00;31m\$ $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -i ${application}-${flavor}-s${server_scale}-c${t_clients}-b${t_ncontexts}-p${t_batch}-r${t_ratio}\e[00m"
+    $common/master.py -a ${application} -f ${flavor} -p ${conf_file} -q ${conf_client_file} -i ${application}-${flavor}-s${server_scale}-c${t_clients}-b${t_ncontexts}-p${t_batch}-r${t_ratio}
     sleep 10
   fi
 
@@ -264,10 +259,14 @@ fi
 #for t_mean in 100000 50000 25000 10000 5000 2500 1000; do  # Additional computation payload at the server.
 #for t_mean in 100000 50000 25000 10000 5000 2500; do  # Additional computation payload at the server.
 for t_mean in 100000; do  # Additional computation payload at the server.
-for t_batch in 1 2 4 8 16; do  # Additional computation payload at the server.
-#for t_ratio in 0.0 0.01 0.1 0.5 1.0; do
+#for t_batch in 1 4 16; do  # Additional computation payload at the server.
+#for t_batch in 1 4 16 64; do  # Additional computation payload at the server.
+for t_batch in 16 64; do  # Additional computation payload at the server.
+#for t_ratio in 0.0 0.1 0.2 0.4 0.8 1.0; do
+for t_ratio in 0.0 0.1 0.5  1.0; do
 #for t_ratio in 0.0; do
-for t_ratio in 0.0; do
+#for t_ratio in 0.1; do
+#for t_ratio in 0.0; do
   log_set_dir=`date --iso-8601="seconds"`
   cleanup # function to remove files that aggregates data from multiple runs of the same setting.
   log_set_dir=`date --iso-8601="seconds"`
