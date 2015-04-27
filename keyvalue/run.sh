@@ -19,10 +19,10 @@ t_ngroups=$t_ncontexts # number of partitions at server
 
 logical_nodes_per_physical_nodes=4
 
-runtime=100 # duration of the experiment
-boottime=40   # total time to boot.
+runtime=300 # duration of the experiment
+boottime=150   # total time to boot.
 server_join_wait_time=0
-client_wait_time=0
+client_wait_time=50
 port_shift=10  # spacing of ports between different nodes
 memory_rounds=1000 # frequency of memory usage log printing
 
@@ -212,7 +212,7 @@ function aggregate_output () {
 
 n_machines=`wc ${host_orig_file} | awk '{print $1}' `
 #for scale in 4 2 1; do
-for scale in 8; do
+for scale in 32; do
   for t_payload  in 1 1000 10000; do
   server_scale=$scale
   t_server_machines=$(( $n_server_logicalnode * $server_scale ))
@@ -244,9 +244,11 @@ for scale in 8; do
             $plotter/plot_connection.sh ${t_server_machines}-${n_client_logicalnode}-$run
             $plotter/run-timeseries.sh
             $plotter/run-net.sh
+            $plotter/parse-utilization.sh
+            $plotter/run-utilization.sh
             #cd $cwd
             # publish plots and parameters and logs to web page
-            $plotter/publish.sh $log_set_dir
+            $common/publish.sh $log_set_dir
           fi
         done # end of nruns
 

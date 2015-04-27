@@ -4,14 +4,13 @@ source conf/conf.sh
 source ../common.sh
 source ../init.sh
 
-mace_start_port=30000
+mace_start_port=10000
 # number of server logical nodes does not change
 n_server_logicalnode=3
-server_scale=4
+server_scale=1
 t_server_machines=$(( $n_server_logicalnode * $server_scale ))
-t_client_machines=8
-#n_client_logicalnode=2
-t_ncontexts=128
+t_client_machines=2 #n_client_logicalnode=2
+t_ncontexts=1
 
 # to save cost, the number of client physical nodes are less than that of the client logical nodes
 # so client logical nodes are equally distributed to the physical nodes.
@@ -22,12 +21,12 @@ runtime=200 # duration of the experiment
 server_boot_time=40
 boottime=20   # total time to boot.
 server_join_wait_time=0
-client_wait_time=10
+client_wait_time=20
 port_shift=10  # spacing of ports between different nodes
 
 tcp_nodelay=1   # If this is 1, you will disable Nagle's algorithm. It will provide better throughput in smaller messages.
 
-nruns=1      # number of replicated runs
+nruns=5      # number of replicated runs
 
 #context_policy="NO_SHIFT"
 #context_policy="SHIFT_BY_ONE"
@@ -68,8 +67,8 @@ function GenerateBenchmarkParameter (){
   echo "run_time = ${runtime}" >> ${conf_file}
   echo "SET_TCP_NODELAY = ${tcp_nodelay}" >> ${conf_file}
 
-  #echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error follower leader SimpleZab ZKReplica\"" >> ${conf_file}
-  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error\"" >> ${conf_file}
+  #echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator GlobalStateCoordinator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error\"" >> ${conf_file}
+  echo "MACE_LOG_AUTO_SELECTORS = \"mace::Init Accumulator TcpTransport::connect BaseTransport::BaseTransport DefaultMappingPolicy ServiceComposition HeadEventTP::constructor ZKClientGet ZKClientSet  ZKReplica::maceInit error\"" >> ${conf_file}
   echo "MACE_LOG_ACCUMULATOR = 1000" >> ${conf_file}
 
   echo "WORKER_JOIN_WAIT_TIME = ${server_join_wait_time}" >>  ${conf_file}
@@ -260,10 +259,12 @@ fi
 #for t_mean in 100000 50000 25000 10000 5000 2500; do  # Additional computation payload at the server.
 for t_mean in 100000; do  # Additional computation payload at the server.
 #for t_batch in 1 4 16; do  # Additional computation payload at the server.
-#for t_batch in 1 4 16 64; do  # Additional computation payload at the server.
-for t_batch in 16 64; do  # Additional computation payload at the server.
-#for t_ratio in 0.0 0.1 0.2 0.4 0.8 1.0; do
-for t_ratio in 0.0 0.1 0.5  1.0; do
+#for t_batch in 1 4; do  # Additional computation payload at the server.
+for t_batch in 16; do  # Additional computation payload at the server.
+#for t_batch in 64; do  # Additional computation payload at the server.
+for t_ratio in 0.0 0.1 0.5 1.0; do
+#for t_ratio in 0.1; do
+#for t_ratio in 0.5; do
 #for t_ratio in 0.0; do
 #for t_ratio in 0.1; do
 #for t_ratio in 0.0; do
@@ -272,6 +273,9 @@ for t_ratio in 0.0 0.1 0.5  1.0; do
   log_set_dir=`date --iso-8601="seconds"`
   for (( run=1; run <= $nruns; run++ )); do
     mace_start_port=$((mace_start_port+500))
+    if [ $mace_start_port -gt 60000 ]; then
+      mace_start_port=10000
+    fi
     runexp $t_server_machines $t_client_machines $n_client_logicalnode $t_mean $t_batch $t_ratio
 
     if [ $config_only -eq 0 ]; then
