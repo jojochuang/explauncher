@@ -12,13 +12,15 @@ and automates running an experiment.
 Prerequisite
 =======
 
-1. Install pssh (preferrably 2.2) and add the path to the pssh executable in your PATH.
+1. Install pssh (preferrably 2.2) and add the path to the pssh executable in your PATH. Pssh can be downloaded at [here] (https://code.google.com/p/parallel-ssh/)
 
-2. Create symbolic link of the executable file under your /YOUR/TOOLDIR/PROJECTNAME/.
+2. Clone this repo to /YOUR/TOOLDIR. e.g. `cd ~/; git clone https://github.com/jojochuang/explauncher benchmark`
+
+3. Create symbolic link of the executable file under your /YOUR/TOOLDIR/PROJECTNAME/.
    For example, if your project name is "microbenchmark" and flavor is "context",
    you should name the symlink to be "microbenchmark\_context".
 
-3. Copy and create your params-basic.conf from
+4. Copy and create your params-basic.conf from
    params-basic.conf-example.
    Also, copy and create your hosts file from hosts-example.
    Change default user and directory settings in .conf file and run.sh file.
@@ -88,7 +90,8 @@ Contacts
 
 Feel free to ask any questions to use this scripts.
 
-* [Sunghwan Yoo](http://www.cs.purdue.edu/homes/yoo7/) email: <sunghwanyoo@purdue.edu>
+* [Wei-Chiu Chuang](http://weichiu.com/about-wei-chiu/) email: <weichiu@purdue.edu>
+* This project is extended from Sunghwan's [explauncher] (https://bitbucket.org/shyoo/explauncher)
 
 
 
